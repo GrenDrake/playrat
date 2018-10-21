@@ -20,7 +20,7 @@ function say(gameData, value) {
     const outputDiv = document.getElementById('output');
     switch(value.type) {
         case ValueType.String:
-            outputDiv.innerHTML += gameData.strings[value.value];
+            outputDiv.innerHTML += gameData.strings[value.value].replace(/\n/g, "<p>");
             break;
         case ValueType.Integer:
             outputDiv.innerHTML += value.value;
@@ -117,6 +117,13 @@ function readLocal(state, localId, origin) {
     return state.locals[localId.value];
 }
 
+function popStack(state, origin) {
+    if (state.stack.length < 1) {
+        throw new RuntimeError(origin, "Stack underflow.");
+    }
+    return state.stack.pop();
+}
+
 function callFunction(gameData, functionId) {
     if (!gameData.functions.hasOwnProperty(functionId)) {
         throw new RuntimeError({id:functionId}, "Function does not exist.");
@@ -132,11 +139,12 @@ function callFunction(gameData, functionId) {
         state.locals.push(new Value(0,0));
     }
     var IP = functionDef[2];
-    var rawType, rawValue, v1, v2;
+    var rawType, rawValue, v1, v2, target, origin;
 
     while (1) {
         const opcode = gameData.bytecode.getUint8(IP);
         ++IP;
+        origin = {id:functionId, IP:IP};
         switch(opcode) {
             case Opcode.Return:
                 if (state.stack.length > 0) {
@@ -186,6 +194,67 @@ function callFunction(gameData, functionId) {
                 var value = state.stack.pop();
                 localId.requireType({id:functionId, IP:IP, segment:"/store"}, ValueType.LocalVar);
                 state.locals[localId.value] = value;
+                break;
+
+            case Opcode.JumpEq:
+                origin.segment = "/jump-eq";
+                target = popStack(state, origin);
+                v1 = readLocal(state, popStack(state, origin), origin);
+                v2 = readLocal(state, popStack(state, origin), origin);
+                target.requireType(origin, ValueType.JumpTarget);
+                if (v1.type == v2.type && v2.value === v1.value) {
+                    IP = functionDef[2] + target.value;
+                }
+                break;
+            case Opcode.JumpNeq:
+                origin.segment = "/jump-eq";
+                target = popStack(state, origin);
+                v1 = readLocal(state, popStack(state, origin), origin);
+                v2 = readLocal(state, popStack(state, origin), origin);
+                target.requireType(origin, ValueType.JumpTarget);
+                if (v1.type != v2.type || v2.value !== v1.value) {
+                    IP = functionDef[2] + target.value;
+                }
+                break;
+            case Opcode.JumpLt:
+                origin.segment = "/jump-lt";
+                target = popStack(state, origin);
+                v1 = readLocal(state, popStack(state, origin), origin);
+                v2 = readLocal(state, popStack(state, origin), origin);
+                target.requireType(origin, ValueType.JumpTarget);
+                if (v1.type == v2.type && v2.value < v1.value) {
+                    IP = functionDef[2] + target.value;
+                }
+                break;
+            case Opcode.JumpLte:
+                origin.segment = "/jump-lte";
+                target = popStack(state, origin);
+                v1 = readLocal(state, popStack(state, origin), origin);
+                v2 = readLocal(state, popStack(state, origin), origin);
+                target.requireType(origin, ValueType.JumpTarget);
+                if (v1.type == v2.type && v2.value <= v1.value) {
+                    IP = functionDef[2] + target.value;
+                }
+                break;
+            case Opcode.JumpGt:
+                origin.segment = "/jump-gt";
+                target = popStack(state, origin);
+                v1 = readLocal(state, popStack(state, origin), origin);
+                v2 = readLocal(state, popStack(state, origin), origin);
+                target.requireType(origin, ValueType.JumpTarget);
+                if (v1.type == v2.type && v2.value < v1.value) {
+                    IP = functionDef[2] + target.value;
+                }
+                break;
+            case Opcode.JumpGte:
+                origin.segment = "/jump-gte";
+                target = popStack(state, origin);
+                v1 = readLocal(state, popStack(state, origin), origin);
+                v2 = readLocal(state, popStack(state, origin), origin);
+                target.requireType(origin, ValueType.JumpTarget);
+                if (v1.type == v2.type && v2.value <= v1.value) {
+                    IP = functionDef[2] + target.value;
+                }
                 break;
 
             case Opcode.Add:
