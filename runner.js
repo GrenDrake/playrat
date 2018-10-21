@@ -16,8 +16,23 @@ RuntimeError.prototype.toString = function() {
     return errorText;
 }
 
-function say(text) {
-    document.getElementById('output').innerHTML += text;
+function say(gameData, value) {
+    const outputDiv = document.getElementById('output');
+    switch(value.type) {
+        case ValueType.String:
+            outputDiv.innerHTML += gameData.strings[value.value];
+            break;
+        case ValueType.Integer:
+            outputDiv.innerHTML += value.value;
+            break;
+        default:
+            var text = "&lt;" + typeNames[value.type];
+            if (value.type != ValueType.None) {
+                text += " " + value.value;
+            }
+            text += "&gt;";
+            outputDiv.innerHTML += text;
+    }
 }
 
 function Value(type, value) {
@@ -203,7 +218,8 @@ function callFunction(gameData, functionId) {
                 break;
 
             case Opcode.Say:
-                say("test");
+                v1 = readLocal(state, state.stack.pop(), {id:functionId, IP:IP, segment:"/add"});
+                say(gameData, v1);
                 break;
             default:
                 throw new RuntimeError({id:functionId, IP:IP}, "Unknown opcode " + opcode + ".");
