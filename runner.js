@@ -139,8 +139,8 @@ function callFunction(gameData, functionId) {
         ++IP;
         switch(opcode) {
             case Opcode.Return:
-                if (stack.length > 0) {
-                    return stack[stack.length - 1];
+                if (state.stack.length > 0) {
+                    return state.stack[stack.length - 1];
                 } else {
                     return new Value(ValueType.Integer, 0);
                 }
