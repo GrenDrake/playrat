@@ -147,21 +147,21 @@ function callFunction(gameData, functionId) {
             case Opcode.Push8:
                 rawType = gameData.bytecode.getUint8(IP);
                 ++IP;
-                rawValue = gameData.bytecode.getInt32(IP);
+                rawValue = gameData.bytecode.getInt8(IP);
                 ++IP;
                 state.stack.push(new Value(rawType,rawValue));
                 break;
             case Opcode.Push16:
                 rawType = gameData.bytecode.getUint8(IP);
                 ++IP;
-                rawValue = gameData.bytecode.getInt32(IP);
+                rawValue = gameData.bytecode.getInt16(IP, true);
                 IP += 2;
                 state.stack.push(new Value(rawType,rawValue));
                 break;
             case Opcode.Push32:
                 rawType = gameData.bytecode.getUint8(IP);
                 ++IP;
-                rawValue = gameData.bytecode.getInt32(IP);
+                rawValue = gameData.bytecode.getInt32(IP, true);
                 IP += 4;
                 state.stack.push(new Value(rawType,rawValue));
                 break;
