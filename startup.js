@@ -137,7 +137,8 @@ function gameDataLoaded(event) {
 }
 
 function failedToLoadGameData(event) {
-    alert("Failed to load game data.");
+    const outputDiv = document.getElementById('output');
+    outputDiv.innerHTML += "<div class='error'>[Failed to load game data.]</div>";
 }
 
 window.addEventListener("load", function() {
