@@ -1,24 +1,28 @@
+<!doctype html>
 <html>
 <head>
+<title>Loading...</title>
 <meta charset='utf-8'>
-<title>Runner</title>
-<style>
-.error {
-    border: 2px solid darkred;
-    padding: 2px 5px;
-    color: darkred;
-    background-color: white;
-}
-</style>
+<link rel="stylesheet" href="page.css" type="text/css">
 </head>
 <body>
+<div id='contentArea'>
+    <div id='top-spacer'></div>
+    <div id='bottom-spacer'></div>
+    <div id='top-statusbar'>
+        <div id='top-left'>&nbsp;</div>
+        <div id='top-right'></div>
+    </div>
+    <div id='info-pane'>Strength: 50<br>Dexterity: 23</div>
+    <div id='text'><p>Loading...</div>
+    <div id='bottom-statusbar'>
+        <div id='bottom-left'>&nbsp;</div>
+        <div id='bottom-right'></div>
+    </div>
+</div>
+</body>
 
-<h1>Runner</h1>
 
-<div id='output'></div>
-
-<script>
-</script>
-<script src='runner.js'></script>
-<script src='startup.js'></script>
-</body></html>
+<script src='js/data.js'></script>
+<script src='js/runner.js'></script>
+</html>
