@@ -28,6 +28,8 @@
         GetSize:                25, // get size of list or map
         SetItem:                26, // set item in list (by index) of map (by key)
         TypeOf:                 27, // get value type
+        DelItem:                28, // remove an item from a list or a key from a map
+        AddItem:                29, // add an item to a list (use set-item for maps)
         CompareTypes:           30, // compare the types of two values and push the result
         Compare:                31, // compare two values and push the result
         Jump:                   32, // unconditional jump
@@ -50,6 +52,8 @@
         BitXor:                 50,
         BitNot:                 51,
         Random:                 52,
+        Inc:                    53,
+        Dec:                    54,
         GetKey:                 60,
         GetOption:              61,
         GetLine:                62,
@@ -57,6 +61,8 @@
         SetInfo:                70,
     };
     Object.freeze(Opcode);
+
+    const maxOperationCount = 10000;
 
     G.callFunction = function callFunction(G, functionId, argList) {
         argList = argList || [];
@@ -66,6 +72,7 @@
             return;
         }
 
+        let operations = 0;
         const stack = new G.Stack();
         const locals = [];
 
@@ -83,6 +90,10 @@
         while (1) {
             const opcode = G.bytecode.getUint8(IP);
             ++IP;
+            ++operations;
+            if (operations > maxOperationCount) {
+                throw new G.RuntimeError("Script exceeded maximum runtime.");
+            }
             switch(opcode) {
                 case Opcode.Return:
                     if (stack.length > 0) {
@@ -471,6 +482,16 @@
                                                    * (v1.value - v2.value)
                                                    + v2.value);
                     stack.push(new G.Value(G.ValueType.Integer, randomValue));
+                    break;
+                case Opcode.Dec:
+                    v1 = stack.topAsLocal(locals);
+                    v1.requireType(G.ValueType.Integer);
+                    v1.value -= 1;
+                    break;
+                case Opcode.Inc:
+                    v1 = stack.topAsLocal(locals);
+                    v1.requireType(G.ValueType.Integer);
+                    v1.value += 1;
                     break;
 
                 case Opcode.GetKey:
