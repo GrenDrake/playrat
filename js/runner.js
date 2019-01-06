@@ -207,6 +207,28 @@
                     G.setObjectProperty(v1, v2, v3);
                     break;
 
+                case Opcode.TypeOf:
+                    v1 = stack.popAsLocal(locals);
+                    stack.push(new G.Value(G.ValueType.Integer, v1.type));
+                    break;
+                case Opcode.CompareTypes:
+                    v1 = stack.popAsLocal(locals);
+                    v2 = stack.popAsLocal(locals);
+                    if (v1.type != v2.type)
+                        stack.push(new G.Value(G.ValueType.Integer, 0));
+                    else
+                        stack.push(new G.Value(G.ValueType.Integer, 1));
+                    break;
+                case Opcode.Compare:
+                    v1 = stack.popAsLocal(locals);
+                    v2 = stack.popAsLocal(locals);
+                    if (v1.type != v2.type)
+                        stack.push(new G.Value(G.ValueType.Integer, -1));
+                    else
+                        stack.push(new G.Value(G.ValueType.Integer,
+                                               v2.value - v1.value));
+                    break;
+
                 case Opcode.Jump:
                     target = stack.popAsLocal(locals);
                     target.requireType(G.ValueType.JumpTarget);
@@ -259,28 +281,6 @@
                     if (v1.value >= 0) {
                         IP = functionDef[2] + target.value;
                     }
-                    break;
-
-                case Opcode.TypeOf:
-                    v1 = stack.popAsLocal(locals);
-                    stack.push(new G.Value(G.ValueType.Integer, v1.type));
-                    break;
-                case Opcode.CompareTypes:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
-                    if (v1.type != v2.type)
-                        stack.push(new G.Value(G.ValueType.Integer, 0));
-                    else
-                        stack.push(new G.Value(G.ValueType.Integer, 1));
-                    break;
-                case Opcode.Compare:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
-                    if (v1.type != v2.type)
-                        stack.push(new G.Value(G.ValueType.Integer, -1));
-                    else
-                        stack.push(new G.Value(G.ValueType.Integer,
-                                               v2.value - v1.value));
                     break;
 
                 case Opcode.Add:
