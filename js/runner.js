@@ -215,14 +215,23 @@
                             throw new G.RuntimeError("invalid list number.");
                         }
                         v2.requireType(G.ValueType.Integer);
-                        stack.push(G.lists[v1.value][v2.value]);
+                        if (v2.value < 0 || v2.value >= G.lists[v1.value].length) {
+                            stack.push(new G.Value(G.ValueType.Integer, 0));
+                        } else {
+                            stack.push(G.lists[v1.value][v2.value]);
+                        }
                     } else if (v1.type === G.ValueType.Map) {
                         if (v1.value < 1 || v1.value > G.maps.length) {
                             throw new G.RuntimeError("invalid map number.");
                         }
-                        throw new G.RuntimeError("not implemented.");
+                        const mapKey = v2.toKey();
+                        if (G.maps[v1.value].hasOwnProperty(mapKey)) {
+                            stack.push(G.maps[v1.value][mapKey]);
+                        } else {
+                            stack.push(new G.Value(G.ValueType.Integer, 0));
+                        }
                     } else {
-                        throw new G.RuntimeError("get-item requires list of map.");
+                        throw new G.RuntimeError("get-item requires list or map.");
                     }
                     break;
                 case Opcode.HasItem:
@@ -242,27 +251,23 @@
                         if (v1.value < 1 || v1.value > G.maps.length) {
                             throw new G.RuntimeError("invalid map number.");
                         }
-                        throw new G.RuntimeError("not implemented.");
+                        const mapKey = v2.toKey();
+                        if (G.maps[v1.value].hasOwnProperty(mapKey)) {
+                            stack.push(new G.Value(G.ValueType.Integer, 1));
+                        } else {
+                            stack.push(new G.Value(G.ValueType.Integer, 0));
+                        }
                     } else {
-                        throw new G.RuntimeError("has-item requires list of map.");
+                        throw new G.RuntimeError("has-item requires list or map.");
                     }
                     break;
                 case Opcode.GetSize:
                     v1 = stack.popAsLocal(locals);
-                    if (v1.type === G.ValueType.List) {
-                        if (v1.value < 1 || v1.value > G.lists.length) {
-                            throw new G.RuntimeError("invalid list number.");
-                        }
-                        stack.push(new G.Value(G.ValueType.Integer, G.lists[v1.value].length));
-                    } else if (v1.type === G.ValueType.Map) {
-                        if (v1.value < 1 || v1.value > G.maps.length) {
-                            throw new G.RuntimeError("invalid map number.");
-                        }
-                        const properties = Object.getOwnPropertyNames(G.maps[v1.value]);
-                        stack.push(new G.Value(G.ValueType.Integer, properties.length));
-                    } else {
-                        throw new G.RuntimeError("get-size requires list of map.");
+                    v1.requireType(G.ValueType.List);
+                    if (v1.value < 1 || v1.value > G.lists.length) {
+                        throw new G.RuntimeError("invalid list number.");
                     }
+                    stack.push(new G.Value(G.ValueType.Integer, G.lists[v1.value].length));
                     break;
                 case Opcode.SetItem:
                     v1 = stack.popAsLocal(locals);
@@ -278,7 +283,11 @@
                         if (v1.value < 1 || v1.value > G.maps.length) {
                             throw new G.RuntimeError("invalid map number.");
                         }
-                        throw new G.RuntimeError("not implemented.");
+                        if (v1.value < 1 || v1.value > G.maps.length) {
+                            throw new G.RuntimeError("invalid map number.");
+                        }
+                        const mapKey = v2.toKey();
+                        G.maps[v1.value][mapKey]= v3;
                     } else {
                         throw new G.RuntimeError("set-item requires list of map.");
                     }

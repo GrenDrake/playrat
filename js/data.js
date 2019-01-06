@@ -219,6 +219,9 @@ const G = {
                     G.typeNames[this.type] + ".");
             }
         }
+        toKey() {
+            return this.mType + "_" + this.mValue;
+        }
         toString() {
             const dumpStr = [ "<" ]
             if (this.type < 0 || this.type > G.ValueType.MaxType) {
@@ -304,11 +307,15 @@ const G = {
                 filePos += 1;
                 const item1Value = gamedataSrc.getInt32(filePos, true);
                 filePos += 4;
+                const valueOne = new G.Value(item1Type, item1Value);
+
                 const item2Type = gamedataSrc.getUint8(filePos, true);
                 filePos += 1;
                 const item2Value = gamedataSrc.getInt32(filePos, true);
                 filePos += 4;
-                thisMap[[item1Type+"_"+item1Value]] = new G.Value(item2Type,item2Value);
+                const valueTwo = new G.Value(item2Type, item2Value);
+
+                thisMap[valueOne.toKey()] = valueTwo;
             }
             G.maps.push(thisMap);
         }
@@ -398,7 +405,6 @@ const G = {
             line = line.trim();
             if (line === "") return;
 
-            console.log(line);
             line = line.replace(/&/g, "&amp;");
             line = line.replace(/</g, "&lt;");
             line = line.replace(/>/g, "&gt;");
