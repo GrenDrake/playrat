@@ -54,6 +54,7 @@
         Random:                 52,
         Inc:                    53,
         Dec:                    54,
+        GetRandom:              55,
         GetKey:                 60,
         GetOption:              61,
         GetLine:                62,
@@ -554,6 +555,19 @@
                     v1.requireType(G.ValueType.Integer);
                     v1.value += 1;
                     break;
+                case Opcode.GetRandom: {
+                    v1 = stack.popAsLocal(locals);
+                    v1.requireType(G.ValueType.List);
+                    if (v1.value < 1 || v1.value > G.lists.length) {
+                        throw new G.RuntimeError("invalid list number.");
+                    }
+                    if (G.lists[v1.value].length === 0) {
+                        stack.push(new G.Value(G.ValueType.Integer, 0));
+                    } else {
+                        const choice = Math.floor(Math.random() * G.lists[v1.value].length);
+                        stack.push(G.lists[v1.value][choice]);
+                    }
+                    break; }
 
                 case Opcode.GetKey:
                     v1 = stack.popAsLocal(locals);
