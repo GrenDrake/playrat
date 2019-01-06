@@ -64,8 +64,13 @@
 
     const maxOperationCount = 10000;
 
-    G.callFunction = function callFunction(G, functionId, argList) {
+    G.callFunction = function callFunction(G, selfObj, functionId, argList) {
         argList = argList || [];
+
+        if (functionId instanceof G.Value) {
+            functionId.requireType(G.ValueType.Node);
+            functionId = functionId.value;
+        }
 
         if (!G.functions.hasOwnProperty(functionId)) {
             throw new G.RuntimeError("Function does not exist.");
@@ -189,8 +194,29 @@
                         theArgs.push(stack.popAsLocal(locals));
                         v1.value -= 1;
                     }
-                    const result = G.callFunction(G, target.value, theArgs);
+                    const result = G.callFunction(G, G.noneValue, target.value, theArgs);
                     stack.push(result);
+                    break;
+                case Opcode.CallMethod: {
+                    //        v1       v2       target
+                    // [args] argcount property object call-method
+                    target = stack.popAsLocal(locals);
+                    v2 = stack.popAsLocal(locals);
+                    v1 = stack.popAsLocal(locals);
+                    target.requireType(G.ValueType.Object);
+                    v1.requireType(G.ValueType.Integer);
+                    v2.requireType(G.ValueType.Property);
+                    const theArgs = [];
+                    while (v1.value > 0) {
+                        theArgs.push(stack.popAsLocal(locals));
+                        v1.value -= 1;
+                    }
+                    const funcId = G.getObjectProperty(target, v2);
+                    const result = G.callFunction(G, target, funcId, theArgs);
+                    stack.push(result);
+                    break; }
+                case Opcode.Self:
+                    stack.push(selfObj);
                     break;
 
                 case Opcode.GetProp:

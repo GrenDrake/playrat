@@ -1,5 +1,6 @@
 
 const G = {
+    noneValue: undefined,
     strings: {},
     objects: [],
     lists: [],
@@ -367,6 +368,7 @@ const G = {
         G.bytecodeBuffer = rawSource.slice(filePos);
         G.bytecode = new DataView(G.bytecodeBuffer);
 
+        G.noneValue = new G.Value(G.ValueType.None, 0);
         document.title = "Untitled Game";
         window.addEventListener("keydown", keyPressHandler);
         G.gameLoaded = true;
@@ -392,7 +394,7 @@ const G = {
             }
             argsList = argsList || [];
 
-            G.callFunction(G, functionId, argsList);
+            G.callFunction(G, G.noneValue, functionId, argsList);
         } catch (error) {
             if (!(error instanceof G.RuntimeError))    throw error;
             const errorDiv = document.createElement("p");
