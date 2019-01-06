@@ -409,8 +409,8 @@ const G = {
             line = line.replace(/&/g, "&amp;");
             line = line.replace(/</g, "&lt;");
             line = line.replace(/>/g, "&gt;");
-            line = line.replace(/\*(.*?)\*/g, "<b>$1</b>");
-            line = line.replace(/_(.*?)_/g, "<i>$1</i>");
+            line = line.replace(/\[b](.*?)\[\/b]/g, "<b>$1</b>");
+            line = line.replace(/\[i](.*?)\[\/i]/g, "<i>$1</i>");
 
             const p = document.createElement("p");
             if (line.substring(0,1) === "#") {
