@@ -2,8 +2,8 @@
 const G = {
     strings: {},
     objects: [],
-    lists: {},
-    maps: {},
+    lists: [],
+    maps: [],
     functions: {},
 
     eOutput: undefined,
@@ -273,9 +273,9 @@ const G = {
         // Read lists from datafile
         G.listCount = gamedataSrc.getUint32(filePos, true);
         filePos += 4;
+        G.lists.push([]);
         for (var i = 0; i < G.listCount; ++i) {
             const thisList = [];
-            const key = gamedataSrc.getUint32(filePos, true);
             filePos += 4;
             const listSize = gamedataSrc.getUint16(filePos, true);
             filePos += 2;
@@ -284,18 +284,18 @@ const G = {
                 filePos += 1;
                 const itemValue = gamedataSrc.getInt32(filePos, true);
                 filePos += 4;
-                thisList.push([itemType, itemValue]);
+                thisList.push(new G.Value(itemType, itemValue));
             }
-            G.lists[key] = thisList;
+            G.lists.push(thisList);
         }
 
         ///////////////////////////////////////////////////////////////////////
         // Read maps from datafile
         G.mapCount = gamedataSrc.getUint32(filePos, true);
         filePos += 4;
+        G.maps.push([]);
         for (var i = 0; i < G.mapCount; ++i) {
             const thisMap = {};
-            const key = gamedataSrc.getUint32(filePos, true);
             filePos += 4;
             const mapSize = gamedataSrc.getUint16(filePos, true);
             filePos += 2;
@@ -308,9 +308,9 @@ const G = {
                 filePos += 1;
                 const item2Value = gamedataSrc.getInt32(filePos, true);
                 filePos += 4;
-                thisMap[[item1Type+"_"+item1Value]] = [item2Type,item2Value];
+                thisMap[[item1Type+"_"+item1Value]] = new G.Value(item2Type,item2Value);
             }
-            G.maps[key] = thisMap;
+            G.maps.push(thisMap);
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -398,8 +398,20 @@ const G = {
             line = line.trim();
             if (line === "") return;
 
+            console.log(line);
+            line = line.replace(/&/g, "&amp;");
+            line = line.replace(/</g, "&lt;");
+            line = line.replace(/>/g, "&gt;");
+            line = line.replace(/\*(.*?)\*/g, "<b>$1</b>");
+            line = line.replace(/_(.*?)_/g, "<i>$1</i>");
+
             const p = document.createElement("p");
-            p.textContent = line;
+            if (line.substring(0,1) === "#") {
+                p.innerHTML = line.substring(1);
+                p.classList.add("headerParagraph")
+            } else {
+                p.innerHTML = line;
+            }
             G.eOutput.appendChild(p);
         });
         G.showOptions();
@@ -446,11 +458,11 @@ const G = {
                 G.textBuffer.push(value.value);
                 break;
             default:
-                var text = "&lt;" + G.typeNames[value.type];
+                var text = "<" + G.typeNames[value.type];
                 if (value.type != G.ValueType.None) {
                     text += " " + value.value;
                 }
-                text += "&gt;";
+                text += ">";
                 G.textBuffer.push(text);
         }
     }

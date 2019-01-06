@@ -207,6 +207,82 @@
                     G.setObjectProperty(v1, v2, v3);
                     break;
 
+                case Opcode.GetItem:
+                    v1 = stack.popAsLocal(locals);
+                    v2 = stack.popAsLocal(locals);
+                    if (v1.type === G.ValueType.List) {
+                        if (v1.value < 1 || v1.value > G.lists.length) {
+                            throw new G.RuntimeError("invalid list number.");
+                        }
+                        v2.requireType(G.ValueType.Integer);
+                        stack.push(G.lists[v1.value][v2.value]);
+                    } else if (v1.type === G.ValueType.Map) {
+                        if (v1.value < 1 || v1.value > G.maps.length) {
+                            throw new G.RuntimeError("invalid map number.");
+                        }
+                        throw new G.RuntimeError("not implemented.");
+                    } else {
+                        throw new G.RuntimeError("get-item requires list of map.");
+                    }
+                    break;
+                case Opcode.HasItem:
+                    v1 = stack.popAsLocal(locals);
+                    v2 = stack.popAsLocal(locals);
+                    if (v1.type === G.ValueType.List) {
+                        if (v1.value < 1 || v1.value > G.lists.length) {
+                            throw new G.RuntimeError("invalid list number.");
+                        }
+                        v2.requireType(G.ValueType.Integer);
+                        if (v2.value < 1 || v2.value > G.lists[v1.value].length) {
+                            stack.push(new G.Value(G.ValueType.Integer, 0));
+                        } else {
+                            stack.push(new G.Value(G.ValueType.Integer, 1));
+                        }
+                    } else if (v1.type === G.ValueType.Map) {
+                        if (v1.value < 1 || v1.value > G.maps.length) {
+                            throw new G.RuntimeError("invalid map number.");
+                        }
+                        throw new G.RuntimeError("not implemented.");
+                    } else {
+                        throw new G.RuntimeError("has-item requires list of map.");
+                    }
+                    break;
+                case Opcode.GetSize:
+                    v1 = stack.popAsLocal(locals);
+                    if (v1.type === G.ValueType.List) {
+                        if (v1.value < 1 || v1.value > G.lists.length) {
+                            throw new G.RuntimeError("invalid list number.");
+                        }
+                        stack.push(new G.Value(G.ValueType.Integer, G.lists[v1.value].length));
+                    } else if (v1.type === G.ValueType.Map) {
+                        if (v1.value < 1 || v1.value > G.maps.length) {
+                            throw new G.RuntimeError("invalid map number.");
+                        }
+                        throw new G.RuntimeError("not implemented.");
+                    } else {
+                        throw new G.RuntimeError("get-size requires list of map.");
+                    }
+                    break;
+                case Opcode.SetItem:
+                    v1 = stack.popAsLocal(locals);
+                    v2 = stack.popAsLocal(locals);
+                    v3 = stack.popAsLocal(locals);
+                    if (v1.type === G.ValueType.List) {
+                        if (v1.value < 1 || v1.value > G.lists.length) {
+                            throw new G.RuntimeError("invalid list number.");
+                        }
+                        v2.requireType(G.ValueType.Integer);
+                        G.lists[v1.value][v2.value] = v3;
+                    } else if (v1.type === G.ValueType.Map) {
+                        if (v1.value < 1 || v1.value > G.maps.length) {
+                            throw new G.RuntimeError("invalid map number.");
+                        }
+                        throw new G.RuntimeError("not implemented.");
+                    } else {
+                        throw new G.RuntimeError("set-item requires list of map.");
+                    }
+                    break;
+
                 case Opcode.TypeOf:
                     v1 = stack.popAsLocal(locals);
                     stack.push(new G.Value(G.ValueType.Integer, v1.type));
