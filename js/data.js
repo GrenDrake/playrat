@@ -77,9 +77,10 @@ const G = {
 // Option class
 // ////////////////////////////////////////////////////////////////////////////
     G.Option = class Option {
-        constructor(displayText, value) {
+        constructor(displayText, value, extraValue) {
             this.displayText = displayText;
             this.value = value;
+            this.extra = extraValue || G.noneValue;
         }
 
         toString() {
@@ -553,7 +554,7 @@ const G = {
                     liSpan.textContent = G.strings[option.displayText.value];
                     liSpan.classList.add("fakeLink");
                     liSpan.addEventListener("click", function() {
-                        G.doEvent(G.optionFunction, [option.value]);
+                        G.doEvent(G.optionFunction, [option.value, option.extra]);
                     });
                     li.appendChild(liSpan);
                     optionsList.appendChild(li);
@@ -586,7 +587,7 @@ const G = {
                 // handle space/enter for activating single options
                 if (code == 32 || event.key === "Enter") {
                     if (G.options.length == 1) {
-                        G.doEvent(G.optionFunction, [G.options[0].value]);
+                        G.doEvent(G.optionFunction, [G.options[0].value, G.options[0].extra]);
                     }
                     return;
                 }
@@ -602,7 +603,7 @@ const G = {
                     return;
                 }
 
-                G.doEvent(G.optionFunction, [G.options[choice].value]);
+                G.doEvent(G.optionFunction, [G.options[choice].value, G.options[choice].extra]);
                 event.preventDefault();
                 break;
             case G.OptionType.KeyInput:

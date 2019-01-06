@@ -59,6 +59,7 @@
         GetOption:              61,
         GetLine:                62,
         AddOption:              63,
+        AddOptionExtra:         64,
         SetInfo:                70,
     };
     Object.freeze(Opcode);
@@ -589,6 +590,13 @@
                     v2 = stack.popAsLocal(locals);
                     v2.requireType(G.ValueType.String);
                     G.options.push(new G.Option(v2, v1));
+                    break;
+                case Opcode.AddOptionExtra:
+                    v1 = stack.popAsLocal(locals);
+                    v2 = stack.popAsLocal(locals);
+                    v3 = stack.popAsLocal(locals);
+                    v3.requireType(G.ValueType.String);
+                    G.options.push(new G.Option(v3, v2, v1));
                     break;
 
                 case Opcode.SetInfo:
