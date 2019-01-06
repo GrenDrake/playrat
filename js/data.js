@@ -324,6 +324,7 @@ const G = {
         // Read game objects from datafile
         G.objectCount = gamedataSrc.getUint32(filePos, true);
         filePos += 4;
+        G.objects.push({});
         for (var i = 0; i < G.objectCount; ++i) {
             const thisObject = {};
             // thisObject.key = gamedataSrc.getUint32(filePos, true);
@@ -440,7 +441,6 @@ const G = {
             throw new G.RuntimeError("Tried to access invalid object ID "
                                      + objectId);
         }
-        objectId -= 1;
         if (G.objects[objectId].hasOwnProperty(propertyId)) {
             return G.objects[objectId][propertyId];
         } else {
