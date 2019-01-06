@@ -303,11 +303,46 @@
                         throw new G.RuntimeError("set-item requires list of map.");
                     }
                     break;
-
                 case Opcode.TypeOf:
                     v1 = stack.popAsLocal(locals);
                     stack.push(new G.Value(G.ValueType.Integer, v1.type));
                     break;
+                case Opcode.DelItem: {
+                    v1 = stack.popAsLocal(locals);
+                    v2 = stack.popAsLocal(locals);
+                    if (v1.type === G.ValueType.List) {
+                        v2.requireType(G.ValueType.Integer);
+                        if (v1.value <= 0 || v1.value > G.lists.length) {
+                            throw new G.RuntimeError("invalid list number.");
+                        }
+                        const theList = G.lists[v1.value];
+                        if (v2.value <= 0) v2.value = 0;
+                        theList.splice(v2.value, 1);
+                    } else {
+                        v1.requireType(G.ValueType.Map);
+                        if (v1.value <= 0 || v1.value > G.maps.length) {
+                            throw new G.RuntimeError("invalid map number.");
+                        }
+                        delete G.maps[v1.value][v2.toKey()];
+                    }
+                    break; }
+                case Opcode.AddItem: {
+                    v1 = stack.popAsLocal(locals);
+                    v2 = stack.popAsLocal(locals);
+                    v3 = stack.popAsLocal(locals);
+                    if (v1.type === G.ValueType.Map) {
+                        throw new G.RuntimeError("attempted to use add-item on map; use set-item instead");
+                    }
+                    v1.requireType(G.ValueType.List);
+                    v2.requireType(G.ValueType.Integer);
+                    if (v1.value <= 0 || v1.value > G.lists.length) {
+                        throw new G.RuntimeError("invalid list number.");
+                    }
+                    const theList = G.lists[v1.value];
+                    if (v2.value <= 0) v2.value = 0;
+                    theList.splice(v2.value, 0, v3);
+                    break; }
+
                 case Opcode.CompareTypes:
                     v1 = stack.popAsLocal(locals);
                     v2 = stack.popAsLocal(locals);
