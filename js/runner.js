@@ -573,7 +573,6 @@
                 case Opcode.AddOption:
                     v1 = stack.popAsLocal(locals);
                     v2 = stack.popAsLocal(locals);
-                    v1.requireType(G.ValueType.Node);
                     v2.requireType(G.ValueType.String);
                     G.options.push(new G.Option(v2, v1));
                     break;
