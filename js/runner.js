@@ -258,7 +258,8 @@
                         if (v1.value < 1 || v1.value > G.maps.length) {
                             throw new G.RuntimeError("invalid map number.");
                         }
-                        throw new G.RuntimeError("not implemented.");
+                        const properties = Object.getOwnPropertyNames(G.maps[v1.value]);
+                        stack.push(new G.Value(G.ValueType.Integer, properties.length));
                     } else {
                         throw new G.RuntimeError("get-size requires list of map.");
                     }
