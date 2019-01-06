@@ -510,7 +510,6 @@ const G = {
             throw new G.RuntimeError("Tried to access invalid object ID "
                                      + objectId);
         }
-        objectId -= 1;
         G.objects[objectId][propertyId] = newValue;
     }
 
