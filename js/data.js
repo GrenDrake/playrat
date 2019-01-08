@@ -451,7 +451,8 @@ const G = {
         }
     }
 
-    G.say = function say(value) {
+    G.say = function say(value, ucFirst) {
+        ucFirst = ucFirst || false;
         if (!(value instanceof G.Value)) {
             if (typeof value === "string" || typeof value === "number") {
                 G.textBuffer.push(value);
@@ -460,9 +461,14 @@ const G = {
         }
 
         switch(value.type) {
-            case G.ValueType.String:
-                G.textBuffer.push(G.strings[value.value]);
-                break;
+            case G.ValueType.String: {
+                let theString = G.strings[value.value];
+                if (ucFirst) {
+                    theString = theString.substring(0,1).toUpperCase()
+                                + theString.substring(1);
+                }
+                G.textBuffer.push(theString);
+                break; }
             case G.ValueType.Integer:
                 G.textBuffer.push(value.value);
                 break;

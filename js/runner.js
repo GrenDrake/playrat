@@ -11,6 +11,7 @@
         Push32:                 6,
         Store:                  7,
         Say:                    10,
+        SayUCFirst:             9,
         SayUnsigned:            11,
         SayChar:                12,
         StackPop:               13, // remove the top item from the stack
@@ -158,6 +159,10 @@
                 case Opcode.Say:
                     v1 = stack.popAsLocal(locals);
                     G.say(v1);
+                    break;
+                case Opcode.SayUCFirst:
+                    v1 = stack.popAsLocal(locals);
+                    G.say(v1, true);
                     break;
                 case Opcode.SayUnsigned:
                     var value = stack.popAsLocal(locals);
