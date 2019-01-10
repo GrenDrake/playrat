@@ -260,6 +260,7 @@ const G = {
         var filePos = 12;
         G.stringCount = gamedataSrc.getUint32(filePos, true);
         filePos += 4;
+        const decoder = new TextDecoder('utf8');
         for (var i = 0; i < G.stringCount; ++i) {
             const stringLength = gamedataSrc.getUint16(filePos, true);
             filePos += 2;
@@ -267,11 +268,12 @@ const G = {
             const rawStringData = new Uint8Array(rawSource, filePos,
                                                  stringLength);
             filePos += stringLength;
-            for (var j = 0; j < stringLength; ++j) {
-                const theString = String.fromCharCode.apply(null,
-                                                            rawStringData);
-                G.strings[i] = theString;
-            }
+            G.strings[i] = decoder.decode(rawStringData);
+            // for (var j = 0; j < stringLength; ++j) {
+            //     const theString = String.fromCharCode.apply(null,
+            //                                                 rawStringData);
+            //     G.strings[i] = theString;
+            // }
         }
 
         ///////////////////////////////////////////////////////////////////////
