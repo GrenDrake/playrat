@@ -552,14 +552,16 @@
                     stack.push(new G.Value(G.ValueType.Integer, randomValue));
                     break;
                 case Opcode.Dec:
-                    v1 = stack.topAsLocal(locals);
+                    v1 = stack.popAsLocal(locals);
                     v1.requireType(G.ValueType.Integer);
                     v1.value -= 1;
+                    stack.push(v1);
                     break;
                 case Opcode.Inc:
-                    v1 = stack.topAsLocal(locals);
+                    v1 = stack.popAsLocal(locals);
                     v1.requireType(G.ValueType.Integer);
                     v1.value += 1;
+                    stack.push(v1);
                     break;
                 case Opcode.GetRandom: {
                     v1 = stack.popAsLocal(locals);

@@ -168,16 +168,6 @@ const G = {
             }
             return this.stack[this.stack.length - 1];
         }
-        topAsLocal(localsArray) {
-            const value = this.top();
-            if (value.type === G.ValueType.LocalVar) {
-                if (value.value < 0 || value.value > localsArray.length) {
-                    throw new G.RuntimeError("Invalid local number.");
-                }
-                return localsArray[value.value];
-            }
-            return value;
-        }
     }
 
 
@@ -646,30 +636,32 @@ const G = {
 // ////////////////////////////////////////////////////////////////////////////
 // Engine Startup Code
 // ////////////////////////////////////////////////////////////////////////////
-    window.addEventListener("load", function() {
-        G.eOutput = document.getElementById("text");
-        G.eTopLeft = document.getElementById("top-left");
-        G.eTopRight = document.getElementById("top-right");
-        G.eBottomLeft = document.getElementById("bottom-left");
-        G.eBottomRight = document.getElementById("bottom-right");
-        G.eInfoPane = document.getElementById("info-pane");
+    if (typeof QUnit === "undefined") {
+        window.addEventListener("load", function() {
+            G.eOutput = document.getElementById("text");
+            G.eTopLeft = document.getElementById("top-left");
+            G.eTopRight = document.getElementById("top-right");
+            G.eBottomLeft = document.getElementById("bottom-left");
+            G.eBottomRight = document.getElementById("bottom-right");
+            G.eInfoPane = document.getElementById("info-pane");
 
-        if (!G.eOutput || !G.eTopLeft || !G.eTopRight ||
-                !G.eBottomLeft || !G.eBottomRight || !G.eInfoPane) {
-            this.console.error("Failed to find all display regions.");
-            return;
+            if (!G.eOutput || !G.eTopLeft || !G.eTopRight ||
+                    !G.eBottomLeft || !G.eBottomRight || !G.eInfoPane) {
+                this.console.error("Failed to find all display regions.");
+                return;
+            }
+
+            var loadGameData = new XMLHttpRequest();
+            loadGameData.addEventListener("load", G.parseGameFile);
+            loadGameData.addEventListener("error", G.failedToLoadGameData);
+            loadGameData.addEventListener("abort", G.failedToLoadGameData);
+            loadGameData.open("GET", "./game.bin");
+            loadGameData.responseType = "arraybuffer";
+            loadGameData.send();
+        })
+
+        G.failedToLoadGameData = function failedToLoadGameData(event) {
+            G.eOutput.innerHTML += "<div class='error'>[Failed to load game data.]</div>";
         }
-
-        var loadGameData = new XMLHttpRequest();
-        loadGameData.addEventListener("load", G.parseGameFile);
-        loadGameData.addEventListener("error", G.failedToLoadGameData);
-        loadGameData.addEventListener("abort", G.failedToLoadGameData);
-        loadGameData.open("GET", "./game.bin");
-        loadGameData.responseType = "arraybuffer";
-        loadGameData.send();
-    })
-
-    G.failedToLoadGameData = function failedToLoadGameData(event) {
-        G.eOutput.innerHTML += "<div class='error'>[Failed to load game data.]</div>";
     }
 })();
