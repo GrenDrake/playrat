@@ -454,7 +454,7 @@
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
                     stack.push(new G.Value(G.ValueType.Integer,
-                                           v1.value + v2.value));
+                                           (v1.value + v2.value) | 0));
                     break;
                 case Opcode.Sub:
                     v1 = stack.popAsLocal(locals);
@@ -462,7 +462,7 @@
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
                     stack.push(new G.Value(G.ValueType.Integer,
-                                           v2.value - v1.value));
+                                           (v2.value - v1.value) | 0));
                     break;
                 case Opcode.Mult:
                     v1 = stack.popAsLocal(locals);
@@ -470,7 +470,7 @@
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
                     stack.push(new G.Value(G.ValueType.Integer,
-                                           v1.value * v2.value));
+                                           (v1.value * v2.value) | 0));
                     break;
                 case Opcode.Div:
                     v1 = stack.popAsLocal(locals);
@@ -478,7 +478,7 @@
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
                     stack.push(new G.Value(G.ValueType.Integer,
-                                           v2.value / v1.value));
+                                           (v2.value / v1.value) | 0));
                     break;
                 case Opcode.Mod:
                     v1 = stack.popAsLocal(locals);
@@ -486,7 +486,7 @@
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
                     stack.push(new G.Value(G.ValueType.Integer,
-                                           v2.value % v1.value));
+                                           (v2.value % v1.value) | 0));
                     break;
                 case Opcode.Pow:
                     v1 = stack.popAsLocal(locals);
@@ -494,7 +494,7 @@
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
                     stack.push(new G.Value(G.ValueType.Integer,
-                                           Math.pow(v2.value, v1.value)));
+                                           (Math.pow(v2.value, v1.value)) | 0));
                     break;
                 case Opcode.BitLeft:
                     v1 = stack.popAsLocal(locals);
