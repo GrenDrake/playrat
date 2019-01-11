@@ -13,6 +13,7 @@ const G = {
     eBottomLeft: undefined,
     eBottomRight: undefined,
     eInfoPane: undefined,
+    eButtons: undefined,
 
     textBuffer: [],
 
@@ -20,6 +21,13 @@ const G = {
     optionType: -1,
     options: [],
     gameLoaded: false,
+
+    inPage: false,
+    pages: {},
+    stored: {
+        textBuffer: undefined,
+        options: undefined,
+    },
 };
 
 (function() {
@@ -371,7 +379,36 @@ const G = {
 // ////////////////////////////////////////////////////////////////////////////
 // Core Engine Functions
 // ////////////////////////////////////////////////////////////////////////////
+    G.addPage = function addPage(pageInfo) {
+        const pageId = pageInfo.title.value;
+        if (G.pages.hasOwnProperty(pageId)) {
+            throw new G.RuntimeError("Tried to add page \"" + G.strings[pageId] + "\" but page already exists.");
+        }
+        const button = document.createElement("button");
+        button.textContent = G.strings[pageId];
+        button.title = G.strings[pageId] + " (" + String.fromCodePoint(pageInfo.hotkey.value) + ")";
+        button.addEventListener("click", function() {
+            G.doPage(pageId);
+        });
+        G.eButtons.appendChild(button);
+        pageInfo.button = button;
+        G.pages[pageId] = pageInfo;
+    }
+
+    G.delPage = function delPage(pageId) {
+        if (G.pages.hasOwnProperty(pageId.value)) {
+            G.eButtons.removeChild(G.pages[pageId.value].button);
+            delete G.pages[pageId.value];
+        }
+    }
+
     G.doEvent = function doEvent(functionId, argsList) {
+        argsList = argsList || [];
+        if (G.inPage) {
+            G.doPage(G.inPage, argsList, functionId);
+            return;
+        }
+
         const start = performance.now();
         G.options = [];
         G.textBuffer = [];
@@ -385,7 +422,6 @@ const G = {
                 functionId.requireType(G.ValueType.Node);
                 functionId = functionId.value;
             }
-            argsList = argsList || [];
 
             G.callFunction(G, G.noneValue, functionId, argsList);
         } catch (error) {
@@ -396,6 +432,14 @@ const G = {
             G.eOutput.appendChild(errorDiv);
         }
 
+        G.doOutput();
+
+        const end = performance.now();
+        G.eBottomLeft.textContent = "Event run time: "
+                                    + (end - start) / 1000 + "s";
+    }
+
+    G.doOutput = function doOutput() {
         const outputText = G.textBuffer.join("").split("\n");
         outputText.forEach(function(line) {
             line = line.trim();
@@ -417,10 +461,44 @@ const G = {
             G.eOutput.appendChild(p);
         });
         G.showOptions();
+    }
 
-        const end = performance.now();
-        G.eBottomLeft.textContent = "Event run time: "
-                                    + (end - start) / 1000 + "s";
+    G.doPage = function doPage(pageId, argsList, fromEvent) {
+        if (G.inPage && G.inPage !== pageId) return;
+        if (!G.inPage) {
+            G.stored.textBuffer = G.textBuffer;
+            G.stored.options = G.options;
+            G.stored.optionType = G.optionType;
+            G.stored.optionFunction = G.optionFunction;
+            G.inPage = pageId;
+        }
+        G.options = [];
+        G.textBuffer = [];
+        while (G.eOutput.childElementCount > 0) {
+            G.eOutput.removeChild(G.eOutput.firstChild);
+        }
+        G.textBuffer.push("# ");
+        G.textBuffer.push(G.strings[pageId]);
+        G.textBuffer.push("\n");
+        if (fromEvent) {
+            G.callFunction(G, G.noneValue, fromEvent, argsList);
+        } else {
+            G.callFunction(G, G.noneValue, G.pages[pageId].callback, argsList);
+        }
+        G.doOutput();
+        G.eBottomLeft.textContent = "Event run time: (unavailable)";
+    }
+
+    G.endPage = function endPage() {
+        if (!G.inPage) {
+            throw new G.RuntimeError("Tried to end page while not in a page");
+        }
+        G.textBuffer = G.stored.textBuffer;
+        G.options = G.stored.options;
+        G.optionType = G.stored.optionType;
+        G.optionFunction = G.stored.optionFunction;
+        G.stored = {};
+        G.inPage = false;
     }
 
     G.getObjectProperty = function getObjectProperty(objectId, propertyId) {
@@ -598,7 +676,7 @@ const G = {
                     choice = code - 49;
                 }
                 if (choice < 0 || choice >= G.options.length) {
-                    return;
+                    break;
                 }
 
                 G.doEvent(G.optionFunction, [G.options[choice].value, G.options[choice].extra]);
@@ -628,7 +706,16 @@ const G = {
                 func.requireType(G.ValueType.Node);
                 G.doEvent(func.value, [new G.Value(G.ValueType.Integer, code)]);
                 event.preventDefault();
-                break;
+                return;
+        }
+
+        const pageKeys = Object.keys(G.pages);
+        for (var i = 0; i < pageKeys.length; ++i) {
+            const page = G.pages[pageKeys[i]];
+            if (page.hotkey.value == code) {
+                G.doPage(page.title.value);
+                event.preventDefault();
+            }
         }
     }
 
@@ -643,9 +730,10 @@ const G = {
             G.eTopRight = document.getElementById("top-right");
             G.eBottomLeft = document.getElementById("bottom-left");
             G.eBottomRight = document.getElementById("bottom-right");
-            G.eInfoPane = document.getElementById("info-pane");
+            G.eInfoPane = document.getElementById("info-main");
+            G.eButtons = document.getElementById("info-controls");
 
-            if (!G.eOutput || !G.eTopLeft || !G.eTopRight ||
+            if (!G.eOutput || !G.eTopLeft || !G.eTopRight || !G.eButtons ||
                     !G.eBottomLeft || !G.eBottomRight || !G.eInfoPane) {
                 this.console.error("Failed to find all display regions.");
                 return;

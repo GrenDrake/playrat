@@ -62,6 +62,9 @@
         AddOption:              63,
         AddOptionExtra:         64,
         SetInfo:                70,
+        AddPage:                71,
+        DeletePage:             72,
+        EndPage:                73,
     };
     Object.freeze(Opcode);
 
@@ -611,6 +614,28 @@
                     v2 = stack.popAsLocal(locals);
                     v1.requireType(G.ValueType.Integer);
                     G.setInfo(v1.value, v2);
+                    break;
+                case Opcode.AddPage:
+                    v1 = stack.popAsLocal(locals);
+                    v2 = stack.popAsLocal(locals);
+                    v3 = stack.popAsLocal(locals);
+                    v3.requireType(G.ValueType.String);
+                    v2.requireType(G.ValueType.Node);
+                    v1.requireType(G.ValueType.Integer);
+                    const pageInfo = {
+                        title: v3,
+                        hotkey: v1,
+                        callback: v2,
+                    };
+                    G.addPage(pageInfo);
+                    break;
+                case Opcode.DeletePage:
+                    v3 = stack.popAsLocal(locals);
+                    v3.requireType(G.ValueType.String);
+                    G.delPage(v3);
+                    break;
+                case Opcode.EndPage:
+                    G.endPage();
                     break;
 
                 default:
