@@ -31,6 +31,7 @@
         TypeOf:                 27, // get value type
         DelItem:                28, // remove an item from a list or a key from a map
         AddItem:                29, // add an item to a list (use set-item for maps)
+        AsType:                 30, // type coercion
         Compare:                31, // compare two values and push the result
         Jump:                   32, // unconditional jump
         JumpZero:               33, // jump if top of stack == 0
@@ -379,6 +380,14 @@
                     const theList = G.lists[v1.value];
                     if (v2.value <= 0) v2.value = 0;
                     theList.splice(v2.value, 0, v3);
+                    break; }
+
+                case Opcode.AsType: {
+                    const value = stack.popAsLocal(locals);
+                    const type = stack.popAsLocal(locals);
+                    type.requireType(G.ValueType.Integer);
+                    value.type = type.value;
+                    stack.push(value);
                     break; }
 
                 case Opcode.Compare: {
