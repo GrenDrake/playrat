@@ -64,6 +64,9 @@
         AddPage:                71,
         DeletePage:             72,
         EndPage:                73,
+        New:                    74,
+        Delete:                 75,
+        IsStatic:               76,
     };
     Object.freeze(Opcode);
 
@@ -639,6 +642,20 @@
                     break;
                 case Opcode.EndPage:
                     G.endPage();
+                    break;
+                case Opcode.New:
+                    v1 = stack.popAsLocal(locals);
+                    v1 = G.makeNew(v1);
+                    stack.push(v1);
+                    break;
+                case Opcode.Delete:
+                    v1 = stack.popAsLocal(locals);
+                    G.deleteData(v1);
+                    break;
+                case Opcode.IsStatic:
+                    v1 = stack.popAsLocal(locals);
+                    v1 = G.isStatic(v1);
+                    stack.push(v1);
                     break;
 
                 default:

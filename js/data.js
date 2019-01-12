@@ -384,6 +384,26 @@ const G = {
         G.pages[pageId] = pageInfo;
     }
 
+    G.deleteData = function deleteData(what) {
+        if (G.isStatic(what).value == 1) {
+            throw new G.RuntimeError("Tried to delete static data.");
+        }
+        switch(what.type) {
+            case G.ValueType.Object:
+                G.objects[what.value] = undefined;
+                break;
+            case G.ValueType.Map:
+                G.maps[what.value] = undefined;
+                break;
+            case G.ValueType.List:
+                G.lists[what.value] = undefined;
+                break;
+            case G.ValueType.String:
+                G.strings[what.value] = undefined;
+                break;
+        }
+    }
+
     G.delPage = function delPage(pageId) {
         if (G.pages.hasOwnProperty(pageId.value)) {
             G.eButtons.removeChild(G.pages[pageId.value].button);
@@ -508,6 +528,67 @@ const G = {
         } else {
             return new G.Value(G.ValueType.Integer, 0);
         }
+    }
+
+    G.isStatic = function isStatic(what) {
+        if (!(what instanceof G.Value)) {
+            throw new G.RuntimeError("Used isStatic on non-Value");
+        }
+        switch(what.type) {
+            case G.ValueType.Object:
+                if (what.value >= G.objectCount)
+                    return new G.Value(G.ValueType.Integer, 0);
+                else
+                    return new G.Value(G.ValueType.Integer, 1);
+            case G.ValueType.Map:
+                if (what.value >= G.mapCount)
+                    return new G.Value(G.ValueType.Integer, 0);
+                else
+                    return new G.Value(G.ValueType.Integer, 1);
+            case G.ValueType.List:
+                if (what.value >= G.listCount)
+                    return new G.Value(G.ValueType.Integer, 0);
+                else
+                    return new G.Value(G.ValueType.Integer, 1);
+            case G.ValueType.String:
+                if (what.value >= G.stringCount)
+                    return new G.Value(G.ValueType.Integer, 0);
+                else
+                    return new G.Value(G.ValueType.Integer, 1);
+            default:
+                return new G.Value(G.ValueType.Integer, 1);
+        }
+        return new G.Value(G.ValueType.Integer, 0);
+    }
+
+    G.makeNew = function makeNew(type) {
+        if (type instanceof G.Value) {
+            type.requireType(G.ValueType.Integer);
+            type = type.value;
+        }
+        let nextId = -1;
+        switch (type) {
+            case G.ValueType.List:
+                nextId = G.lists.length;
+                G.lists[nextId] = [];
+                return new G.Value(G.ValueType.List, nextId);
+            case G.ValueType.Map:
+                nextId = G.maps.length;
+                G.maps[nextId] = {};
+                return new G.Value(G.ValueType.Map, nextId);
+            case G.ValueType.Object:
+                nextId = G.objects.length;
+                G.objects[nextId] = {};
+                return new G.Value(G.ValueType.Object, nextId);
+            case G.ValueType.String:
+                nextId = G.strings.length;
+                G.strings[nextId] = "";
+                return new G.Value(G.ValueType.String, nextId);
+            default:
+                throw new G.RuntimeError("Cannot instantiate objects of type "
+                                        + G.typeNames[type]);
+        }
+        return new G.Value(G.ValueType.None, 0);
     }
 
     G.say = function say(value, ucFirst) {
