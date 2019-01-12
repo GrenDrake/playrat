@@ -31,7 +31,6 @@
         TypeOf:                 27, // get value type
         DelItem:                28, // remove an item from a list or a key from a map
         AddItem:                29, // add an item to a list (use set-item for maps)
-        CompareTypes:           30, // compare the types of two values and push the result
         Compare:                31, // compare two values and push the result
         Jump:                   32, // unconditional jump
         JumpZero:               33, // jump if top of stack == 0
@@ -379,14 +378,6 @@
                     theList.splice(v2.value, 0, v3);
                     break; }
 
-                case Opcode.CompareTypes:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
-                    if (v1.type != v2.type)
-                        stack.push(new G.Value(G.ValueType.Integer, 0));
-                    else
-                        stack.push(new G.Value(G.ValueType.Integer, 1));
-                    break;
                 case Opcode.Compare: {
                     const rhs = stack.popAsLocal(locals);
                     const lhs = stack.popAsLocal(locals);
