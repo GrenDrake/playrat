@@ -387,15 +387,27 @@
                     else
                         stack.push(new G.Value(G.ValueType.Integer, 1));
                     break;
-                case Opcode.Compare:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
-                    if (v1.type != v2.type)
-                        stack.push(new G.Value(G.ValueType.Integer, -1));
-                    else
-                        stack.push(new G.Value(G.ValueType.Integer,
-                                               v2.value - v1.value));
-                    break;
+                case Opcode.Compare: {
+                    const rhs = stack.popAsLocal(locals);
+                    const lhs = stack.popAsLocal(locals);
+                    if (lhs.type !== rhs.type) {
+                        stack.push(new G.Value(G.ValueType.Integer, 1));
+                    } else {
+                        switch(rhs.type) {
+                            case G.ValueType.Integer:
+                                stack.push(new G.Value(G.ValueType.Integer,
+                                    rhs.value - lhs.value));
+                                break;
+                            case G.ValueType.None:
+                                stack.push(new G.Value(G.ValueType.Integer, 0));
+                                break;
+                            default:
+                                stack.push(new G.Value(G.ValueType.Integer,
+                                    (rhs.value === lhs.value) ? 0 : 1));
+                                break;
+                        }
+                    }
+                    break; }
 
                 case Opcode.Jump:
                     target = stack.popAsLocal(locals);
