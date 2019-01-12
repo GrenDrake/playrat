@@ -262,16 +262,10 @@ const G = {
         for (var i = 0; i < G.stringCount; ++i) {
             const stringLength = gamedataSrc.getUint16(filePos, true);
             filePos += 2;
-            var stringData = "";
             const rawStringData = new Uint8Array(rawSource, filePos,
                                                  stringLength);
             filePos += stringLength;
             G.strings[i] = decoder.decode(rawStringData);
-            // for (var j = 0; j < stringLength; ++j) {
-            //     const theString = String.fromCharCode.apply(null,
-            //                                                 rawStringData);
-            //     G.strings[i] = theString;
-            // }
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -347,7 +341,6 @@ const G = {
         G.functionCount = gamedataSrc.getUint32(filePos, true);
         filePos += 4;
         for (var i = 0; i < G.functionCount; ++i) {
-            const thisFunction = {};
             const key = i + 1;
             const argCount = gamedataSrc.getUint16(filePos, true);
             filePos += 2;
