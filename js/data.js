@@ -459,6 +459,7 @@ const G = {
             line = line.replace(/>/g, "&gt;");
             line = line.replace(/\[b](.*?)\[\/b]/g, "<b>$1</b>");
             line = line.replace(/\[i](.*?)\[\/i]/g, "<i>$1</i>");
+            line = line.replace(/\[br]/g, "<br>");
 
             const p = document.createElement("p");
             if (line.substring(0,1) === "#") {
