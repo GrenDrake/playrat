@@ -1,7 +1,7 @@
 
 const G = {
     noneValue: undefined,
-    strings: {},
+    strings: [],
     objects: [],
     lists: [],
     maps: [],
@@ -265,7 +265,7 @@ const G = {
             const rawStringData = new Uint8Array(rawSource, filePos,
                                                  stringLength);
             filePos += stringLength;
-            G.strings[i] = decoder.decode(rawStringData);
+            G.strings.push(decoder.decode(rawStringData));
         }
 
         ///////////////////////////////////////////////////////////////////////
