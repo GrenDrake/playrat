@@ -40,6 +40,7 @@
         JumpLessThanEqual:      36, // jump if top of stack <= 0
         JumpGreaterThan:        37, // jump if top of stack > 0
         JumpGreaterThanEqual:   38, // jump if top of stack >= 0
+        Not:                    39,
         Add:                    40,
         Sub:                    41,
         Mult:                   42,
@@ -466,6 +467,14 @@
                     }
                     break;
 
+                case Opcode.Not:
+                    v1 = stack.popAsLocal(locals);
+                    if (v1.type === G.ValueType.None || v1.value === 0) {
+                        stack.push(new G.Value(G.ValueType.Integer, 1));
+                    } else {
+                        stack.push(new G.Value(G.ValueType.Integer, 0));
+                    }
+                    break;
                 case Opcode.Add:
                     v1 = stack.popAsLocal(locals);
                     v2 = stack.popAsLocal(locals);
