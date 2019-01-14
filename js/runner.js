@@ -57,6 +57,8 @@
         Inc:                    53,
         Dec:                    54,
         GetRandom:              55,
+        And:                    56,
+        Or:                     57,
         GetKey:                 60,
         GetOption:              61,
         GetLine:                62,
@@ -469,10 +471,10 @@
 
                 case Opcode.Not:
                     v1 = stack.popAsLocal(locals);
-                    if (v1.type === G.ValueType.None || v1.value === 0) {
-                        stack.push(new G.Value(G.ValueType.Integer, 1));
-                    } else {
+                    if (v1.isTrue()) {
                         stack.push(new G.Value(G.ValueType.Integer, 0));
+                    } else {
+                        stack.push(new G.Value(G.ValueType.Integer, 1));
                     }
                     break;
                 case Opcode.Add:
@@ -603,6 +605,11 @@
                         stack.push(G.lists[v1.value][choice]);
                     }
                     break; }
+
+                case Opcode.And:
+                    break;
+                case Opcode.Or:
+                    break;
 
                 case Opcode.GetKey:
                     v1 = stack.popAsLocal(locals);

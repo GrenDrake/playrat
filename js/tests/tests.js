@@ -115,3 +115,53 @@ QUnit.test("Clone value (.clone)", function(assert) {
 //     assert.throws(value.requireType(G.ValueType.String), G.RuntimeError,
 //                   "requiresType raises error on failure");
 // });
+
+QUnit.test("Truthfulness (.isTrue / .isFalse)", function(assert) {
+    let value = new G.Value(G.ValueType.None, 67);
+    assert.ok(!value.isTrue(), "None values are not true.");
+    assert.ok(value.isFalse(), "None values are false.");
+
+    value = new G.Value(G.ValueType.String, 4);
+    assert.ok(value.isTrue(), "Strings are true.");
+    assert.ok(!value.isFalse(), "Strings are not false.");
+    value = new G.Value(G.ValueType.List, 4);
+    assert.ok(value.isTrue(), "Lists are true.");
+    assert.ok(!value.isFalse(), "Lists are not false.");
+    value = new G.Value(G.ValueType.Map, 4);
+    assert.ok(value.isTrue(), "Maps are true.");
+    assert.ok(!value.isFalse(), "Maps are not false.");
+    value = new G.Value(G.ValueType.Object, 4);
+    assert.ok(value.isTrue(), "Objects are true.");
+    assert.ok(!value.isFalse(), "Objects are not false.");
+    value = new G.Value(G.ValueType.Node, 4);
+    assert.ok(value.isTrue(), "Functions are true.");
+    assert.ok(!value.isFalse(), "Functions are not false.");
+    value = new G.Value(G.ValueType.Property, 4);
+    assert.ok(value.isTrue(), "Properties are true.");
+    assert.ok(!value.isFalse(), "Properties are not false.");
+    value = new G.Value(G.ValueType.Integer, 0);
+    assert.ok(!value.isTrue(), "Integer 0 is not true.");
+    assert.ok(value.isFalse(), "Integer 0 is false.");
+    value = new G.Value(G.ValueType.Integer, 4);
+    assert.ok(value.isTrue(), "Non-zero integers are true.");
+    assert.ok(!value.isFalse(), "Non-zero integers are not false.");
+
+    value = new G.Value(G.ValueType.String, 0);
+    assert.ok(!value.isTrue(), "String 0 is not true.");
+    assert.ok(value.isFalse(), "String 0 is false.");
+    value = new G.Value(G.ValueType.List, 0);
+    assert.ok(!value.isTrue(), "List 0 is not true.");
+    assert.ok(value.isFalse(), "List 0 is false.");
+    value = new G.Value(G.ValueType.Map, 0);
+    assert.ok(!value.isTrue(), "Map 0 is not true.");
+    assert.ok(value.isFalse(), "Map 0 is false.");
+    value = new G.Value(G.ValueType.Object, 0);
+    assert.ok(!value.isTrue(), "Object 0 is not true.");
+    assert.ok(value.isFalse(), "Object 0 is false.");
+    value = new G.Value(G.ValueType.Node, 0);
+    assert.ok(!value.isTrue(), "Function 0 is not true.");
+    assert.ok(value.isFalse(), "Function 0 is false.");
+    value = new G.Value(G.ValueType.Property, 0);
+    assert.ok(!value.isTrue(), "Property 0 is not true.");
+    assert.ok(value.isFalse(), "Property 0 is false.");
+});

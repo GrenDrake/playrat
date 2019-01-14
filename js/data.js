@@ -212,6 +212,16 @@ const G = {
         clone() {
             return new G.Value(this.mType, this.mValue);
         }
+        isFalse() {
+            return !this.isTrue();
+        }
+        isTrue() {
+            if (this.type === G.ValueType.None || this.value === 0) {
+                return false;
+            } else {
+                return true;
+            }
+        }
         requireType(type) {
             if (this.type !== type) {
                 throw new G.RuntimeError(
