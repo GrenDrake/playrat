@@ -57,8 +57,7 @@
         Inc:                    53,
         Dec:                    54,
         GetRandom:              55,
-        And:                    56,
-        Or:                     57,
+        GetKeys:                56,
         GetKey:                 60,
         GetOption:              61,
         GetLine:                62,
@@ -606,10 +605,24 @@
                     }
                     break; }
 
-                case Opcode.And:
-                    break;
-                case Opcode.Or:
-                    break;
+                case Opcode.GetKeys: {
+                    v1 = stack.popAsLocal(locals);
+                    v1.requireType(G.ValueType.Map);
+                    v2 = G.makeNew(G.ValueType.List);
+                    const keys = Object.keys(G.maps[v1.value]);
+                    keys.forEach(function(key) {
+                        const keySep = key.indexOf(":");
+                        const keyType = +key.substring(0, keySep);
+                        const keyValue = +key.substring(keySep + 1);
+                        console.log(keySep,
+                                    typeof keyType, keyType,
+                                    typeof keyValue, keyValue);
+                        const result = new G.Value(keyType, keyValue);
+                        G.lists[v2.value].push(result);
+                    })
+                    console.log(G.lists[v2.value], v2);
+                    stack.push(v2);
+                    break; }
 
                 case Opcode.GetKey:
                     v1 = stack.popAsLocal(locals);

@@ -230,7 +230,7 @@ const G = {
             }
         }
         toKey() {
-            return this.mType + "_" + this.mValue;
+            return this.mType + ":" + this.mValue;
         }
         toString() {
             const dumpStr = [ "<" ]
