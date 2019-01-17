@@ -221,71 +221,55 @@
                     stack.push(new G.Value(G.ValueType.Integer, stack.length));
                     break;
 
+                case Opcode.CallMethod:
                 case Opcode.Call: {
-                    target = stack.popAsLocal(locals);
-                    v1 = stack.popAsLocal(locals);
-                    target.requireType(G.ValueType.Node);
-                    v1.requireType(G.ValueType.Integer);
-                    const newFunc = G.functions[target.value];
+                    let theFunc = undefined;
+                    let mySelf = G.noneValue;
+                    if (opcode == Opcode.CallMethod) {
+                        //        v1       v2       target
+                        // [args] argcount property object call-method
+                        target = stack.popAsLocal(locals);
+                        v2 = stack.popAsLocal(locals);
+                        v1 = stack.popAsLocal(locals);
+                        target.requireType(G.ValueType.Object);
+                        v1.requireType(G.ValueType.Integer);
+                        v2.requireType(G.ValueType.Property);
+                        const funcValue = G.getObjectProperty(target, v2);
+                        theFunc = G.functions[funcValue.value];
+                        mySelf = target;
+                    } else {
+                        //        v1       target
+                        // [args] argcount function call
+                        target = stack.popAsLocal(locals);
+                        v1 = stack.popAsLocal(locals);
+                        target.requireType(G.ValueType.Node);
+                        v1.requireType(G.ValueType.Integer);
+                        theFunc = G.functions[target.value];
+                    }
                     const theArgs = [];
                     while (v1.value > 0) {
                         theArgs.push(stack.popAsLocal(locals));
                         v1.value -= 1;
                     }
-                    while (theArgs.length > newFunc[0]) {
+                    while (theArgs.length > theFunc[0]) {
                         theArgs.pop();
                     }
-                    while (theArgs.length < newFunc[0] + newFunc[1]) {
+                    while (theArgs.length < theFunc[0] + theFunc[1]) {
                         theArgs.push(G.noneValue);
                     }
                     const newFrame = {
                         who: target.value,
-                        base: newFunc[2],
+                        base: theFunc[2],
                         retAddress: IP,
-                        self: G.noneValue,
+                        self: mySelf,
                         locals: theArgs,
                         stackSize: stack.length
                     };
                     G.callStack.push(newFrame);
                     frame = newFrame;
                     locals = newFrame.locals;
-                    selfObj = newFrame.self;
-                    IP = newFunc[2];
-                    break; }
-                case Opcode.CallMethod: {
-                    //        v1       v2       target
-                    // [args] argcount property object call-method
-                    target = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
-                    v1 = stack.popAsLocal(locals);
-                    target.requireType(G.ValueType.Object);
-                    v1.requireType(G.ValueType.Integer);
-                    v2.requireType(G.ValueType.Property);
-                    const funcValue = G.getObjectProperty(target, v2);
-                    const newFunc = G.functions[funcValue.value];
-                    const theArgs = [];
-                    while (v1.value > 0) {
-                        theArgs.push(stack.popAsLocal(locals));
-                        v1.value -= 1;
-                    }
-                    while (theArgs.length > newFunc[0]) {
-                        theArgs.pop();
-                    }
-                    while (theArgs.length < newFunc[0] + newFunc[1]) {
-                        theArgs.push(G.noneValue);
-                    }
-                    const newFrame = {
-                        who: funcValue.value,
-                        retAddress: IP,
-                        self: target,
-                        locals: theArgs,
-                        stackSize: stack.length
-                    };
-                    G.callStack.push(newFrame);
-                    frame = newFrame;
-                    locals = newFrame.locals;
-                    selfObj = newFrame.self;
-                    IP = newFunc[2];
+                    selfObj = mySelf;
+                    IP = theFunc[2];
                     break; }
                 case Opcode.Self:
                     stack.push(selfObj);
