@@ -684,7 +684,6 @@ const G = {
             throw new G.RuntimeError("Tried to access invalid object ID "
                                      + objectId);
         }
-        objectId -= 1;
         if (G.objects[objectId].hasOwnProperty(propertyId)) {
             return new G.Value(G.ValueType.Integer, 1);
         } else {
