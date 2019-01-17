@@ -28,6 +28,10 @@ const G = {
         textBuffer: undefined,
         options: undefined,
     },
+
+    operations: 0,
+    callStack: undefined,
+    stack: undefined
 };
 
 (function() {
@@ -104,8 +108,6 @@ const G = {
     G.RuntimeError = class RuntimeError {
         constructor(message) {
             this.message = message;
-            console.log("Exception \"" + message + "\" thrown at:");
-            console.trace();
         }
 
         toString() {
@@ -120,6 +122,7 @@ const G = {
     G.Stack = class Stack {
         constructor() {
             this.stack = [];
+            this.base = 0;
         }
 
         get length() {
@@ -127,13 +130,17 @@ const G = {
         }
 
         toString() {
-            const dumpStr = ["(stack; size:", this.stack.length, " ["];
-            this.stack.forEach(function (item) {
-                dumpStr.push(" ");
+            const dumpStr = ["STACK:\n    Size:", this.stack.length, " Base:",
+                             this.base, "\n"];
+            for (var i = 0; i < this.stack.length; ++i) {
+                const item = this.stack[i];
+                dumpStr.push("    ");
                 dumpStr.push(item);
-            });
-            dumpStr.push(" ])");
-            console.info(dumpStr.join(""));
+                dumpStr.push("\n");
+                if (i + 1 == this.base) dumpStr.push("---\n");
+            };
+            dumpStr.push("===");
+            return dumpStr.join("");
         }
         peek(position) {
             if (position < 0 || position >= this.stack.length) {
@@ -142,7 +149,7 @@ const G = {
             return this.stack[this.stack.length - 1 - position];
         }
         pop() {
-            if (this.stack.length === 0) {
+            if (this.stack.length <= this.base) {
                 throw new G.RuntimeError("Stack underflow.");
             }
             return this.stack.pop();
@@ -171,10 +178,20 @@ const G = {
             this.stack.push(value);
         }
         top() {
-            if (this.stack.length === 0) {
+            if (this.stack.length <= this.base) {
                 throw new G.RuntimeError("Stack underflow.");
             }
             return this.stack[this.stack.length - 1];
+        }
+        resize(newSize) {
+            this.base = newSize;
+            if (this.stack.length > newSize) {
+                this.stack.splice(newSize, this.stack.length);
+            } else {
+                while (this.stack.length < newSize) {
+                    this.stack.push(G.noneValue);
+                }
+            }
         }
     }
 
@@ -239,9 +256,7 @@ const G = {
             } else {
                 dumpStr.push(G.typeNames[this.type]);
             }
-            dumpStr.push("(");
-            dumpStr.push(this.type);
-            dumpStr.push("): ");
+            dumpStr.push(": ");
             dumpStr.push(this.value);
             dumpStr.push(">");
             return dumpStr.join("");
@@ -445,17 +460,51 @@ const G = {
             G.callFunction(G, G.noneValue, functionId, argsList);
         } catch (error) {
             if (!(error instanceof G.RuntimeError))    throw error;
-            const errorDiv = document.createElement("p");
+            const errorDiv = document.createElement("pre");
             errorDiv.classList.add("error");
-            errorDiv.textContent = "[" + error + "]";
+            const errorMessage = [];
+
+            if (G.callStack) {
+                const callStr = [];
+                callStr.push("\nCALL STACK:\n    Size:",G.callStack.length,"\n");
+                for (var i = 0; i < G.callStack.length; ++i) {
+                    const line = G.callStack[i];
+                    const localStr = [];
+                    line.locals.forEach(function(value) {
+                        localStr.push(value.toString());
+                    });
+                    callStr.push("    ");
+                    callStr.push(i);
+                    callStr.push(" FunctionID:");
+                    callStr.push(line.who);
+                    callStr.push(" SELF:");
+                    callStr.push(line.self.toString());
+                    callStr.push(" LOCALS:");
+                    callStr.push(localStr.join(", "));
+                    callStr.push("\n");
+                }
+                errorMessage.push(callStr.join(""));
+            }
+
+            if (G.stack) {
+                errorMessage.push("\n");
+                errorMessage.push(G.stack.toString());
+            }
+            errorDiv.textContent = errorMessage.join("");
+            const fatalErrorText = document.createElement("span");
+            fatalErrorText.classList.add("errorTitle");
+            fatalErrorText.textContent = error.toString() + "\n";
+            errorDiv.insertBefore(fatalErrorText, errorDiv.firstChild);
             G.eOutput.appendChild(errorDiv);
         }
 
         G.doOutput();
 
         const end = performance.now();
+        const runtime = Math.round((end - start) * 1000) / 1000000;
         G.eBottomLeft.textContent = "Event run time: "
-                                    + (end - start) / 1000 + "s";
+                                    + runtime + "s; "
+                                    + G.operations + " opcodes";
     }
 
     G.doOutput = function doOutput() {

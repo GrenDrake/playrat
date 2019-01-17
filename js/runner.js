@@ -82,17 +82,26 @@
             functionId.requireType(G.ValueType.Node);
             functionId = functionId.value;
         }
-
         if (!G.functions.hasOwnProperty(functionId)) {
             throw new G.RuntimeError("Function does not exist.");
             return;
         }
-
-        let operations = 0;
-        const stack = new G.Stack();
-        const locals = [];
-
         const functionDef = G.functions[functionId];
+
+        G.operations = 0;
+        const stack = new G.Stack();
+        G.callStack = [{
+            who: functionId,
+            base: functionDef[2],
+            retAddress: -1,
+            self: G.noneValue,
+            locals: [],
+            stackSize: 0
+        }];
+        G.stack = stack;
+        let frame = G.callStack[0];
+        let locals = G.callStack[0].locals;
+
         for (var i = 0; i < functionDef[0] + functionDef[1]; ++i) {
             if (i < argList.length && i < functionDef[0]) {
                 locals.push(argList[i]);
@@ -106,17 +115,30 @@
         while (1) {
             const opcode = G.bytecode.getUint8(IP);
             ++IP;
-            ++operations;
-            if (operations > maxOperationCount) {
+            ++G.operations;
+            if (G.operations > maxOperationCount) {
                 throw new G.RuntimeError("Script exceeded maximum runtime.");
             }
+
             switch(opcode) {
-                case Opcode.Return:
-                    if (stack.length > 0) {
-                        return stack.top();
+                case Opcode.Return: {
+                    const top = stack.length > stack.base
+                                    ? stack.popAsLocal(locals)
+                                    : G.noneValue;
+                    const oldFrame = G.callStack.pop();
+                    if (oldFrame.retAddress === -1) {
+                        G.callStack = undefined;
+                        return top;
                     } else {
-                        return new G.Value(G.ValueType.Integer, 0);
+                        frame = G.callStack[G.callStack.length - 1];
+                        locals = frame.locals;
+                        IP = oldFrame.retAddress;
+                        selfObj = oldFrame.self;
+                        stack.resize(oldFrame.stackSize);
+                        stack.push(top);
                     }
+                    break;
+                }
                 case Opcode.Push0:
                     rawType = G.bytecode.getUint8(IP);
                     ++IP;
@@ -199,19 +221,37 @@
                     stack.push(new G.Value(G.ValueType.Integer, stack.length));
                     break;
 
-                case Opcode.Call:
+                case Opcode.Call: {
                     target = stack.popAsLocal(locals);
                     v1 = stack.popAsLocal(locals);
                     target.requireType(G.ValueType.Node);
                     v1.requireType(G.ValueType.Integer);
+                    const newFunc = G.functions[target.value];
                     const theArgs = [];
                     while (v1.value > 0) {
                         theArgs.push(stack.popAsLocal(locals));
                         v1.value -= 1;
                     }
-                    const result = G.callFunction(G, G.noneValue, target.value, theArgs);
-                    stack.push(result);
-                    break;
+                    while (theArgs.length > newFunc[0]) {
+                        theArgs.pop();
+                    }
+                    while (theArgs.length < newFunc[0] + newFunc[1]) {
+                        theArgs.push(G.noneValue);
+                    }
+                    const newFrame = {
+                        who: target.value,
+                        base: newFunc[2],
+                        retAddress: IP,
+                        self: G.noneValue,
+                        locals: theArgs,
+                        stackSize: stack.length
+                    };
+                    G.callStack.push(newFrame);
+                    frame = newFrame;
+                    locals = newFrame.locals;
+                    selfObj = newFrame.self;
+                    IP = newFunc[2];
+                    break; }
                 case Opcode.CallMethod: {
                     //        v1       v2       target
                     // [args] argcount property object call-method
@@ -221,14 +261,31 @@
                     target.requireType(G.ValueType.Object);
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Property);
+                    const funcValue = G.getObjectProperty(target, v2);
+                    const newFunc = G.functions[funcValue.value];
                     const theArgs = [];
                     while (v1.value > 0) {
                         theArgs.push(stack.popAsLocal(locals));
                         v1.value -= 1;
                     }
-                    const funcId = G.getObjectProperty(target, v2);
-                    const result = G.callFunction(G, target, funcId, theArgs);
-                    stack.push(result);
+                    while (theArgs.length > newFunc[0]) {
+                        theArgs.pop();
+                    }
+                    while (theArgs.length < newFunc[0] + newFunc[1]) {
+                        theArgs.push(G.noneValue);
+                    }
+                    const newFrame = {
+                        who: funcValue.value,
+                        retAddress: IP,
+                        self: target,
+                        locals: theArgs,
+                        stackSize: stack.length
+                    };
+                    G.callStack.push(newFrame);
+                    frame = newFrame;
+                    locals = newFrame.locals;
+                    selfObj = newFrame.self;
+                    IP = newFunc[2];
                     break; }
                 case Opcode.Self:
                     stack.push(selfObj);
@@ -417,14 +474,14 @@
                 case Opcode.Jump:
                     target = stack.popAsLocal(locals);
                     target.requireType(G.ValueType.JumpTarget);
-                    IP = functionDef[2] + target.value;
+                    IP = frame.base + target.value;
                     break;
                 case Opcode.JumpZero:
                     target = stack.popAsLocal(locals);
                     v1 = stack.popAsLocal(locals);
                     target.requireType(G.ValueType.JumpTarget);
                     if (v1.value === 0) {
-                        IP = functionDef[2] + target.value;
+                        IP = frame.base + target.value;
                     }
                     break;
                 case Opcode.JumpNotZero:
@@ -432,7 +489,7 @@
                     v1 = stack.popAsLocal(locals);
                     target.requireType(G.ValueType.JumpTarget);
                     if (v1.value !== 0) {
-                        IP = functionDef[2] + target.value;
+                        IP = frame.base + target.value;
                     }
                     break;
                 case Opcode.JumpLessThan:
@@ -440,7 +497,7 @@
                     v1 = stack.popAsLocal(locals);
                     target.requireType(G.ValueType.JumpTarget);
                     if (v1.value < 0) {
-                        IP = functionDef[2] + target.value;
+                        IP = frame.base + target.value;
                     }
                     break;
                 case Opcode.JumpLessThanEqual:
@@ -448,7 +505,7 @@
                     v1 = stack.popAsLocal(locals);
                     target.requireType(G.ValueType.JumpTarget);
                     if (v1.value <= 0) {
-                        IP = functionDef[2] + target.value;
+                        IP = frame.base + target.value;
                     }
                     break;
                 case Opcode.JumpGreaterThan:
@@ -456,7 +513,7 @@
                     v1 = stack.popAsLocal(locals);
                     target.requireType(G.ValueType.JumpTarget);
                     if (v1.value > 0) {
-                        IP = functionDef[2] + target.value;
+                        IP = frame.base + target.value;
                     }
                     break;
                 case Opcode.JumpGreaterThanEqual:
@@ -464,7 +521,7 @@
                     v1 = stack.popAsLocal(locals);
                     target.requireType(G.ValueType.JumpTarget);
                     if (v1.value >= 0) {
-                        IP = functionDef[2] + target.value;
+                        IP = frame.base + target.value;
                     }
                     break;
 
