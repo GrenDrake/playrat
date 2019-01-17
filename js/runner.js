@@ -434,6 +434,8 @@
                     break; }
 
                 case Opcode.Compare: {
+                    // LHS RHS cmp
+                    // 5   10  cmp   5 gt
                     const rhs = stack.popAsLocal(locals);
                     const lhs = stack.popAsLocal(locals);
                     if (lhs.type !== rhs.type) {
@@ -442,7 +444,7 @@
                         switch(rhs.type) {
                             case G.ValueType.Integer:
                                 stack.push(new G.Value(G.ValueType.Integer,
-                                    rhs.value - lhs.value));
+                                    lhs.value - rhs.value));
                                 break;
                             case G.ValueType.None:
                                 stack.push(new G.Value(G.ValueType.Integer, 0));
