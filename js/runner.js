@@ -614,13 +614,9 @@
                         const keySep = key.indexOf(":");
                         const keyType = +key.substring(0, keySep);
                         const keyValue = +key.substring(keySep + 1);
-                        console.log(keySep,
-                                    typeof keyType, keyType,
-                                    typeof keyValue, keyValue);
                         const result = new G.Value(keyType, keyValue);
                         G.lists[v2.value].push(result);
                     })
-                    console.log(G.lists[v2.value], v2);
                     stack.push(v2);
                     break; }
 
