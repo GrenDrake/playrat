@@ -5,7 +5,7 @@ const G = {
     objects: [],
     lists: [],
     maps: [],
-    functions: {},
+    functions: [],
 
     eOutput: undefined,
     eTopLeft: undefined,
@@ -57,6 +57,7 @@ const G = {
         String:       2,
         List:         3,
         Map:          4,
+        Function:     5,
         Node:         5,
         Object:       6,
         Property:     7,
@@ -72,7 +73,7 @@ const G = {
         "String",
         "List",
         "Map",
-        "Node",
+        "Function",
         "Object",
         "Property",
         "LocalVar",
@@ -293,7 +294,7 @@ const G = {
             const rawStringData = new Uint8Array(rawSource, filePos,
                                                  stringLength);
             filePos += stringLength;
-            G.strings.push(decoder.decode(rawStringData));
+            G.strings.push({data:decoder.decode(rawStringData)});
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -312,7 +313,7 @@ const G = {
                 filePos += 4;
                 thisList.push(new G.Value(itemType, itemValue));
             }
-            G.lists.push(thisList);
+            G.lists.push({data:thisList});
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -339,7 +340,7 @@ const G = {
 
                 thisMap[valueOne.toKey()] = valueTwo;
             }
-            G.maps.push(thisMap);
+            G.maps.push({data:thisMap});
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -361,22 +362,22 @@ const G = {
                 filePos += 4;
                 thisObject[propId] = new G.Value(itemType, itemValue);
             }
-            G.objects.push(thisObject);
+            G.objects.push({data:thisObject});
         }
 
         ///////////////////////////////////////////////////////////////////////
         // Read function headers from datafile
         G.functionCount = gamedataSrc.getUint32(filePos, true);
         filePos += 4;
+        G.functions.push([]);
         for (var i = 0; i < G.functionCount; ++i) {
-            const key = i + 1;
             const argCount = gamedataSrc.getUint16(filePos, true);
             filePos += 2;
             const localCount = gamedataSrc.getUint16(filePos, true);
             filePos += 2;
             const codePosition = gamedataSrc.getUint32(filePos, true);
             filePos += 4;
-            G.functions[key] = [argCount, localCount, codePosition];
+            G.functions.push({data: [argCount, localCount, codePosition]});
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -399,11 +400,11 @@ const G = {
     G.addPage = function addPage(pageInfo) {
         const pageId = pageInfo.title.value;
         if (G.pages.hasOwnProperty(pageId)) {
-            throw new G.RuntimeError("Tried to add page \"" + G.strings[pageId] + "\" but page already exists.");
+            throw new G.RuntimeError("Tried to add page \"" + G.getString(pageId) + "\" but page already exists.");
         }
         const button = document.createElement("button");
-        button.textContent = G.strings[pageId];
-        button.title = G.strings[pageId] + " (" + String.fromCodePoint(pageInfo.hotkey.value) + ")";
+        button.textContent = G.getString(pageId);
+        button.title = G.getString(pageId) + " (" + String.fromCodePoint(pageInfo.hotkey.value) + ")";
         button.addEventListener("click", function() {
             G.doPage(pageId);
         });
@@ -555,7 +556,7 @@ const G = {
             G.eOutput.removeChild(G.eOutput.firstChild);
         }
         G.textBuffer.push("# ");
-        G.textBuffer.push(G.strings[pageId]);
+        G.textBuffer.push(G.getString(pageId));
         G.textBuffer.push("\n");
         if (fromEvent) {
             G.callFunction(G, G.noneValue, fromEvent, argsList);
@@ -578,6 +579,33 @@ const G = {
         G.inPage = false;
     }
 
+    G.getData = function getData(type, dataArray, index) {
+        if (index instanceof G.Value) {
+            index.requireType(type);
+            index = stringNumber.value;
+        }
+        if (index < 0 || index >= dataArray.length || (type !== G.ValueType.String && index === 0)) {
+            throw new G.RuntimeError("Tried to access invalid " + G.typeNames[type] + " #" + index);
+        }
+        return dataArray[index].data;
+    }
+
+    G.getFunction = function getString(functionNumber) {
+        return G.getData(G.ValueType.Function, G.functions, functionNumber);
+    }
+
+    G.getList = function getList(listNumber) {
+        return G.getData(G.ValueType.List, G.lists, listNumber);
+    }
+
+    G.getMap = function getMap(mapNumber) {
+        return G.getData(G.ValueType.Map, G.maps, mapNumber);
+    }
+
+    G.getObject = function getString(objectNumber) {
+        return G.getData(G.ValueType.Object, G.objects, objectNumber);
+    }
+
     G.getObjectProperty = function getObjectProperty(objectId, propertyId) {
         if (objectId instanceof G.Value) {
             objectId.requireType(G.ValueType.Object);
@@ -596,6 +624,10 @@ const G = {
         } else {
             return new G.Value(G.ValueType.Integer, 0);
         }
+    }
+
+    G.getString = function getString(stringNumber) {
+        return G.getData(G.ValueType.String, G.strings, stringNumber);
     }
 
     G.isStatic = function isStatic(what) {
@@ -650,7 +682,7 @@ const G = {
                 return new G.Value(G.ValueType.Object, nextId);
             case G.ValueType.String:
                 nextId = G.strings.length;
-                G.strings[nextId] = "";
+                G.strings[nextId] = {text:""};
                 return new G.Value(G.ValueType.String, nextId);
             default:
                 throw new G.RuntimeError("Cannot instantiate objects of type "
@@ -670,7 +702,7 @@ const G = {
 
         switch(value.type) {
             case G.ValueType.String: {
-                let theString = G.strings[value.value];
+                let theString = G.getString(value.value);
                 if (ucFirst) {
                     theString = theString.substring(0,1).toUpperCase()
                                 + theString.substring(1);
@@ -699,13 +731,13 @@ const G = {
             case G.Info.RightHeader:    eArea = G.eTopRight;    break;
             case G.Info.Footer:         eArea = G.eBottomRight; break;
             case G.Info.Title:
-                document.title = G.strings[toValue.value];
+                document.title = G.getString(toValue.value);
                 return;
         }
         if (!eArea) {
             throw new G.RuntimeError("Unknown info area " + area);
         }
-        eArea.textContent = G.strings[toValue.value];
+        eArea.textContent = G.getString(toValue.value);
     }
 
     G.setObjectProperty = function setObjectProperty(objectId, propertyId,
@@ -764,7 +796,7 @@ const G = {
                     option.displayText.requireType(G.ValueType.String);
                     const li = document.createElement("li");
                     const liSpan = document.createElement("span");
-                    liSpan.textContent = G.strings[option.displayText.value];
+                    liSpan.textContent = G.getString(option.displayText.value);
                     liSpan.classList.add("fakeLink");
                     liSpan.addEventListener("click", function() {
                         G.doEvent(G.optionFunction, [option.value, option.extra]);
@@ -779,7 +811,7 @@ const G = {
                 const options = document.createElement("p");
                 options.id = "optionslist";
                 options.classList.add("optionslist");
-                options.textContent = G.strings[theOption.displayText.value];
+                options.textContent = G.getString(theOption.displayText.value);
                 G.eOutput.appendChild(options);
                 break;
         }

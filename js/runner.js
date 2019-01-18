@@ -82,11 +82,7 @@
             functionId.requireType(G.ValueType.Node);
             functionId = functionId.value;
         }
-        if (!G.functions.hasOwnProperty(functionId)) {
-            throw new G.RuntimeError("Function does not exist.");
-            return;
-        }
-        const functionDef = G.functions[functionId];
+        const functionDef = G.getFunction(functionId);
 
         G.operations = 0;
         const stack = new G.Stack();
@@ -235,7 +231,7 @@
                         v1.requireType(G.ValueType.Integer);
                         v2.requireType(G.ValueType.Property);
                         const funcValue = G.getObjectProperty(target, v2);
-                        theFunc = G.functions[funcValue.value];
+                        theFunc = G.getFunction(funcValue.value);
                         mySelf = target;
                     } else {
                         //        v1       target
@@ -244,7 +240,7 @@
                         v1 = stack.popAsLocal(locals);
                         target.requireType(G.ValueType.Node);
                         v1.requireType(G.ValueType.Integer);
-                        theFunc = G.functions[target.value];
+                        theFunc = G.getFunction(target.value);
                     }
                     const theArgs = [];
                     while (v1.value > 0) {
