@@ -68,7 +68,6 @@
         DeletePage:             72,
         EndPage:                73,
         New:                    74,
-        Delete:                 75,
         IsStatic:               76,
     };
     Object.freeze(Opcode);
@@ -300,22 +299,18 @@
                     v1 = stack.popAsLocal(locals);
                     v2 = stack.popAsLocal(locals);
                     if (v1.type === G.ValueType.List) {
-                        if (v1.value < 1 || v1.value > G.lists.length) {
-                            throw new G.RuntimeError("invalid list number.");
-                        }
                         v2.requireType(G.ValueType.Integer);
-                        if (v2.value < 0 || v2.value >= G.lists[v1.value].length) {
+                        const theList = G.getList(v1.value);
+                        if (v2.value < 0 || v2.value >= theList.length) {
                             stack.push(new G.Value(G.ValueType.Integer, 0));
                         } else {
-                            stack.push(G.lists[v1.value][v2.value]);
+                            stack.push(theList[v2.value]);
                         }
                     } else if (v1.type === G.ValueType.Map) {
-                        if (v1.value < 1 || v1.value > G.maps.length) {
-                            throw new G.RuntimeError("invalid map number.");
-                        }
+                        const theMap = G.getMap(v1.value);
                         const mapKey = v2.toKey();
-                        if (G.maps[v1.value].hasOwnProperty(mapKey)) {
-                            stack.push(G.maps[v1.value][mapKey]);
+                        if (theMap.hasOwnProperty(mapKey)) {
+                            stack.push(theMap[mapKey]);
                         } else {
                             stack.push(new G.Value(G.ValueType.Integer, 0));
                         }
@@ -327,21 +322,16 @@
                     v1 = stack.popAsLocal(locals);
                     v2 = stack.popAsLocal(locals);
                     if (v1.type === G.ValueType.List) {
-                        if (v1.value < 1 || v1.value > G.lists.length) {
-                            throw new G.RuntimeError("invalid list number.");
-                        }
                         v2.requireType(G.ValueType.Integer);
-                        if (v2.value < 1 || v2.value > G.lists[v1.value].length) {
+                        if (v2.value < 1 || v2.value > G.getList(v1.value).length) {
                             stack.push(new G.Value(G.ValueType.Integer, 0));
                         } else {
                             stack.push(new G.Value(G.ValueType.Integer, 1));
                         }
                     } else if (v1.type === G.ValueType.Map) {
-                        if (v1.value < 1 || v1.value > G.maps.length) {
-                            throw new G.RuntimeError("invalid map number.");
-                        }
+                        const theMap = G.getMap(v1.value);
                         const mapKey = v2.toKey();
-                        if (G.maps[v1.value].hasOwnProperty(mapKey)) {
+                        if (theMap.hasOwnProperty(mapKey)) {
                             stack.push(new G.Value(G.ValueType.Integer, 1));
                         } else {
                             stack.push(new G.Value(G.ValueType.Integer, 0));
@@ -353,30 +343,19 @@
                 case Opcode.GetSize:
                     v1 = stack.popAsLocal(locals);
                     v1.requireType(G.ValueType.List);
-                    if (v1.value < 1 || v1.value > G.lists.length) {
-                        throw new G.RuntimeError("invalid list number.");
-                    }
-                    stack.push(new G.Value(G.ValueType.Integer, G.lists[v1.value].length));
+                    stack.push(new G.Value(G.ValueType.Integer, G.getList(v1.value).length));
                     break;
                 case Opcode.SetItem:
                     v1 = stack.popAsLocal(locals);
                     v2 = stack.popAsLocal(locals);
                     v3 = stack.popAsLocal(locals);
                     if (v1.type === G.ValueType.List) {
-                        if (v1.value < 1 || v1.value > G.lists.length) {
-                            throw new G.RuntimeError("invalid list number.");
-                        }
                         v2.requireType(G.ValueType.Integer);
-                        G.lists[v1.value][v2.value] = v3;
+                        G.getList(v1.value)[v2.value] = v3;
                     } else if (v1.type === G.ValueType.Map) {
-                        if (v1.value < 1 || v1.value > G.maps.length) {
-                            throw new G.RuntimeError("invalid map number.");
-                        }
-                        if (v1.value < 1 || v1.value > G.maps.length) {
-                            throw new G.RuntimeError("invalid map number.");
-                        }
+                        const theMap = G.getMap(v1.value);
                         const mapKey = v2.toKey();
-                        G.maps[v1.value][mapKey]= v3;
+                        theMap[mapKey]= v3;
                     } else {
                         throw new G.RuntimeError("set-item requires list of map.");
                     }
@@ -390,18 +369,13 @@
                     v2 = stack.popAsLocal(locals);
                     if (v1.type === G.ValueType.List) {
                         v2.requireType(G.ValueType.Integer);
-                        if (v1.value <= 0 || v1.value > G.lists.length) {
-                            throw new G.RuntimeError("invalid list number.");
-                        }
-                        const theList = G.lists[v1.value];
+                        const theList = G.getList(v1.value);
                         if (v2.value <= 0) v2.value = 0;
                         theList.splice(v2.value, 1);
                     } else {
                         v1.requireType(G.ValueType.Map);
-                        if (v1.value <= 0 || v1.value > G.maps.length) {
-                            throw new G.RuntimeError("invalid map number.");
-                        }
-                        delete G.maps[v1.value][v2.toKey()];
+                        const theMap = G.getMap(v1.value);
+                        delete theMap[v2.toKey()];
                     }
                     break; }
                 case Opcode.AddItem: {
@@ -413,10 +387,7 @@
                     }
                     v1.requireType(G.ValueType.List);
                     v2.requireType(G.ValueType.Integer);
-                    if (v1.value <= 0 || v1.value > G.lists.length) {
-                        throw new G.RuntimeError("invalid list number.");
-                    }
-                    const theList = G.lists[v1.value];
+                    const theList = G.getList(v1.value);
                     if (v2.value <= 0) v2.value = 0;
                     theList.splice(v2.value, 0, v3);
                     break; }
@@ -633,14 +604,12 @@
                 case Opcode.GetRandom: {
                     v1 = stack.popAsLocal(locals);
                     v1.requireType(G.ValueType.List);
-                    if (v1.value < 1 || v1.value > G.lists.length) {
-                        throw new G.RuntimeError("invalid list number.");
-                    }
-                    if (G.lists[v1.value].length === 0) {
+                    const theList = G.getList(v1.value);
+                    if (theList.length === 0) {
                         stack.push(new G.Value(G.ValueType.Integer, 0));
                     } else {
-                        const choice = Math.floor(Math.random() * G.lists[v1.value].length);
-                        stack.push(G.lists[v1.value][choice]);
+                        const choice = Math.floor(Math.random() * theList.length);
+                        stack.push(theList[choice]);
                     }
                     break; }
 
@@ -648,13 +617,14 @@
                     v1 = stack.popAsLocal(locals);
                     v1.requireType(G.ValueType.Map);
                     v2 = G.makeNew(G.ValueType.List);
-                    const keys = Object.keys(G.maps[v1.value]);
+                    const theList = G.getMap(v1.value);
+                    const keys = Object.keys(theList);
                     keys.forEach(function(key) {
                         const keySep = key.indexOf(":");
                         const keyType = +key.substring(0, keySep);
                         const keyValue = +key.substring(keySep + 1);
                         const result = new G.Value(keyType, keyValue);
-                        G.lists[v2.value].push(result);
+                        G.getList(v2.value).push(result);
                     })
                     stack.push(v2);
                     break; }
@@ -720,10 +690,6 @@
                     v1 = stack.popAsLocal(locals);
                     v1 = G.makeNew(v1);
                     stack.push(v1);
-                    break;
-                case Opcode.Delete:
-                    v1 = stack.popAsLocal(locals);
-                    G.deleteData(v1);
                     break;
                 case Opcode.IsStatic:
                     v1 = stack.popAsLocal(locals);

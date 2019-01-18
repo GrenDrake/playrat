@@ -28,6 +28,8 @@ const G = {
         options: undefined,
     },
 
+    garbageCollectionFrequency: 5,
+    eventCount: 0,
     operations: 0,
     callStack: undefined,
     stack: undefined,
@@ -301,7 +303,7 @@ const G = {
         // Read lists from datafile
         G.listCount = gamedataSrc.getUint32(filePos, true);
         filePos += 4;
-        G.lists.push([]);
+        G.lists.push(undefined);
         for (var i = 0; i < G.listCount; ++i) {
             const thisList = [];
             const listSize = gamedataSrc.getUint16(filePos, true);
@@ -320,7 +322,7 @@ const G = {
         // Read maps from datafile
         G.mapCount = gamedataSrc.getUint32(filePos, true);
         filePos += 4;
-        G.maps.push([]);
+        G.maps.push(undefined);
         for (var i = 0; i < G.mapCount; ++i) {
             const thisMap = {};
             const mapSize = gamedataSrc.getUint16(filePos, true);
@@ -347,7 +349,7 @@ const G = {
         // Read game objects from datafile
         G.objectCount = gamedataSrc.getUint32(filePos, true);
         filePos += 4;
-        G.objects.push({});
+        G.objects.push(undefined);
         for (var i = 0; i < G.objectCount; ++i) {
             const thisObject = {};
             // thisObject.key = gamedataSrc.getUint32(filePos, true);
@@ -369,7 +371,7 @@ const G = {
         // Read function headers from datafile
         G.functionCount = gamedataSrc.getUint32(filePos, true);
         filePos += 4;
-        G.functions.push([]);
+        G.functions.push(undefined);
         for (var i = 0; i < G.functionCount; ++i) {
             const argCount = gamedataSrc.getUint16(filePos, true);
             filePos += 2;
@@ -413,24 +415,97 @@ const G = {
         G.pages[pageId] = pageInfo;
     }
 
-    G.deleteData = function deleteData(what) {
-        if (G.isStatic(what).value == 1) {
-            throw new G.RuntimeError("Tried to delete static data.");
+    G.collectGarbage = function collectGarbage() {
+        ////////////////////////////////////////
+        // COLLECTING
+        function markObject(object) {
+            if (!object || object.marked || !object.data) return;
+            object.marked = true;
+            const keys = Object.keys(object.data);
+            keys.forEach(function(key) {
+                markValue(object.data[key].value);
+            });
+        };
+        function markList(list) {
+            if (!list || list.marked || !list.data) return;
+            list.marked = true;
+            list.data.forEach(function(value) {
+                markValue(value.value);
+            });
+        };
+        function markMap(map) {
+            if (!map || map.marked || !map.data) return;
+            map.marked = true;
+
+            const rawKeys = Object.keys(map.data);
+            rawKeys.forEach(function(key) {
+                const keySep = key.indexOf(":");
+                const keyType = +key.substring(0, keySep);
+                const keyValue = +key.substring(keySep + 1);
+                const value = new G.Value(keyType, keyValue);
+                markValue(value);
+                markValue(map.data[key]);
+            })
+        };
+        function markString(string) {
+            if (!string || string.marked || string.data == undefined) return;
+            string.marked = true;
         }
-        switch(what.type) {
-            case G.ValueType.Object:
-                G.objects[what.value] = undefined;
-                break;
-            case G.ValueType.Map:
-                G.maps[what.value] = undefined;
-                break;
-            case G.ValueType.List:
-                G.lists[what.value] = undefined;
-                break;
-            case G.ValueType.String:
-                G.strings[what.value] = undefined;
-                break;
+        function markValue(what) {
+            switch(what.type) {
+                case G.ValueType.String:
+                    markString(G.strings[what.value]);
+                    break;
+                case G.ValueType.Object:
+                    markObject(G.getObject(what.value));
+                    break;
+                case G.ValueType.List:
+                    markList(G.getList(what.value));
+                    break;
+            }
+            if (!what || what.marked || !what.data) return;
+            what.marked = true;
         }
+        for (var i = 0; i <= G.objectCount; ++i)    markObject(G.objects[i]);
+        for (var i = 0; i <= G.listCount; ++i)      markList(G.lists[i]);
+        for (var i = 0; i <= G.mapsCount; ++i)      markMap(G.maps[i]);
+
+        ////////////////////////////////////////
+        // COLLECTING
+        function collect(theList,start) {
+            for (var i = start; i < theList.length; ++i) {
+                if (!theList[i] || theList[i].data == undefined) {
+                    continue;
+                }
+                if (!theList[i].marked) {
+                    theList[i] = undefined;
+                }
+            }
+        }
+        collect(G.objects,  G.objectCount + 1);
+        collect(G.lists,    G.listCount + 1);
+        collect(G.maps,     G.mapCount + 1);
+        collect(G.strings,  G.stringCount);
+
+        ////////////////////////////////////////
+        // TRIMMING
+        while (G.objects.length > 0
+                && G.objects[G.objects.length - 1] == undefined) {
+            G.objects.pop();
+        }
+        while (G.maps.length > 0
+                && G.maps[G.maps.length - 1] == undefined) {
+            G.maps.pop();
+        }
+        while (G.strings.length > 0
+                && G.strings[G.strings.length - 1] == undefined) {
+            G.strings.pop();
+        }
+        while (G.lists.length > 0
+                && G.lists[G.lists.length - 1] == undefined) {
+            G.lists.pop();
+        }
+
     }
 
     G.delPage = function delPage(pageId) {
@@ -503,15 +578,26 @@ const G = {
         }
 
         G.doOutput();
+        ++G.eventCount;
+        const end = performance.now();
+        const runGC = G.eventCount % G.garbageCollectionFrequency ===  0;
+        const gcStart = performance.now();
+        if (runGC) {
+            G.collectGarbage();
+        }
+        const gcEnd = performance.now();
 
         const systemInfo = [];
         if (G.showEventDuration) {
-            const end = performance.now();
             const runtime = Math.round((end - start) * 1000) / 1000000;
             systemInfo.push("Runtime: " + runtime + "s");
         }
         if (G.showOperationsCount) {
             systemInfo.push(G.operations + " opcodes");
+        }
+        if (runGC && G.showGarbageCollectionDuration) {
+            const runtime = Math.round((gcEnd - gcStart) * 1000) / 1000000;
+            systemInfo.push("GC: " + runtime + "s");
         }
         G.eBottomLeft.textContent = systemInfo.join("; ");
     }
@@ -670,19 +756,19 @@ const G = {
         switch (type) {
             case G.ValueType.List:
                 nextId = G.lists.length;
-                G.lists[nextId] = [];
+                G.lists[nextId] = {data:[]};
                 return new G.Value(G.ValueType.List, nextId);
             case G.ValueType.Map:
                 nextId = G.maps.length;
-                G.maps[nextId] = {};
+                G.maps[nextId] = {data:{}};
                 return new G.Value(G.ValueType.Map, nextId);
             case G.ValueType.Object:
                 nextId = G.objects.length;
-                G.objects[nextId] = {};
+                G.objects[nextId] = {data:{}};
                 return new G.Value(G.ValueType.Object, nextId);
             case G.ValueType.String:
                 nextId = G.strings.length;
-                G.strings[nextId] = {text:""};
+                G.strings[nextId] = {data:""};
                 return new G.Value(G.ValueType.String, nextId);
             default:
                 throw new G.RuntimeError("Cannot instantiate objects of type "
