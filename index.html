@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="page.css" type="text/css">
 </head>
 <body>
-<div id='contentArea'>
+<div id='contentArea' class='limitWidth'>
     <div id='top-statusbar'>
         <div id='top-left'>&nbsp;</div>
         <div id='top-right'></div>
@@ -34,7 +34,8 @@
         <div class='dialogTitle'>
             Options
         </div>
-        <b>Debugging features:</b><br>
+        <label><input type='checkbox' id='limitWidth'> Limit display width</label><br>
+        <br><b>Debugging features:</b><br>
         <label><input type='checkbox' id='showEventDuration'> Show Event Duration</label><br>
         <label><input type='checkbox' id='showOperationsCount'> Show Operation Count</label><br>
         <label><input type='checkbox' id='showGarbageCollectionDuration'> Show Garbage Collection Duration</label><br>

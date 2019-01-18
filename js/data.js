@@ -1003,6 +1003,7 @@ const G = {
                 const settingsDialog = document.getElementById("settings");
                 settingsDialog.style.display = "block";
 
+                document.getElementById("limitWidth").checked = document.getElementById("contentArea").classList.contains("limitWidth");
                 document.getElementById("showEventDuration").checked = G.showEventDuration;
                 document.getElementById("showOperationsCount").checked = G.showOperationsCount;
                 document.getElementById("showGarbageCollectionDuration").checked = G.showGarbageCollectionDuration;
@@ -1022,6 +1023,7 @@ const G = {
                 const settingsDialog = document.getElementById("settings");
                 settingsDialog.style.display = "none";
 
+                document.getElementById("contentArea").classList.toggle("limitWidth", document.getElementById("limitWidth").checked);
                 G.showEventDuration = document.getElementById("showEventDuration").checked;
                 G.showOperationsCount = document.getElementById("showOperationsCount").checked;
                 G.showGarbageCollectionDuration = document.getElementById("showGarbageCollectionDuration").checked;

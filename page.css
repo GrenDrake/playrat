@@ -1,12 +1,19 @@
 body {
     margin: 0;
     padding: 0;
+    background: grey;
 }
 #contentArea {
     display: flex;
     flex-direction: column;
     width: 100vw;
     height: 100vh;
+    margin: 0 auto;
+}
+.limitWidth {
+    max-width: 600px;
+    border-left: 1px solid black;
+    border-right: 1px solid black;
 }
 #top-statusbar {
     background-color: black;
@@ -60,11 +67,10 @@ body {
     margin: auto;
 }
 #text {
-    grid-column: 2;
-    grid-row: 2;
-    padding: 0.25em;
+    padding: 0.25em 1em;
     flex-grow: 5;
     overflow: scroll;
+    background: white;
 }
 #text hr {
     width: 50%;
