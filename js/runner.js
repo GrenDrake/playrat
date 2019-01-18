@@ -63,6 +63,10 @@
         GetLine:                62,
         AddOption:              63,
         AddOptionExtra:         64,
+        StringCopy:             65,
+        StringAppend:           66,
+        StringLength:           67,
+        StringCompare:          68,
         SetInfo:                70,
         AddPage:                71,
         DeletePage:             72,
@@ -657,6 +661,47 @@
                     v3.requireType(G.ValueType.String);
                     G.options.push(new G.Option(v3, v2, v1));
                     break;
+
+                case Opcode.StringCopy: {
+                    // v2  v1       v2 -> v1
+                    // 5   10  strcpy
+                    v1 = stack.popAsLocal(locals);
+                    v2 = stack.popAsLocal(locals);
+                    v1.requireType(G.ValueType.String);
+                    v2.requireType(G.ValueType.String);
+                    if (G.isStatic(v1).value) {
+                        throw new G.RuntimeError("Cannot modify static string");
+                    }
+                    const s2 = G.getString(v2.value);
+                    G.strings[v1.value].data = s2;
+                    break; }
+                case Opcode.StringAppend:
+                    v1 = stack.popAsLocal(locals);
+                    v2 = stack.popAsLocal(locals);
+                    v1.requireType(G.ValueType.String);
+                    v2.requireType(G.ValueType.String);
+                    if (G.isStatic(v1).value) {
+                        throw new G.RuntimeError("Cannot modify static string");
+                    }
+                    const s2 = G.getString(v2.value);
+                    G.strings[v1.value].data += s2;
+                    break;
+                case Opcode.StringLength: {
+                    v1 = stack.popAsLocal(locals);
+                    v1.requireType(G.ValueType.String);
+                    const theString = G.getString(v1.value);
+                    stack.push(new G.Value(G.ValueType.Integer, theString.length));
+                    break; }
+                case Opcode.StringCompare: {
+                    v1 = stack.popAsLocal(locals);
+                    v2 = stack.popAsLocal(locals);
+                    v1.requireType(G.ValueType.String);
+                    v2.requireType(G.ValueType.String);
+                    const s1 = G.getString(v1.value);
+                    const s2 = G.getString(v2.value);
+                    const theResult = 0 + !(s1 === s2);
+                    stack.push(new G.Value(G.ValueType.Integer, theResult));
+                    break; }
 
                 case Opcode.SetInfo:
                     v1 = stack.popAsLocal(locals);
