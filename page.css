@@ -66,6 +66,9 @@ body {
     flex-grow: 5;
     overflow: scroll;
 }
+#text hr {
+    width: 50%;
+}
 #optionslist {
     border-top: 1px dashed black;
     padding-top: 1em;

@@ -608,21 +608,26 @@ const G = {
             line = line.trim();
             if (line === "") return;
 
-            line = line.replace(/&/g, "&amp;");
-            line = line.replace(/</g, "&lt;");
-            line = line.replace(/>/g, "&gt;");
-            line = line.replace(/\[b](.*?)\[\/b]/g, "<b>$1</b>");
-            line = line.replace(/\[i](.*?)\[\/i]/g, "<i>$1</i>");
-            line = line.replace(/\[br]/g, "<br>");
-
-            const p = document.createElement("p");
-            if (line.substring(0,1) === "#") {
-                p.innerHTML = line.substring(1);
-                p.classList.add("headerParagraph")
+            if (line.match(/^---+$/) !== null) {
+                const p = document.createElement("hr");
+                G.eOutput.appendChild(p);
             } else {
-                p.innerHTML = line;
+                line = line.replace(/&/g, "&amp;");
+                line = line.replace(/</g, "&lt;");
+                line = line.replace(/>/g, "&gt;");
+                line = line.replace(/\[b](.*?)\[\/b]/g, "<b>$1</b>");
+                line = line.replace(/\[i](.*?)\[\/i]/g, "<i>$1</i>");
+                line = line.replace(/\[br]/g, "<br>");
+
+                const p = document.createElement("p");
+                if (line.substring(0,1) === "#") {
+                    p.innerHTML = line.substring(1);
+                    p.classList.add("headerParagraph")
+                } else {
+                    p.innerHTML = line;
+                }
+                G.eOutput.appendChild(p);
             }
-            G.eOutput.appendChild(p);
         });
         G.showOptions();
     }
