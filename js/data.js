@@ -12,7 +12,6 @@ const G = {
     eTopRight: undefined,
     eBottomLeft: undefined,
     eBottomRight: undefined,
-    eInfoPane: undefined,
     eButtons: undefined,
 
     textBuffer: [],
@@ -31,7 +30,11 @@ const G = {
 
     operations: 0,
     callStack: undefined,
-    stack: undefined
+    stack: undefined,
+
+    showEventDuration: true,
+    showOperationsCount: true,
+    showGarbageCollectionDuration: true,
 };
 
 (function() {
@@ -500,11 +503,16 @@ const G = {
 
         G.doOutput();
 
-        const end = performance.now();
-        const runtime = Math.round((end - start) * 1000) / 1000000;
-        G.eBottomLeft.textContent = "Event run time: "
-                                    + runtime + "s; "
-                                    + G.operations + " opcodes";
+        const systemInfo = [];
+        if (G.showEventDuration) {
+            const end = performance.now();
+            const runtime = Math.round((end - start) * 1000) / 1000000;
+            systemInfo.push("Runtime: " + runtime + "s");
+        }
+        if (G.showOperationsCount) {
+            systemInfo.push(G.operations + " opcodes");
+        }
+        G.eBottomLeft.textContent = systemInfo.join("; ");
     }
 
     G.doOutput = function doOutput() {
@@ -859,14 +867,48 @@ const G = {
             G.eTopRight = document.getElementById("top-right");
             G.eBottomLeft = document.getElementById("bottom-left");
             G.eBottomRight = document.getElementById("bottom-right");
-            G.eInfoPane = document.getElementById("info-main");
-            G.eButtons = document.getElementById("info-controls");
+            G.eButtons = document.getElementById("bottom-centre");
 
             if (!G.eOutput || !G.eTopLeft || !G.eTopRight || !G.eButtons ||
-                    !G.eBottomLeft || !G.eBottomRight || !G.eInfoPane) {
+                    !G.eBottomLeft || !G.eBottomRight) {
                 this.console.error("Failed to find all display regions.");
                 return;
             }
+
+            const settingsBtn = document.getElementById("settingsButton");
+            if (!settingsBtn) {
+                this.console.error("Failed to find settings button.");
+                return;
+            }
+            settingsBtn.addEventListener("click", function() {
+                const overlay = document.getElementById("overlay");
+                overlay.style.display = "block";
+                const settingsDialog = document.getElementById("settings");
+                settingsDialog.style.display = "block";
+
+                document.getElementById("showEventDuration").checked = G.showEventDuration;
+                document.getElementById("showOperationsCount").checked = G.showOperationsCount;
+                document.getElementById("showGarbageCollectionDuration").checked = G.showGarbageCollectionDuration;
+            });
+
+            const notImplemented = function() {
+                alert("Not implemented yet.");
+            }
+            document.getElementById("newButton").addEventListener("click", notImplemented);
+            document.getElementById("loadButton").addEventListener("click", notImplemented);
+            document.getElementById("saveButton").addEventListener("click", notImplemented);
+
+            const closeSettingsBtn = document.getElementById("closeSettings");
+            closeSettingsBtn.addEventListener("click", function() {
+                const overlay = document.getElementById("overlay");
+                overlay.style.display = "none";
+                const settingsDialog = document.getElementById("settings");
+                settingsDialog.style.display = "none";
+
+                G.showEventDuration = document.getElementById("showEventDuration").checked;
+                G.showOperationsCount = document.getElementById("showOperationsCount").checked;
+                G.showGarbageCollectionDuration = document.getElementById("showGarbageCollectionDuration").checked;
+            });
 
             var loadGameData = new XMLHttpRequest();
             loadGameData.addEventListener("load", G.parseGameFile);

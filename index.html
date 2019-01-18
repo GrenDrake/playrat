@@ -7,33 +7,44 @@
 </head>
 <body>
 <div id='contentArea'>
-    <div id='spacer'>&nbsp;</div>
     <div id='top-statusbar'>
-        <div id='top-left'></div>
+        <div id='top-left'>&nbsp;</div>
         <div id='top-right'></div>
-    </div>
-    <div id='info-pane'>
-        <div id='info-main'>
-            <!-- Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque lacinia erat eget egestas consequat. Mauris in dolor vel eros molestie aliquet eu id neque. Sed sed leo iaculis, dignissim dolor quis, feugiat enim. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Cras volutpat erat vel diam suscipit, laoreet varius lacus pellentesque. Phasellus vel hendrerit dui. Nulla ac tellus et dolor tempus placerat. Aenean nunc est, vehicula et ligula eu, facilisis dapibus urna. Fusce cursus tortor quis dignissim ornare. Quisque sed diam neque. -->
-        </div>
-        <div id='info-controls'>
-            <!-- <button>Test</button>
-            <button>Really Big Item</button>
-            <button>Me</button>
-            <button>Out</button>
-            <button>Really</button>
-            <button>Good</button>
-            <button>A</button> -->
-        </div>
     </div>
     <div id='text'><p>Loading...</div>
     <div id='bottom-statusbar'>
         <div id='bottom-left'>&nbsp;</div>
+        <div id='bottom-centre'>
+            <!-- https://game-icons.net/delapouite/originals/anticlockwise-rotation.html -->
+            <img src='gfx/new.svg' id='newButton' class='button' alt='Start new game' title='New game'>
+            <!-- https://game-icons.net/delapouite/originals/load.html -->
+            <img src='gfx/load.svg' id='loadButton' class='button' alt='Load a game' title='Load game'>
+            <!-- https://game-icons.net/delapouite/originals/save.html -->
+            <img src='gfx/save.svg' id='saveButton' class='button' alt='Save the game' title='Save game'>
+            <!-- https://game-icons.net/lorc/originals/cog.html -->
+            <img src='gfx/settings.svg' id='settingsButton' class='button' alt='Open settings menu' title='Settings menu'>
+        </div>
         <div id='bottom-right'></div>
     </div>
 </div>
 </body>
 
+<div id='overlay'>
+    <div id='settings' class='dialog'>
+        <div class='dialogTitle'>
+            Options
+        </div>
+        <b>Debugging features:</b><br>
+        <label><input type='checkbox' id='showEventDuration'> Show Event Duration</label><br>
+        <label><input type='checkbox' id='showOperationsCount'> Show Operation Count</label><br>
+        <label><input type='checkbox' id='showGarbageCollectionDuration'> Show Garbage Collection Duration</label><br>
+
+        <p class='credits'>Settings icon by <a href='http://lorcblog.blogspot.com/' target='_blank'>Lorc</a>. New, load, and save icons by <a href='https://delapouite.com/' target='_blank'>Delapouite</a>. All courtesy of <a href='http://game-icons.net/' target='_blank'>game-icons.net</a>.
+        <div class='dialogButtons'>
+            <button id='closeSettings'>Close</button>
+        </div>
+    </div>
+</div>
 
 <script src="js/encoding.js"></script>
 <script src='js/data.js'></script>

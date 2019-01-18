@@ -3,24 +3,12 @@ body {
     padding: 0;
 }
 #contentArea {
-    display: grid;
-    grid-template-rows: auto 1fr auto;
-    grid-template-columns: 200px 1fr;
+    display: flex;
     flex-direction: column;
     width: 100vw;
     height: 100vh;
 }
-#spacer {
-    padding: 0.25em;
-    font-size: 120%;
-    background-color: black;
-    grid-column: 1;
-    grid-row: 1;
-}
 #top-statusbar {
-    grid-column: 2;
-    grid-row: 1;
-    vertical-align: center;
     background-color: black;
     color: white;
     font-weight: bold;
@@ -29,9 +17,6 @@ body {
     font-size: 120%;
 }
 #bottom-statusbar {
-    grid-column: 2;
-    grid-row: 3;
-    vertical-align: center;
     background-color: lightgrey;
     color: black;
     border-top: 2px solid black;
@@ -39,11 +24,34 @@ body {
     padding: 0.25em;
     display: flex;
     font-size: 85%;
+    align-items: end;
 }
 #top-left, #bottom-left {
     text-align: left;
     flex-grow: 1;
     margin: auto;
+}
+#bottom-centre button {
+    flex-grow: 1;
+    margin: 1px;
+    font-size: 100%;
+    font-style: italic;
+    border: 1px solid white;
+    border: 1px solid black;
+    background-color: grey;
+    color: white;
+}
+#bottom-centre {
+    max-width: 33%;
+    display: flex;
+    flex-wrap: wrap;
+    flex-grow: auto;
+}
+.button {
+    padding: 0 0.2em;
+    width: 1.5em;
+    height: 1.5em;
+    cursor: pointer;
 }
 #top-right, #bottom-right {
     flex-grow: 1;
@@ -57,36 +65,6 @@ body {
     padding: 0.25em;
     flex-grow: 5;
     overflow: scroll;
-}
-#info-pane {
-    grid-column: 1;
-    grid-row: 2 / span 2;
-    background-color: black;
-    color: white;
-    padding: 0.25em;
-    display: flex;
-    flex-direction: column;
-}
-#info-main {
-    /* border: 1px solid red ; */
-    flex-grow: 1;
-    padding: 0.2em;
-}
-#info-controls {
-    /* border: 1px solid blue; */
-    display: flex;
-    flex-wrap: wrap;
-    /* flex-grow: 1; */
-}
-#info-controls button {
-    flex-grow: 1;
-    margin: 1px;
-    font-size: 100%;
-    font-style: italic;
-    border: 1px solid white;
-    border: none;
-    background-color: grey;
-    color: white;
 }
 #optionslist {
     border-top: 1px dashed black;
@@ -111,4 +89,47 @@ body {
 .headerParagraph {
     font-weight: bold;
     font-size: 120%;
+}
+
+#overlay {
+    display: none;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width:100%;
+    height:100%;
+    text-align:center;
+    z-index: 1000;
+    background: rgba(127,127,127,0.75);
+}
+.dialog {
+    display: none;
+    width: 400px;
+    margin: 100px auto;
+    border: 4px solid black;
+    background: white;
+    text-align: left;
+    padding: 1em;
+}
+.dialogTitle {
+    text-align: center;
+    font-size: 120%;
+    margin-bottom: 1em;
+    padding-bottom: 0.5em;
+    border-bottom: 1px dotted black;
+}
+.dialogButtons {
+    margin-top: 1em;
+    padding-top: 0.5em;
+    text-align: right;
+    border-top: 1px dotted black;
+}
+.dialogButtons button {
+    font-size: 110%;
+}
+.credits {
+    padding-top: 0.5em;
+    border-top: 1px dotted #AAA;
+    font-size: 85%;
+    font-style: italic;
 }
