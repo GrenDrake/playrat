@@ -963,6 +963,11 @@ const G = {
                 return;
         }
 
+        if (code == 111) {
+            showSettings();
+            return;
+        }
+
         const pageKeys = Object.keys(G.pages);
         for (var i = 0; i < pageKeys.length; ++i) {
             const page = G.pages[pageKeys[i]];
@@ -973,6 +978,17 @@ const G = {
         }
     }
 
+    function showSettings() {
+        const overlay = document.getElementById("overlay");
+        overlay.style.display = "block";
+        const settingsDialog = document.getElementById("settings");
+        settingsDialog.style.display = "block";
+
+        document.getElementById("limitWidth").checked = document.getElementById("contentArea").classList.contains("limitWidth");
+        document.getElementById("showEventDuration").checked = G.showEventDuration;
+        document.getElementById("showOperationsCount").checked = G.showOperationsCount;
+        document.getElementById("showGarbageCollectionDuration").checked = G.showGarbageCollectionDuration;
+    };
 
 // ////////////////////////////////////////////////////////////////////////////
 // Engine Startup Code
@@ -997,17 +1013,7 @@ const G = {
                 this.console.error("Failed to find settings button.");
                 return;
             }
-            settingsBtn.addEventListener("click", function() {
-                const overlay = document.getElementById("overlay");
-                overlay.style.display = "block";
-                const settingsDialog = document.getElementById("settings");
-                settingsDialog.style.display = "block";
-
-                document.getElementById("limitWidth").checked = document.getElementById("contentArea").classList.contains("limitWidth");
-                document.getElementById("showEventDuration").checked = G.showEventDuration;
-                document.getElementById("showOperationsCount").checked = G.showOperationsCount;
-                document.getElementById("showGarbageCollectionDuration").checked = G.showGarbageCollectionDuration;
-            });
+            settingsBtn.addEventListener("click", showSettings);
 
             const notImplemented = function() {
                 alert("Not implemented yet.");
