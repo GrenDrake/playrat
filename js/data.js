@@ -701,12 +701,9 @@ const G = {
             propertyId.requireType(G.ValueType.Property);
             propertyId = propertyId.value;
         }
-        if (objectId < 1 || objectId > G.objects.length) {
-            throw new G.RuntimeError("Tried to access invalid object ID "
-                                     + objectId);
-        }
-        if (G.objects[objectId].hasOwnProperty(propertyId)) {
-            return G.objects[objectId][propertyId];
+        const theObject = G.getObject(objectId);
+        if (theObject.hasOwnProperty(propertyId)) {
+            return theObject[propertyId];
         } else {
             return new G.Value(G.ValueType.Integer, 0);
         }
@@ -855,11 +852,8 @@ const G = {
             propertyId.requireType(G.ValueType.Property);
             propertyId = propertyId.value;
         }
-        if (objectId < 1 || objectId > G.objects.length) {
-            throw new G.RuntimeError("Tried to access invalid object ID "
-                                     + objectId);
-        }
-        if (G.objects[objectId].hasOwnProperty(propertyId)) {
+        const theObject = G.getObject(objectId);
+        if (theObject.hasOwnProperty(propertyId)) {
             return new G.Value(G.ValueType.Integer, 1);
         } else {
             return new G.Value(G.ValueType.Integer, 0);
