@@ -978,6 +978,9 @@ const G = {
         }
     }
 
+// ////////////////////////////////////////////////////////////////////////////
+// Engine Settings Management
+// ////////////////////////////////////////////////////////////////////////////
     function showSettings() {
         const overlay = document.getElementById("overlay");
         overlay.style.display = "block";
@@ -989,6 +992,33 @@ const G = {
         document.getElementById("showOperationsCount").checked = G.showOperationsCount;
         document.getElementById("showGarbageCollectionDuration").checked = G.showGarbageCollectionDuration;
     };
+
+    function closeSettings() {
+        const overlay = document.getElementById("overlay");
+        overlay.style.display = "none";
+        const settingsDialog = document.getElementById("settings");
+        settingsDialog.style.display = "none";
+
+        const results = {
+            limitWidth: document.getElementById("limitWidth").checked,
+            showEventDuration: document.getElementById("showEventDuration").checked,
+            showOperationsCount: document.getElementById("showOperationsCount").checked,
+            showGarbageCollectionDuration: document.getElementById("showGarbageCollectionDuration").checked,
+        };
+        localStorage["gtrpge_options"] = JSON.stringify(results);
+        applySettings();
+    }
+
+    function applySettings() {
+        const rawResults = localStorage.getItem("gtrpge_options");
+        if (rawResults) {
+            const results = JSON.parse(rawResults);
+            document.getElementById("contentArea").classList.toggle("limitWidth", results.limitWidth);
+            G.showEventDuration = results.showEventDuration;
+            G.showOperationsCount = results.showOperationsCount;
+            G.showGarbageCollectionDuration = results.showGarbageCollectionDuration;
+        }
+    }
 
 // ////////////////////////////////////////////////////////////////////////////
 // Engine Startup Code
@@ -1008,32 +1038,22 @@ const G = {
                 return;
             }
 
-            const settingsBtn = document.getElementById("settingsButton");
-            if (!settingsBtn) {
-                this.console.error("Failed to find settings button.");
-                return;
-            }
-            settingsBtn.addEventListener("click", showSettings);
-
             const notImplemented = function() {
                 alert("Not implemented yet.");
             }
-            document.getElementById("newButton").addEventListener("click", notImplemented);
-            document.getElementById("loadButton").addEventListener("click", notImplemented);
-            document.getElementById("saveButton").addEventListener("click", notImplemented);
 
-            const closeSettingsBtn = document.getElementById("closeSettings");
-            closeSettingsBtn.addEventListener("click", function() {
-                const overlay = document.getElementById("overlay");
-                overlay.style.display = "none";
-                const settingsDialog = document.getElementById("settings");
-                settingsDialog.style.display = "none";
+            document.getElementById("settingsButton")
+                .addEventListener("click", showSettings);
+            document.getElementById("closeSettings")
+                .addEventListener("click", closeSettings);
+            document.getElementById("newButton")
+                .addEventListener("click", notImplemented);
+            document.getElementById("loadButton")
+                .addEventListener("click", notImplemented);
+            document.getElementById("saveButton")
+                .addEventListener("click", notImplemented);
 
-                document.getElementById("contentArea").classList.toggle("limitWidth", document.getElementById("limitWidth").checked);
-                G.showEventDuration = document.getElementById("showEventDuration").checked;
-                G.showOperationsCount = document.getElementById("showOperationsCount").checked;
-                G.showGarbageCollectionDuration = document.getElementById("showGarbageCollectionDuration").checked;
-            });
+            applySettings();
 
             var loadGameData = new XMLHttpRequest();
             loadGameData.addEventListener("load", G.parseGameFile);
