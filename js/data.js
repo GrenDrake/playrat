@@ -841,11 +841,8 @@ const G = {
         if (!(newValue instanceof G.Value)) {
             throw new RuntimeError("Tried to set property value to non-Value");
         }
-        if (objectId < 1 || objectId > G.objects.length) {
-            throw new G.RuntimeError("Tried to access invalid object ID "
-                                     + objectId);
-        }
-        G.objects[objectId][propertyId] = newValue;
+        const theObject = G.getObject(objectId);
+        theObject[propertyId] = newValue;
     }
 
     G.objectHasProperty = function objectHasProperty(objectId, propertyId) {
