@@ -23,6 +23,8 @@
             <img src='gfx/save.svg' id='saveButton' class='button' alt='Save the game' title='Save game'>
             <!-- https://game-icons.net/lorc/originals/cog.html -->
             <img src='gfx/settings.svg' id='settingsButton' class='button' alt='Open options menu' title='Options menu (o)'>
+            <!-- https://game-icons.net/delapouite/originals/info.html -->
+            <img src='gfx/credits.svg' id='creditsButton' class='button' alt='Open credits window' title='Credits window'>
         </div>
         <div id='bottom-right'></div>
     </div>
@@ -40,9 +42,20 @@
         <label><input type='checkbox' id='showOperationsCount'> Show Operation Count</label><br>
         <label><input type='checkbox' id='showGarbageCollectionDuration'> Show Garbage Collection Duration</label><br>
 
-        <p class='credits'>Options icon by <a href='http://lorcblog.blogspot.com/' target='_blank'>Lorc</a>. New, load, and save icons by <a href='https://delapouite.com/' target='_blank'>Delapouite</a>. All courtesy of <a href='http://game-icons.net/' target='_blank'>game-icons.net</a>.
         <div class='dialogButtons'>
             <button id='closeSettings'>Close</button>
+        </div>
+    </div>
+
+    <div id='creditsWindow' class='dialog'>
+        <div class='dialogTitle'>
+            Credits
+        </div>
+        <p>GTRPGE Game Engine by <a href='https://github.com/GrenDrake'>Gren Drake</a>
+        <p>Options icon by <a href='http://lorcblog.blogspot.com/' target='_blank'>Lorc</a>. Credits, new, load, and save icons by <a href='https://delapouite.com/' target='_blank'>Delapouite</a>. All courtesy of <a href='http://game-icons.net/' target='_blank'>game-icons.net</a>.
+
+        <div class='dialogButtons'>
+            <button id='closeCredits'>Close</button>
         </div>
     </div>
 </div>

@@ -1022,6 +1022,23 @@ const G = {
     }
 
 // ////////////////////////////////////////////////////////////////////////////
+// Credits Dialog
+// ////////////////////////////////////////////////////////////////////////////
+    function showCredits() {
+        const overlay = document.getElementById("overlay");
+        overlay.style.display = "block";
+        const settingsDialog = document.getElementById("creditsWindow");
+        settingsDialog.style.display = "block";
+    };
+
+    function closeCredits() {
+        const overlay = document.getElementById("overlay");
+        overlay.style.display = "none";
+        const settingsDialog = document.getElementById("creditsWindow");
+        settingsDialog.style.display = "none";
+    }
+
+// ////////////////////////////////////////////////////////////////////////////
 // Engine Startup Code
 // ////////////////////////////////////////////////////////////////////////////
     if (typeof QUnit === "undefined") {
@@ -1047,6 +1064,10 @@ const G = {
                 .addEventListener("click", showSettings);
             document.getElementById("closeSettings")
                 .addEventListener("click", closeSettings);
+            document.getElementById("creditsButton")
+                .addEventListener("click", showCredits);
+            document.getElementById("closeCredits")
+                .addEventListener("click", closeCredits);
             document.getElementById("newButton")
                 .addEventListener("click", notImplemented);
             document.getElementById("loadButton")

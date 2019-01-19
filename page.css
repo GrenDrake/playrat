@@ -136,9 +136,3 @@ body {
 .dialogButtons button {
     font-size: 110%;
 }
-.credits {
-    padding-top: 0.5em;
-    border-top: 1px dotted #AAA;
-    font-size: 85%;
-    font-style: italic;
-}
