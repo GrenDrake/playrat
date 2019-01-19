@@ -286,7 +286,7 @@ const G = {
 
         ///////////////////////////////////////////////////////////////////////
         // Read strings from datafile
-        var filePos = 12;
+        var filePos = 64;
         G.stringCount = gamedataSrc.getUint32(filePos, true);
         filePos += 4;
         const decoder = new TextDecoder('utf8');
