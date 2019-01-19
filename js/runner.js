@@ -180,7 +180,7 @@
                     var value = stack.popAsLocal(locals);
                     localId.requireType(G.ValueType.LocalVar);
                     if (localId.value < 0 || localId.value >= locals.length) {
-                        throw new G.RuntimeError("Invalid local number.");
+                        throw new G.RuntimeError("Opcode.Store: Invalid local number " + localId.value + ".");
                     }
                     locals[localId.value] = value;
                     break;

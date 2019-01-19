@@ -164,7 +164,7 @@ const G = {
             const value = this.pop();
             if (value.type === G.ValueType.LocalVar) {
                 if (value.value < 0 || value.value > localsArray.length) {
-                    throw new G.RuntimeError("Invalid local number.");
+                    throw new G.RuntimeError("popAsLocal: Invalid local number " + value.value + ".");
                 }
                 return localsArray[value.value];
             }
