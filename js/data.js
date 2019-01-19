@@ -32,7 +32,6 @@ const G = {
     eventCount: 0,
     operations: 0,
     callStack: undefined,
-    stack: undefined,
 
     showEventDuration: true,
     showOperationsCount: true,
@@ -128,7 +127,6 @@ const G = {
     G.Stack = class Stack {
         constructor() {
             this.stack = [];
-            this.base = 0;
         }
 
         get length() {
@@ -136,14 +134,12 @@ const G = {
         }
 
         toString() {
-            const dumpStr = ["STACK:\n    Size:", this.stack.length, " Base:",
-                             this.base, "\n"];
+            const dumpStr = ["STACK:\n    Size:", this.stack.length, "\n"];
             for (var i = 0; i < this.stack.length; ++i) {
                 const item = this.stack[i];
                 dumpStr.push("    ");
                 dumpStr.push(item);
                 dumpStr.push("\n");
-                if (i + 1 == this.base) dumpStr.push("---\n");
             };
             dumpStr.push("===");
             return dumpStr.join("");
@@ -155,20 +151,10 @@ const G = {
             return this.stack[this.stack.length - 1 - position];
         }
         pop() {
-            if (this.stack.length <= this.base) {
+            if (this.stack.length <= 0) {
                 throw new G.RuntimeError("Stack underflow.");
             }
             return this.stack.pop();
-        }
-        popAsLocal(localsArray) {
-            const value = this.pop();
-            if (value.type === G.ValueType.LocalVar) {
-                if (value.value < 0 || value.value > localsArray.length) {
-                    throw new G.RuntimeError("popAsLocal: Invalid local number " + value.value + ".");
-                }
-                return localsArray[value.value];
-            }
-            return value;
         }
         push(value) {
             if (!(value instanceof G.Value)) {
@@ -184,23 +170,141 @@ const G = {
             this.stack.push(value);
         }
         top() {
-            if (this.stack.length <= this.base) {
+            if (this.stack.length <= 0) {
                 throw new G.RuntimeError("Stack underflow.");
             }
             return this.stack[this.stack.length - 1];
         }
-        resize(newSize) {
-            this.base = newSize;
-            if (this.stack.length > newSize) {
-                this.stack.splice(newSize, this.stack.length);
-            } else {
-                while (this.stack.length < newSize) {
-                    this.stack.push(G.noneValue);
-                }
-            }
-        }
     }
 
+
+// ////////////////////////////////////////////////////////////////////////////
+// CallStack class
+// ////////////////////////////////////////////////////////////////////////////
+    G.CallStack = class CallStack {
+        constructor() {
+            this.frames = [];
+        }
+
+        get frameCount() {
+            return this.frames.length;
+        }
+
+        toString() {
+            const callStr = [];
+            callStr.push("\nCALL STACK:\n");
+            for (var i = 0; i < this.frameCount; ++i) {
+                const line = this.frames[i];
+                const localStr = [];
+                const stackStr = [];
+                line.locals.forEach(function(value) {
+                    localStr.push(value.toString());
+                });
+                line.stack.stack.forEach(function(value) {
+                    stackStr.push(value.toString());
+                });
+                callStr.push("  ");
+                callStr.push(i);
+                callStr.push(" FunctionID:");
+                callStr.push(line.functionId);
+                callStr.push(" SELF:");
+                callStr.push(line.selfValue.toString());
+                callStr.push("\n    LOCALS:[");
+                callStr.push(localStr.join(", "));
+                callStr.push("]\n    STACK:[");
+                callStr.push(stackStr.join(", "));
+                callStr.push("]\n");
+            }
+            return callStr.join("");
+        }
+
+        get base() {
+            return this.topFrame().baseAddress;
+        }
+        get id() {
+            return this.topFrame().functionId;
+        }
+        get length() {
+            return this.frames.length;
+        }
+        get locals() {
+            return this.topFrame().locals;
+        }
+        get returnAddress() {
+            return this.topFrame().returnAddress;
+        }
+        get returnValue() {
+            if (this.stack.length > 0)
+                return this.evaluate(this.stack.pop());
+            else
+                return G.noneValue;
+        }
+        get self() {
+            return this.topFrame().selfValue;
+        }
+        get stack() {
+            return this.topFrame().stack;
+        }
+
+        evaluate(value) {
+            while (value.type === G.ValueType.LocalVar) {
+                if (value.value < 0 || value.value > this.locals.length) {
+                    throw new G.RuntimeError("evaluate: Invalid local number " + value.value + ".");
+                }
+                value = this.locals[value.value];
+            }
+            return value;
+        }
+        pop() {
+            if (this.frames.length === 0) {
+                throw new G.RuntimeError("Tried to pop with empty callstack.");
+            }
+            return this.evaluate(this.stack.pop());
+        }
+        push(value) {
+            if (this.frames.length === 0) {
+                throw new G.RuntimeError("Tried to pop with empty callstack.");
+            }
+            return this.stack.push(value);
+        }
+
+        popFrame() {
+            if (this.frames.length === 0) {
+                throw new G.RuntimeError("Tried to pop frame from empty callstack.");
+            }
+            return this.frames.pop()
+        }
+        pushFrame(functionId, baseAddress, returnAddress, selfValue) {
+            returnAddress = returnAddress || -1;
+            selfValue = selfValue || G.noneValue;
+            this.frames.push(new G.CallStackFrame(functionId, baseAddress, returnAddress, selfValue));
+        }
+        topFrame() {
+            if (this.frames.length === 0) {
+                throw new G.RuntimeError("Tried to get top frame of empty callstack.");
+            }
+            return this.frames[this.frames.length - 1];
+        }
+
+    }
+    G.CallStackFrame = class CallStackFrame {
+        constructor(functionId, baseAddress, returnAddress, selfValue) {
+            this.functionId = functionId;
+            this.baseAddress = baseAddress;
+            this.returnAddress = returnAddress;
+            this.selfValue = selfValue;
+            this.stack = new G.Stack();
+            this.locals = [];
+
+            //             who: functionId,
+            // base: functionDef[2],
+            // retAddress: -1,
+            // self: G.noneValue,
+            // locals: [],
+            // stackSize: 0
+        }
+
+    }
 
 // ////////////////////////////////////////////////////////////////////////////
 // Value class
@@ -548,31 +652,13 @@ const G = {
             const errorMessage = [];
 
             if (G.callStack) {
-                const callStr = [];
-                callStr.push("\nCALL STACK:\n    Size:",G.callStack.length,"\n");
-                for (var i = 0; i < G.callStack.length; ++i) {
-                    const line = G.callStack[i];
-                    const localStr = [];
-                    line.locals.forEach(function(value) {
-                        localStr.push(value.toString());
-                    });
-                    callStr.push("    ");
-                    callStr.push(i);
-                    callStr.push(" FunctionID:");
-                    callStr.push(line.who);
-                    callStr.push(" SELF:");
-                    callStr.push(line.self.toString());
-                    callStr.push(" LOCALS:");
-                    callStr.push(localStr.join(", "));
-                    callStr.push("\n");
-                }
-                errorMessage.push(callStr.join(""));
+                errorMessage.push(G.callStack.toString());
             }
-
             if (G.stack) {
                 errorMessage.push("\n");
                 errorMessage.push(G.stack.toString());
             }
+
             errorDiv.textContent = errorMessage.join("");
             const fatalErrorText = document.createElement("span");
             fatalErrorText.classList.add("errorTitle");

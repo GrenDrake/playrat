@@ -79,6 +79,7 @@
     const maxOperationCount = 10000;
 
     G.callFunction = function callFunction(G, selfObj, functionId, argList) {
+        "use strict";
         argList = argList || [];
 
         if (functionId instanceof G.Value) {
@@ -88,24 +89,14 @@
         const functionDef = G.getFunction(functionId);
 
         G.operations = 0;
-        const stack = new G.Stack();
-        G.callStack = [{
-            who: functionId,
-            base: functionDef[2],
-            retAddress: -1,
-            self: G.noneValue,
-            locals: [],
-            stackSize: 0
-        }];
-        G.stack = stack;
-        let frame = G.callStack[0];
-        let locals = G.callStack[0].locals;
+        G.callStack = new G.CallStack();
+        G.callStack.pushFrame(functionId, functionDef[2]);
 
         for (var i = 0; i < functionDef[0] + functionDef[1]; ++i) {
             if (i < argList.length && i < functionDef[0]) {
-                locals.push(argList[i]);
+                G.callStack.locals.push(argList[i]);
             } else {
-                locals.push(new G.Value(0,0));
+                G.callStack.locals.push(new G.Value(0,0));
             }
         }
         var IP = functionDef[2];
@@ -121,103 +112,96 @@
 
             switch(opcode) {
                 case Opcode.Return: {
-                    const top = stack.length > stack.base
-                                    ? stack.popAsLocal(locals)
-                                    : G.noneValue;
-                    const oldFrame = G.callStack.pop();
-                    if (oldFrame.retAddress === -1) {
-                        G.callStack = undefined;
+                    const top = G.callStack.returnValue;
+                    const oldFrame = G.callStack.popFrame();
+                    if (G.callStack.frameCount === 0) {
                         return top;
                     } else {
-                        frame = G.callStack[G.callStack.length - 1];
-                        locals = frame.locals;
-                        IP = oldFrame.retAddress;
+                        IP = oldFrame.returnAddress;
                         selfObj = oldFrame.self;
-                        stack.resize(oldFrame.stackSize);
-                        stack.push(top);
+                        G.callStack.stack.push(top);
                     }
                     break;
                 }
                 case Opcode.Push0:
                     rawType = G.bytecode.getUint8(IP);
                     ++IP;
-                    stack.push(new G.Value(rawType,0));
+                    G.callStack.stack.push(new G.Value(rawType,0));
                     break;
                 case Opcode.Push1:
                     rawType = G.bytecode.getUint8(IP);
                     ++IP;
-                    stack.push(new G.Value(rawType,1));
+                    G.callStack.stack.push(new G.Value(rawType,1));
                     break;
                 case Opcode.PushNeg1:
                     rawType = G.bytecode.getUint8(IP);
                     ++IP;
-                    stack.push(new G.Value(rawType,-1));
+                    G.callStack.stack.push(new G.Value(rawType,-1));
                     break;
                 case Opcode.Push8:
                     rawType = G.bytecode.getUint8(IP);
                     ++IP;
                     rawValue = G.bytecode.getInt8(IP);
                     ++IP;
-                    stack.push(new G.Value(rawType,rawValue));
+                    G.callStack.stack.push(new G.Value(rawType,rawValue));
                     break;
                 case Opcode.Push16:
                     rawType = G.bytecode.getUint8(IP);
                     ++IP;
                     rawValue = G.bytecode.getInt16(IP, true);
                     IP += 2;
-                    stack.push(new G.Value(rawType,rawValue));
+                    G.callStack.stack.push(new G.Value(rawType,rawValue));
                     break;
                 case Opcode.Push32:
                     rawType = G.bytecode.getUint8(IP);
                     ++IP;
                     rawValue = G.bytecode.getInt32(IP, true);
                     IP += 4;
-                    stack.push(new G.Value(rawType, rawValue));
+                    G.callStack.stack.push(new G.Value(rawType, rawValue));
                     break;
 
                 case Opcode.Store:
-                    var localId = stack.pop();
-                    var value = stack.popAsLocal(locals);
+                    var localId = G.callStack.stack.pop();
+                    var value = G.callStack.pop(G.callStack.locals);
                     localId.requireType(G.ValueType.LocalVar);
-                    if (localId.value < 0 || localId.value >= locals.length) {
+                    if (localId.value < 0 || localId.value >= G.callStack.locals.length) {
                         throw new G.RuntimeError("Opcode.Store: Invalid local number " + localId.value + ".");
                     }
-                    locals[localId.value] = value;
+                    G.callStack.locals[localId.value] = value;
                     break;
 
                 case Opcode.Say:
-                    v1 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
                     G.say(v1);
                     break;
                 case Opcode.SayUCFirst:
-                    v1 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
                     G.say(v1, true);
                     break;
                 case Opcode.SayUnsigned:
-                    var value = stack.popAsLocal(locals);
+                    var value = G.callStack.pop(G.callStack.locals);
                     value.requireType(G.ValueType.Integer);
                     G.say(value.value>>>0);
                     break;
                 case Opcode.SayChar:
-                    var value = stack.popAsLocal(locals);
+                    var value = G.callStack.pop(G.callStack.locals);
                     value.requireType(G.ValueType.Integer);
                     G.say(String.fromCodePoint(value.value));
                     break;
 
                 case Opcode.StackPop:
-                    stack.pop();
+                    G.callStack.stack.pop();
                     break;
                 case Opcode.StackDup:
-                    const topStackItem = stack.top();
-                    stack.push(stack.top().clone());
+                    G.callStack.stack.push(G.callStack.stack.top().clone());
                     break;
                 case Opcode.StackPeek:
-                    v1 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Integer);
-                    stack.push(stack.peek(v1.value).clone());
+                    G.callStack.stack.push(G.callStack.stack.peek(v1.value).clone());
                     break;
                 case Opcode.StackSize:
-                    stack.push(new G.Value(G.ValueType.Integer, stack.length));
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer, G.callStack.stack.length));
                     break;
 
                 case Opcode.CallMethod:
@@ -227,9 +211,9 @@
                     if (opcode == Opcode.CallMethod) {
                         //        v1       v2       target
                         // [args] argcount property object call-method
-                        target = stack.popAsLocal(locals);
-                        v2 = stack.popAsLocal(locals);
-                        v1 = stack.popAsLocal(locals);
+                        target = G.callStack.pop();
+                        v2 = G.callStack.pop(G.callStack.locals);
+                        v1 = G.callStack.pop(G.callStack.locals);
                         target.requireType(G.ValueType.Object);
                         v1.requireType(G.ValueType.Integer);
                         v2.requireType(G.ValueType.Property);
@@ -239,15 +223,15 @@
                     } else {
                         //        v1       target
                         // [args] argcount function call
-                        target = stack.popAsLocal(locals);
-                        v1 = stack.popAsLocal(locals);
+                        target = G.callStack.pop(G.callStack.locals);
+                        v1 = G.callStack.pop(G.callStack.locals);
                         target.requireType(G.ValueType.Node);
                         v1.requireType(G.ValueType.Integer);
                         theFunc = G.getFunction(target.value);
                     }
                     const theArgs = [];
                     while (v1.value > 0) {
-                        theArgs.push(stack.popAsLocal(locals));
+                        theArgs.push(G.callStack.pop(G.callStack.locals));
                         v1.value -= 1;
                     }
                     while (theArgs.length > theFunc[0]) {
@@ -256,103 +240,93 @@
                     while (theArgs.length < theFunc[0] + theFunc[1]) {
                         theArgs.push(G.noneValue);
                     }
-                    const newFrame = {
-                        who: target.value,
-                        base: theFunc[2],
-                        retAddress: IP,
-                        self: mySelf,
-                        locals: theArgs,
-                        stackSize: stack.length
-                    };
-                    G.callStack.push(newFrame);
-                    frame = newFrame;
-                    locals = newFrame.locals;
-                    selfObj = mySelf;
+                    G.callStack.pushFrame(target.value, theFunc[2], IP, mySelf);
+                    G.callStack.topFrame().locals = theArgs;
                     IP = theFunc[2];
                     break; }
                 case Opcode.Self:
-                    stack.push(selfObj);
+                    G.callStack.stack.push(G.callStack.self);
                     break;
 
                 case Opcode.GetProp:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Object);
                     v2.requireType(G.ValueType.Property);
                     const propValue = G.getObjectProperty(v1, v2);
-                    stack.push(propValue);
+                    G.callStack.stack.push(propValue);
                     break;
                 case Opcode.HasProp:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Object);
                     v2.requireType(G.ValueType.Property);
                     const propExists = G.objectHasProperty(v1, v2);
-                    stack.push(propExists);
+                    G.callStack.stack.push(propExists);
                     break;
                 case Opcode.SetProp:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
-                    v3 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
+                    v3 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Object);
                     v2.requireType(G.ValueType.Property);
                     G.setObjectProperty(v1, v2, v3);
                     break;
 
                 case Opcode.GetItem:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     if (v1.type === G.ValueType.List) {
                         v2.requireType(G.ValueType.Integer);
                         const theList = G.getList(v1.value);
                         if (v2.value < 0 || v2.value >= theList.length) {
-                            stack.push(new G.Value(G.ValueType.Integer, 0));
+                            G.callStack.stack.push(new G.Value(G.ValueType.Integer, 0));
                         } else {
-                            stack.push(theList[v2.value]);
+                            G.callStack.stack.push(theList[v2.value]);
                         }
                     } else if (v1.type === G.ValueType.Map) {
                         const theMap = G.getMap(v1.value);
                         const mapKey = v2.toKey();
                         if (theMap.hasOwnProperty(mapKey)) {
-                            stack.push(theMap[mapKey]);
+                            G.callStack.stack.push(theMap[mapKey]);
                         } else {
-                            stack.push(new G.Value(G.ValueType.Integer, 0));
+                            G.callStack.stack.push(new G.Value(G.ValueType.Integer, 0));
                         }
                     } else {
                         throw new G.RuntimeError("get-item requires list or map.");
                     }
                     break;
                 case Opcode.HasItem:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     if (v1.type === G.ValueType.List) {
                         v2.requireType(G.ValueType.Integer);
                         if (v2.value < 1 || v2.value > G.getList(v1.value).length) {
-                            stack.push(new G.Value(G.ValueType.Integer, 0));
+                            G.callStack.stack.push(new G.Value(G.ValueType.Integer, 0));
                         } else {
-                            stack.push(new G.Value(G.ValueType.Integer, 1));
+                            G.callStack.stack.push(new G.Value(G.ValueType.Integer, 1));
                         }
                     } else if (v1.type === G.ValueType.Map) {
                         const theMap = G.getMap(v1.value);
                         const mapKey = v2.toKey();
                         if (theMap.hasOwnProperty(mapKey)) {
-                            stack.push(new G.Value(G.ValueType.Integer, 1));
+                            G.callStack.stack.push(new G.Value(G.ValueType.Integer, 1));
                         } else {
-                            stack.push(new G.Value(G.ValueType.Integer, 0));
+                            G.callStack.stack.push(new G.Value(G.ValueType.Integer, 0));
                         }
                     } else {
                         throw new G.RuntimeError("has-item requires list or map.");
                     }
                     break;
                 case Opcode.GetSize:
-                    v1 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.List);
-                    stack.push(new G.Value(G.ValueType.Integer, G.getList(v1.value).length));
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer, G.getList(v1.value).length));
                     break;
                 case Opcode.SetItem:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
-                    v3 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
+                    v3 = G.callStack.pop(G.callStack.locals);
                     if (v1.type === G.ValueType.List) {
                         v2.requireType(G.ValueType.Integer);
                         G.getList(v1.value)[v2.value] = v3;
@@ -365,12 +339,12 @@
                     }
                     break;
                 case Opcode.TypeOf:
-                    v1 = stack.popAsLocal(locals);
-                    stack.push(new G.Value(G.ValueType.Integer, v1.type));
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer, v1.type));
                     break;
                 case Opcode.DelItem: {
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     if (v1.type === G.ValueType.List) {
                         v2.requireType(G.ValueType.Integer);
                         const theList = G.getList(v1.value);
@@ -383,9 +357,9 @@
                     }
                     break; }
                 case Opcode.AddItem: {
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
-                    v3 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
+                    v3 = G.callStack.pop(G.callStack.locals);
                     if (v1.type === G.ValueType.Map) {
                         throw new G.RuntimeError("attempted to use add-item on map; use set-item instead");
                     }
@@ -397,31 +371,31 @@
                     break; }
 
                 case Opcode.AsType: {
-                    const value = stack.popAsLocal(locals);
-                    const type = stack.popAsLocal(locals);
+                    const value = G.callStack.pop(G.callStack.locals);
+                    const type = G.callStack.pop(G.callStack.locals);
                     type.requireType(G.ValueType.Integer);
                     value.type = type.value;
-                    stack.push(value);
+                    G.callStack.stack.push(value);
                     break; }
 
                 case Opcode.Compare: {
                     // LHS RHS cmp
                     // 5   10  cmp   5 gt
-                    const rhs = stack.popAsLocal(locals);
-                    const lhs = stack.popAsLocal(locals);
+                    const rhs = G.callStack.pop(G.callStack.locals);
+                    const lhs = G.callStack.pop(G.callStack.locals);
                     if (lhs.type !== rhs.type) {
-                        stack.push(new G.Value(G.ValueType.Integer, 1));
+                        G.callStack.stack.push(new G.Value(G.ValueType.Integer, 1));
                     } else {
                         switch(rhs.type) {
                             case G.ValueType.Integer:
-                                stack.push(new G.Value(G.ValueType.Integer,
+                                G.callStack.stack.push(new G.Value(G.ValueType.Integer,
                                     lhs.value - rhs.value));
                                 break;
                             case G.ValueType.None:
-                                stack.push(new G.Value(G.ValueType.Integer, 0));
+                                G.callStack.stack.push(new G.Value(G.ValueType.Integer, 0));
                                 break;
                             default:
-                                stack.push(new G.Value(G.ValueType.Integer,
+                                G.callStack.stack.push(new G.Value(G.ValueType.Integer,
                                     (rhs.value === lhs.value) ? 0 : 1));
                                 break;
                         }
@@ -429,196 +403,196 @@
                     break; }
 
                 case Opcode.Jump:
-                    target = stack.popAsLocal(locals);
+                    target = G.callStack.pop(G.callStack.locals);
                     target.requireType(G.ValueType.JumpTarget);
-                    IP = frame.base + target.value;
+                    IP = G.callStack.base + target.value;
                     break;
                 case Opcode.JumpZero:
-                    target = stack.popAsLocal(locals);
-                    v1 = stack.popAsLocal(locals);
+                    target = G.callStack.pop(G.callStack.locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
                     target.requireType(G.ValueType.JumpTarget);
                     if (v1.value === 0) {
-                        IP = frame.base + target.value;
+                        IP = G.callStack.base + target.value;
                     }
                     break;
                 case Opcode.JumpNotZero:
-                    target = stack.popAsLocal(locals);
-                    v1 = stack.popAsLocal(locals);
+                    target = G.callStack.pop(G.callStack.locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
                     target.requireType(G.ValueType.JumpTarget);
                     if (v1.value !== 0) {
-                        IP = frame.base + target.value;
+                        IP = G.callStack.base + target.value;
                     }
                     break;
                 case Opcode.JumpLessThan:
-                    target = stack.popAsLocal(locals);
-                    v1 = stack.popAsLocal(locals);
+                    target = G.callStack.pop(G.callStack.locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
                     target.requireType(G.ValueType.JumpTarget);
                     if (v1.value < 0) {
-                        IP = frame.base + target.value;
+                        IP = G.callStack.base + target.value;
                     }
                     break;
                 case Opcode.JumpLessThanEqual:
-                    target = stack.popAsLocal(locals);
-                    v1 = stack.popAsLocal(locals);
+                    target = G.callStack.pop(G.callStack.locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
                     target.requireType(G.ValueType.JumpTarget);
                     if (v1.value <= 0) {
-                        IP = frame.base + target.value;
+                        IP = G.callStack.base + target.value;
                     }
                     break;
                 case Opcode.JumpGreaterThan:
-                    target = stack.popAsLocal(locals);
-                    v1 = stack.popAsLocal(locals);
+                    target = G.callStack.pop(G.callStack.locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
                     target.requireType(G.ValueType.JumpTarget);
                     if (v1.value > 0) {
-                        IP = frame.base + target.value;
+                        IP = G.callStack.base + target.value;
                     }
                     break;
                 case Opcode.JumpGreaterThanEqual:
-                    target = stack.popAsLocal(locals);
-                    v1 = stack.popAsLocal(locals);
+                    target = G.callStack.pop(G.callStack.locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
                     target.requireType(G.ValueType.JumpTarget);
                     if (v1.value >= 0) {
-                        IP = frame.base + target.value;
+                        IP = G.callStack.base + target.value;
                     }
                     break;
 
                 case Opcode.Not:
-                    v1 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
                     if (v1.isTrue()) {
-                        stack.push(new G.Value(G.ValueType.Integer, 0));
+                        G.callStack.stack.push(new G.Value(G.ValueType.Integer, 0));
                     } else {
-                        stack.push(new G.Value(G.ValueType.Integer, 1));
+                        G.callStack.stack.push(new G.Value(G.ValueType.Integer, 1));
                     }
                     break;
                 case Opcode.Add:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
-                    stack.push(new G.Value(G.ValueType.Integer,
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer,
                                            (v1.value + v2.value) | 0));
                     break;
                 case Opcode.Sub:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
-                    stack.push(new G.Value(G.ValueType.Integer,
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer,
                                            (v2.value - v1.value) | 0));
                     break;
                 case Opcode.Mult:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
-                    stack.push(new G.Value(G.ValueType.Integer,
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer,
                                            (v1.value * v2.value) | 0));
                     break;
                 case Opcode.Div:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
-                    stack.push(new G.Value(G.ValueType.Integer,
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer,
                                            (v2.value / v1.value) | 0));
                     break;
                 case Opcode.Mod:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
-                    stack.push(new G.Value(G.ValueType.Integer,
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer,
                                            (v2.value % v1.value) | 0));
                     break;
                 case Opcode.Pow:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
-                    stack.push(new G.Value(G.ValueType.Integer,
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer,
                                            (Math.pow(v2.value, v1.value)) | 0));
                     break;
                 case Opcode.BitLeft:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
-                    stack.push(new G.Value(G.ValueType.Integer,
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer,
                                            v2.value << v1.value));
                     break;
                 case Opcode.BitRight:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
-                    stack.push(new G.Value(G.ValueType.Integer,
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer,
                                            v2.value >>> v1.value));
                     break;
                 case Opcode.BitAnd:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
-                    stack.push(new G.Value(G.ValueType.Integer,
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer,
                                            v2.value & v1.value));
                     break;
                 case Opcode.BitOr:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
-                    stack.push(new G.Value(G.ValueType.Integer,
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer,
                                            v2.value | v1.value));
                     break;
                 case Opcode.BitXor:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
-                    stack.push(new G.Value(G.ValueType.Integer,
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer,
                                            v2.value ^ v1.value));
                     break;
                 case Opcode.BitNot:
-                    v1 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Integer);
-                    stack.push(new G.Value(G.ValueType.Integer, ~v1.value));
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer, ~v1.value));
                     break;
                 case Opcode.Random:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
                     const randomValue = Math.floor(Math.random()
                                                    * (v1.value - v2.value)
                                                    + v2.value);
-                    stack.push(new G.Value(G.ValueType.Integer, randomValue));
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer, randomValue));
                     break;
                 case Opcode.Dec:
-                    v1 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Integer);
                     v1.value -= 1;
-                    stack.push(v1);
+                    G.callStack.stack.push(v1);
                     break;
                 case Opcode.Inc:
-                    v1 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Integer);
                     v1.value += 1;
-                    stack.push(v1);
+                    G.callStack.stack.push(v1);
                     break;
                 case Opcode.GetRandom: {
-                    v1 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.List);
                     const theList = G.getList(v1.value);
                     if (theList.length === 0) {
-                        stack.push(new G.Value(G.ValueType.Integer, 0));
+                        G.callStack.stack.push(new G.Value(G.ValueType.Integer, 0));
                     } else {
                         const choice = Math.floor(Math.random() * theList.length);
-                        stack.push(theList[choice]);
+                        G.callStack.stack.push(theList[choice]);
                     }
                     break; }
 
                 case Opcode.GetKeys: {
-                    v1 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Map);
                     v2 = G.makeNew(G.ValueType.List);
                     const theList = G.getMap(v1.value);
@@ -630,12 +604,12 @@
                         const result = new G.Value(keyType, keyValue);
                         G.getList(v2.value).push(result);
                     })
-                    stack.push(v2);
+                    G.callStack.stack.push(v2);
                     break; }
 
                 case Opcode.GetKey:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Node);
                     v2.requireType(G.ValueType.String);
                     G.optionType = G.OptionType.KeyInput;
@@ -643,21 +617,21 @@
                     G.options = [ new G.Option(v2, v1) ];
                     break;
                 case Opcode.GetOption:
-                    v1 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Node);
                     G.optionType = G.OptionType.MenuItem;
                     G.optionFunction = v1.value;
                     break;
                 case Opcode.AddOption:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     v2.requireType(G.ValueType.String);
                     G.options.push(new G.Option(v2, v1));
                     break;
                 case Opcode.AddOptionExtra:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
-                    v3 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
+                    v3 = G.callStack.pop(G.callStack.locals);
                     v3.requireType(G.ValueType.String);
                     G.options.push(new G.Option(v3, v2, v1));
                     break;
@@ -665,8 +639,8 @@
                 case Opcode.StringCopy: {
                     // v2  v1       v2 -> v1
                     // 5   10  strcpy
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.String);
                     v2.requireType(G.ValueType.String);
                     if (G.isStatic(v1).value) {
@@ -676,8 +650,8 @@
                     G.strings[v1.value].data = s2;
                     break; }
                 case Opcode.StringAppend:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.String);
                     v2.requireType(G.ValueType.String);
                     if (G.isStatic(v1).value) {
@@ -687,32 +661,32 @@
                     G.strings[v1.value].data += s2;
                     break;
                 case Opcode.StringLength: {
-                    v1 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.String);
                     const theString = G.getString(v1.value);
-                    stack.push(new G.Value(G.ValueType.Integer, theString.length));
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer, theString.length));
                     break; }
                 case Opcode.StringCompare: {
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.String);
                     v2.requireType(G.ValueType.String);
                     const s1 = G.getString(v1.value);
                     const s2 = G.getString(v2.value);
                     const theResult = 0 + !(s1 === s2);
-                    stack.push(new G.Value(G.ValueType.Integer, theResult));
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer, theResult));
                     break; }
 
                 case Opcode.SetInfo:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
                     v1.requireType(G.ValueType.Integer);
                     G.setInfo(v1.value, v2);
                     break;
                 case Opcode.AddPage:
-                    v1 = stack.popAsLocal(locals);
-                    v2 = stack.popAsLocal(locals);
-                    v3 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v2 = G.callStack.pop(G.callStack.locals);
+                    v3 = G.callStack.pop(G.callStack.locals);
                     v3.requireType(G.ValueType.String);
                     v2.requireType(G.ValueType.Node);
                     v1.requireType(G.ValueType.Integer);
@@ -724,7 +698,7 @@
                     G.addPage(pageInfo);
                     break;
                 case Opcode.DeletePage:
-                    v3 = stack.popAsLocal(locals);
+                    v3 = G.callStack.pop(G.callStack.locals);
                     v3.requireType(G.ValueType.String);
                     G.delPage(v3);
                     break;
@@ -732,14 +706,14 @@
                     G.endPage();
                     break;
                 case Opcode.New:
-                    v1 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
                     v1 = G.makeNew(v1);
-                    stack.push(v1);
+                    G.callStack.stack.push(v1);
                     break;
                 case Opcode.IsStatic:
-                    v1 = stack.popAsLocal(locals);
+                    v1 = G.callStack.pop(G.callStack.locals);
                     v1 = G.isStatic(v1);
-                    stack.push(v1);
+                    G.callStack.stack.push(v1);
                     break;
 
                 default:
