@@ -361,7 +361,7 @@
                         const mapKey = v2.toKey();
                         theMap[mapKey]= v3;
                     } else {
-                        throw new G.RuntimeError("set-item requires list of map.");
+                        throw new G.RuntimeError("set-item requires list or map.");
                     }
                     break;
                 case Opcode.TypeOf:
