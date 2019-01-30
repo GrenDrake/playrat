@@ -58,6 +58,7 @@
         Dec:                    54,
         GetRandom:              55,
         GetKeys:                56,
+        StackSwap:              57,
         GetKey:                 60,
         GetOption:              61,
         GetLine:                62,
@@ -605,6 +606,20 @@
                         G.getList(v2.value).push(result);
                     })
                     G.callStack.stack.push(v2);
+                    break; }
+
+                case Opcode.StackSwap: {
+                    v1 = G.callStack.pop(G.callStack.locals);
+                    v1.requireType(G.ValueType.Integer);
+                    v2 = G.callStack.pop(G.callStack.locals);
+                    v1.requireType(G.ValueType.Integer);
+                    if (v1.value < 0 || v1.value >= G.callStack.stack.length
+                        || v2.value < 0 || v2.value >= G.callStack.stack.length) {
+                        throw new G.RuntimeError("Invalid stack position.");
+                    }
+                    const tmp = G.callStack.stack.stack[v1.value];
+                    G.callStack.stack.stack[v1.value] = G.callStack.stack.stack[v2.value];
+                    G.callStack.stack.stack[v2.value] = tmp;
                     break; }
 
                 case Opcode.GetKey:
