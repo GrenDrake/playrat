@@ -62,9 +62,10 @@ const G = {
         Node:         5,
         Object:       6,
         Property:     7,
-        LocalVar:     8,
+        Stream:       8,
         JumpTarget:   9,
-        MaxType:      9,
+        LocalVar:     15,
+        MaxType:      15,
     };
     Object.freeze(G.ValueType);
 
