@@ -87,7 +87,7 @@
             document.getElementById("closeCredits")
                 .addEventListener("click", closeCredits);
             document.getElementById("newButton")
-                .addEventListener("click", notImplemented);
+                .addEventListener("click", G.newGame);
             document.getElementById("loadButton")
                 .addEventListener("click", notImplemented);
             document.getElementById("saveButton")
@@ -102,6 +102,8 @@
             loadGameData.open("GET", "./game.bin");
             loadGameData.responseType = "arraybuffer";
             loadGameData.send();
+
+            window.addEventListener("keydown", G.keyPressHandler);
         })
 
         G.failedToLoadGameData = function failedToLoadGameData(event) {
@@ -146,7 +148,6 @@
         // Read lists from datafile
         G.listCount = gamedataSrc.getUint32(filePos, true);
         filePos += 4;
-        G.lists.push(undefined);
         for (var i = 0; i < G.listCount; ++i) {
             const thisList = [];
             const listSize = gamedataSrc.getUint16(filePos, true);
@@ -158,14 +159,13 @@
                 filePos += 4;
                 thisList.push(new G.Value(itemType, itemValue));
             }
-            G.lists.push({data:thisList});
+            G.raw.lists.push(thisList);
         }
 
         ///////////////////////////////////////////////////////////////////////
         // Read maps from datafile
         G.mapCount = gamedataSrc.getUint32(filePos, true);
         filePos += 4;
-        G.maps.push(undefined);
         for (var i = 0; i < G.mapCount; ++i) {
             const thisMap = {};
             const mapSize = gamedataSrc.getUint16(filePos, true);
@@ -185,14 +185,13 @@
 
                 thisMap[valueOne.toKey()] = valueTwo;
             }
-            G.maps.push({data:thisMap});
+            G.raw.maps.push(thisMap);
         }
 
         ///////////////////////////////////////////////////////////////////////
         // Read game objects from datafile
         G.objectCount = gamedataSrc.getUint32(filePos, true);
         filePos += 4;
-        G.objects.push(undefined);
         for (var i = 0; i < G.objectCount; ++i) {
             const thisObject = {};
             // thisObject.key = gamedataSrc.getUint32(filePos, true);
@@ -207,7 +206,7 @@
                 filePos += 4;
                 thisObject[propId] = new G.Value(itemType, itemValue);
             }
-            G.objects.push({data:thisObject});
+            G.raw.objects.push(thisObject);
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -232,9 +231,53 @@
         G.bytecodeBuffer = rawSource.slice(filePos);
         G.bytecode = new DataView(G.bytecodeBuffer);
 
+        ///////////////////////////////////////////////////////////////////////
+        // Store the none value for ease of use
         G.noneValue = new G.Value(G.ValueType.None, 0);
-        document.title = "Untitled Game";
-        window.addEventListener("keydown", G.keyPressHandler);
+
+        ///////////////////////////////////////////////////////////////////////
+        // Start the game running
+        G.newGame();
+    }
+
+    G.newGame = function newGame() {
+        G.setInfo(G.Info.LeftHeader, "Untitled Game");
+        G.setInfo(G.Info.LeftHeader, "");
+        G.setInfo(G.Info.RightHeader, "");
+        G.setInfo(G.Info.Footer, "");
+
+        G.gameLoaded = false;
+        G.strings.length = G.stringCount;
+
+        G.lists = [ undefined ];
+        G.raw.lists.forEach(function(oldList) {
+            const newList = [];
+            oldList.forEach(function(value) {
+                newList.push(value.clone());
+            });
+            G.lists.push({data:newList});
+        });
+
+        G.maps = [ undefined ];
+        G.raw.maps.forEach(function(oldMap) {
+            const newMap = [];
+            const mapKeys = Object.getOwnPropertyNames(oldMap);
+            mapKeys.forEach(function(key) {
+                newMap[key] = oldMap[key].clone();
+            });
+            G.maps.push({data:newMap});
+        });
+
+        G.objects = [ undefined ];
+        G.raw.objects.forEach(function(oldObject) {
+            const newObject = [];
+            const objectProperties = Object.getOwnPropertyNames(oldObject);
+            objectProperties.forEach(function(propId) {
+                newObject[propId] = oldObject[propId].clone();
+            });
+            G.objects.push({data:newObject});
+        });
+
         G.gameLoaded = true;
         G.doEvent(G.mainFunction);
     }

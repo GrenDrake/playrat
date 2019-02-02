@@ -6,6 +6,11 @@ const G = {
     lists: [],
     maps: [],
     functions: [],
+    raw: {
+        objects: [],
+        lists: [],
+        maps: []
+    },
 
     eOutput: undefined,
     eTopLeft: undefined,
@@ -772,7 +777,10 @@ const G = {
     }
 
     G.setInfo = function setInfo(area, toValue) {
-        toValue.requireType(G.ValueType.String);
+        if (toValue instanceof G.Value) {
+            toValue.requireType(G.ValueType.String);
+            toValue = G.getString(toValue.value);
+        }
 
         var eArea = undefined;
         switch(area) {
@@ -780,13 +788,14 @@ const G = {
             case G.Info.RightHeader:    eArea = G.eTopRight;    break;
             case G.Info.Footer:         eArea = G.eBottomRight; break;
             case G.Info.Title:
-                document.title = G.getString(toValue.value);
+                document.title = toValue;
                 return;
         }
         if (!eArea) {
             throw new G.RuntimeError("Unknown info area " + area);
         }
-        eArea.textContent = G.getString(toValue.value);
+        if (toValue)    eArea.textContent = toValue;
+        else            eArea.innerHTML = "&nbsp;";
     }
 
     G.setObjectProperty = function setObjectProperty(objectId, propertyId,
@@ -865,6 +874,9 @@ const G = {
 // Keyboard input handler
 // ////////////////////////////////////////////////////////////////////////////
     G.keyPressHandler = function keyPressHandler(event) {
+        // only handle events if the game is actually running
+        if (!G.gameLoaded) return;
+
         var code = -1;
         if (event.key.length === 1) code = event.key.codePointAt(0);
 
