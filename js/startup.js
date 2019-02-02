@@ -65,66 +65,64 @@
 // ////////////////////////////////////////////////////////////////////////////
 // Engine Startup Code
 // ////////////////////////////////////////////////////////////////////////////
-    if (typeof QUnit === "undefined") {
-        window.addEventListener("load", function() {
-            var error = false;
+    window.addEventListener("load", function() {
+        if (typeof QUnit !== "undefined") return;
+        var error = false;
 
-            G.eOutput = document.getElementById("text");
-            G.eTopLeft = document.getElementById("top-left");
-            G.eTopRight = document.getElementById("top-right");
-            G.eBottomLeft = document.getElementById("bottom-left");
-            G.eBottomRight = document.getElementById("bottom-right");
-            G.eButtons = document.getElementById("bottom-centre");
-            G.eSaveButton = document.getElementById("saveButton");
-            G.eNoSaveButton = document.getElementById("nosaveButton");
+        G.eOutput = document.getElementById("text");
+        G.eTopLeft = document.getElementById("top-left");
+        G.eTopRight = document.getElementById("top-right");
+        G.eBottomLeft = document.getElementById("bottom-left");
+        G.eBottomRight = document.getElementById("bottom-right");
+        G.eButtons = document.getElementById("bottom-centre");
+        G.eSaveButton = document.getElementById("saveButton");
+        G.eNoSaveButton = document.getElementById("nosaveButton");
 
-            if (!G.eOutput || !G.eTopLeft || !G.eTopRight || !G.eButtons ||
-                    !G.eBottomLeft || !G.eBottomRight) {
-                this.console.error("Failed to find all display regions.");
-                return;
-            }
-            if (!G.eSaveButton)     { error = true; this.console.error("Failed to find enabled save button."); }
-            if (!G.eNoSaveButton)   { error = true; this.console.error("Failed to find disabled save button."); }
+        if (!G.eOutput)         { error = true; this.console.error("Failed to find output area."); }
+        if (!G.eTopLeft)        { error = true; this.console.error("Failed to find left header."); }
+        if (!G.eTopRight)       { error = true; this.console.error("Failed to find right header."); }
+        if (!G.eBottomLeft)     { error = true; this.console.error("Failed to find left footer."); }
+        if (!G.eBottomRight)    { error = true; this.console.error("Failed to find right footer."); }
+        if (!G.eButtons)        { error = true; this.console.error("Failed to find buttons area."); }
+        if (!G.eSaveButton)     { error = true; this.console.error("Failed to find enabled save button."); }
+        if (!G.eNoSaveButton)   { error = true; this.console.error("Failed to find disabled save button."); }
 
-            const notImplemented = function() {
-                alert("Not implemented yet.");
-            }
+        if (error) return;
 
-            document.getElementById("settingsButton")
-                .addEventListener("click", showSettings);
-            document.getElementById("closeSettings")
-                .addEventListener("click", closeSettings);
-            document.getElementById("creditsButton")
-                .addEventListener("click", showCredits);
-            document.getElementById("closeCredits")
-                .addEventListener("click", closeCredits);
-            document.getElementById("newButton")
-                .addEventListener("click", function() {
-                doConfirm("Are you sure you want to start a new game?", G.newGame); });
-            document.getElementById("loadButton")
-                .addEventListener("click", function() {
-                doConfirm("Are you sure you want to start a load the saved game?", G.loadGame); });
-            G.eNoSaveButton.addEventListener("click", function() {
-                alert("You cannot save the game at this time.");
-            });
-            G.eSaveButton.addEventListener("click", G.saveGame);
+        document.getElementById("settingsButton")
+            .addEventListener("click", showSettings);
+        document.getElementById("closeSettings")
+            .addEventListener("click", closeSettings);
+        document.getElementById("creditsButton")
+            .addEventListener("click", showCredits);
+        document.getElementById("closeCredits")
+            .addEventListener("click", closeCredits);
+        document.getElementById("newButton")
+            .addEventListener("click", function() {
+            doConfirm("Are you sure you want to start a new game?", G.newGame); });
+        document.getElementById("loadButton")
+            .addEventListener("click", function() {
+            doConfirm("Are you sure you want to start a load the saved game?", G.loadGame); });
+        G.eNoSaveButton.addEventListener("click", function() {
+            alert("You cannot save the game at this time.");
+        });
+        G.eSaveButton.addEventListener("click", G.saveGame);
 
-            applySettings();
+        applySettings();
 
-            var loadGameData = new XMLHttpRequest();
-            loadGameData.addEventListener("load", G.parseGameFile);
-            loadGameData.addEventListener("error", G.failedToLoadGameData);
-            loadGameData.addEventListener("abort", G.failedToLoadGameData);
-            loadGameData.open("GET", "./game.bin");
-            loadGameData.responseType = "arraybuffer";
-            loadGameData.send();
+        var loadGameData = new XMLHttpRequest();
+        loadGameData.addEventListener("load", G.parseGameFile);
+        loadGameData.addEventListener("error", failedToLoadGameData);
+        loadGameData.addEventListener("abort", failedToLoadGameData);
+        loadGameData.open("GET", "./game.bin");
+        loadGameData.responseType = "arraybuffer";
+        loadGameData.send();
 
-            window.addEventListener("keydown", G.keyPressHandler);
-        })
+        window.addEventListener("keydown", G.keyPressHandler);
+    })
 
-        G.failedToLoadGameData = function failedToLoadGameData(event) {
-            G.eOutput.innerHTML += "<div class='error'>[Failed to load game data.]</div>";
-        }
+    function failedToLoadGameData(event) {
+        G.eOutput.innerHTML += "<div class='error'>[Failed to load game data.]</div>";
     }
 
 // ////////////////////////////////////////////////////////////////////////////
