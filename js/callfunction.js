@@ -91,7 +91,7 @@
 
         G.operations = 0;
         G.callStack = new G.CallStack();
-        G.callStack.pushFrame(functionId, functionDef[2]);
+        G.callStack.pushFrame(functionId, functionDef[2], 0, selfObj);
 
         for (var i = 0; i < functionDef[0] + functionDef[1]; ++i) {
             if (i < argList.length && i < functionDef[0]) {

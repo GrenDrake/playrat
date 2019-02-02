@@ -96,9 +96,10 @@
                 .addEventListener("click", function() {
                 doConfirm("Are you sure you want to start a new game?", G.newGame); });
             document.getElementById("loadButton")
-                .addEventListener("click", notImplemented);
+                .addEventListener("click", function() {
+                doConfirm("Are you sure you want to start a load the saved game?", G.loadGame); });
             document.getElementById("saveButton")
-                .addEventListener("click", notImplemented);
+                .addEventListener("click", G.saveGame);
 
             applySettings();
 
@@ -247,7 +248,8 @@
         G.newGame();
     }
 
-    G.newGame = function newGame() {
+    G.newGame = function newGame(callMain) {
+        callMain = callMain || true;
         G.setInfo(G.Info.LeftHeader, "Untitled Game");
         G.setInfo(G.Info.LeftHeader, "");
         G.setInfo(G.Info.RightHeader, "");
@@ -286,7 +288,76 @@
         });
 
         G.gameLoaded = true;
-        G.doEvent(G.mainFunction);
+        if (callMain) G.doEvent(G.mainFunction, [new G.Value(G.ValueType.Integer, G.StartupSource.NewGame)]);
+    }
+
+    G.saveGame = function saveGame() {
+        const saveData = {
+            data: {},
+        };
+        G.objects.forEach(function(theObject, objId) {
+            if (!theObject)                             return;
+            theObject = theObject.data;
+            if (!theObject.hasOwnProperty(G.propIdent)) return;
+            if (!theObject.hasOwnProperty(G.propSave))  return;
+            const myIdent = theObject[G.propIdent];
+            const saveList = G.makeNew(G.ValueType.List);
+            try {
+                G.callFunction(G, new G.Value(G.ValueType.Object, objId), theObject[G.propSave], [saveList]);
+            } catch (error) {
+                if (!(error instanceof G.RuntimeError))    throw error;
+                alert("An error occured while saving. Check JavaScript console for details.");
+                console.error(G.callStack.toString());
+                throw new G.RuntimeError("An error occured while saving Object " + objId);
+            }
+            saveData.data[myIdent.value] = G.lists[saveList.value].data;
+        });
+
+        const saveDataStr = JSON.stringify(saveData);
+        localStorage.setItem("savegame", saveDataStr);
+        console.log(saveDataStr);
+        G.setInfo(G.Info.Status, "Game saved.");
+    }
+
+    G.loadGame = function loadGame() {
+        const loadDataStr = localStorage.getItem("savegame");
+        if (!loadDataStr) {
+            alert("No saved game to load!");
+            return;
+        }
+        G.newGame();
+        const loadData = JSON.parse(loadDataStr);
+        const identList = Object.keys(loadData.data);
+        const loadListValue = G.makeNew(G.ValueType.List);
+        const loadList = G.lists[loadListValue.value].data;
+        identList.forEach(function(ident) {
+            const objectValue = G.objectByIdent(+ident);
+            if (objectValue.type === G.ValueType.None) {
+                console.warn("Could not find object with ident " + ident);
+                return;
+            }
+            const theObject = G.objects[objectValue.value].data;
+            if (!theObject.hasOwnProperty(G.propLoad)) {
+                return;
+            }
+
+            loadList.length = 0;
+            loadData.data[ident].forEach(function(data) {
+                loadList.push(new G.Value(data.mType, data.mValue));
+            });
+
+            try {
+                G.callFunction(G, objectValue, theObject[G.propLoad], [loadListValue]);
+            } catch (error) {
+                if (!(error instanceof G.RuntimeError))    throw error;
+                alert("An error occured while loading. Check JavaScript console for details.");
+                console.error(G.callStack.toString());
+                throw new G.RuntimeError("An error occured while loading Object " + objId);
+            }
+        });
+
+        G.doEvent(G.mainFunction, [new G.Value(G.ValueType.Integer, G.StartupSource.Restore)]);
+        G.setInfo(G.Info.Status, "Game loaded.");
     }
 
 })();

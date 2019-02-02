@@ -26,6 +26,7 @@ const G = {
     options: [],
     gameLoaded: false,
 
+    lastNode: "",
     inPage: false,
     pages: {},
     stored: {
@@ -49,11 +50,16 @@ const G = {
 // ////////////////////////////////////////////////////////////////////////////
 // ENum Values
 // ////////////////////////////////////////////////////////////////////////////
+    G.StartupSource = {
+        NewGame:        0,
+        Restore:        1,
+    }
     G.Info = {
         LeftHeader:     0,
         RightHeader:    1,
         Footer:         2,
         Title:          3,
+        Status:         4,
     };
     Object.freeze(G.Info);
 
@@ -399,6 +405,12 @@ const G = {
         G.pages[pageId] = pageInfo;
     }
 
+    G.clearOutput = function clearOutput() {
+        while (G.eOutput.childElementCount > 0) {
+            G.eOutput.removeChild(G.eOutput.firstChild);
+        }
+    }
+
     G.collectGarbage = function collectGarbage() {
         ////////////////////////////////////////
         // COLLECTING
@@ -509,10 +521,7 @@ const G = {
         const start = performance.now();
         G.options = [];
         G.textBuffer = [];
-
-        while (G.eOutput.childElementCount > 0) {
-            G.eOutput.removeChild(G.eOutput.firstChild);
-        }
+        G.clearOutput();
 
         try {
             if (functionId instanceof G.Value) {
@@ -787,6 +796,7 @@ const G = {
             case G.Info.LeftHeader:     eArea = G.eTopLeft;     break;
             case G.Info.RightHeader:    eArea = G.eTopRight;    break;
             case G.Info.Footer:         eArea = G.eBottomRight; break;
+            case G.Info.Status:         eArea = G.eBottomLeft;  break;
             case G.Info.Title:
                 document.title = toValue;
                 return;
@@ -813,6 +823,22 @@ const G = {
         }
         const theObject = G.getObject(objectId);
         theObject[propertyId] = newValue;
+    }
+
+    G.objectByIdent = function objectByIdent(objectId) {
+        if (objectId instanceof G.Value) {
+            objectId.requireType(G.ValueType.Integer);
+            objectId = objectId.value;
+        }
+        if (objectId <= 0) return G.noneValue;
+
+        for (var i = 1; i < G.objects.length; ++i) {
+            const thisIdent = G.getObjectProperty(i, G.propIdent);
+            if (thisIdent.value === objectId) {
+                return new G.Value(G.ValueType.Object, i);
+            }
+        }
+        return G.noneValue;
     }
 
     G.objectHasProperty = function objectHasProperty(objectId, propertyId) {
