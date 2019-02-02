@@ -9,6 +9,7 @@
         const settingsDialog = document.getElementById("settings");
         settingsDialog.style.display = "block";
 
+        G.UI.inDialog = {id:"settings",close:G.UI.closeSettings, allowSpace:false};
         document.getElementById("limitWidth").checked = document.getElementById("contentArea").classList.contains("limitWidth");
         document.getElementById("showEventDuration").checked = G.showEventDuration;
         document.getElementById("showOperationsCount").checked = G.showOperationsCount;
@@ -27,6 +28,7 @@
             showOperationsCount: document.getElementById("showOperationsCount").checked,
             showGarbageCollectionDuration: document.getElementById("showGarbageCollectionDuration").checked,
         };
+        G.UI.inDialog = false;
         localStorage["gtrpge_options"] = JSON.stringify(results);
         G.UI.applySettings();
     }
@@ -47,6 +49,7 @@
         overlay.style.display = "block";
         const settingsDialog = document.getElementById("creditsWindow");
         settingsDialog.style.display = "block";
+        G.UI.inDialog = {id:"creditsWindow", close:G.UI.closeCredits, allowSpace:true};
     };
 
     G.UI.closeCredits = function closeCredits() {
@@ -54,6 +57,7 @@
         overlay.style.display = "none";
         const settingsDialog = document.getElementById("creditsWindow");
         settingsDialog.style.display = "none";
+        G.UI.inDialog = false;
     }
 
     G.UI.doConfirm = function doConfirm(prompt, onYes) {

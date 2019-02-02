@@ -1,6 +1,8 @@
 
 const G = {
-    UI: {},
+    UI: {
+        inDialog: false,
+    },
     noneValue: undefined,
     strings: [],
     objects: [],
@@ -932,6 +934,16 @@ const G = {
 // Keyboard input handler
 // ////////////////////////////////////////////////////////////////////////////
     G.keyPressHandler = function keyPressHandler(event) {
+        // handle dialog keyboard events
+        if (G.UI.inDialog) {
+            if (event.key === "Enter" || event.key === "Escape"
+                    || (event.key === " " && G.UI.inDialog.allowSpace)) {
+                G.UI.inDialog.close();
+                event.preventDefault();
+            }
+            return;
+        }
+
         // only handle events if the game is actually running
         if (!G.gameLoaded) return;
 
