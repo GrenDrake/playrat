@@ -1,5 +1,6 @@
 
 const G = {
+    UI: {},
     noneValue: undefined,
     strings: [],
     objects: [],
@@ -990,7 +991,7 @@ const G = {
         }
 
         if (code == 111) {
-            showSettings();
+            G.UI.showSettings();
             return;
         }
 

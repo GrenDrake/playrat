@@ -3,7 +3,7 @@
 // ////////////////////////////////////////////////////////////////////////////
 // UI Code
 // ////////////////////////////////////////////////////////////////////////////
-    function showSettings() {
+    G.UI.showSettings = function showSettings() {
         const overlay = document.getElementById("overlay");
         overlay.style.display = "block";
         const settingsDialog = document.getElementById("settings");
@@ -15,7 +15,7 @@
         document.getElementById("showGarbageCollectionDuration").checked = G.showGarbageCollectionDuration;
     };
 
-    function closeSettings() {
+    G.UI.closeSettings = function closeSettings() {
         const overlay = document.getElementById("overlay");
         overlay.style.display = "none";
         const settingsDialog = document.getElementById("settings");
@@ -28,10 +28,10 @@
             showGarbageCollectionDuration: document.getElementById("showGarbageCollectionDuration").checked,
         };
         localStorage["gtrpge_options"] = JSON.stringify(results);
-        applySettings();
+        G.UI.applySettings();
     }
 
-    function applySettings() {
+    G.UI.applySettings = function applySettings() {
         const rawResults = localStorage.getItem("gtrpge_options");
         if (rawResults) {
             const results = JSON.parse(rawResults);
@@ -42,21 +42,21 @@
         }
     }
 
-    function showCredits() {
+    G.UI.showCredits = function showCredits() {
         const overlay = document.getElementById("overlay");
         overlay.style.display = "block";
         const settingsDialog = document.getElementById("creditsWindow");
         settingsDialog.style.display = "block";
     };
 
-    function closeCredits() {
+    G.UI.closeCredits = function closeCredits() {
         const overlay = document.getElementById("overlay");
         overlay.style.display = "none";
         const settingsDialog = document.getElementById("creditsWindow");
         settingsDialog.style.display = "none";
     }
 
-    function doConfirm(prompt, onYes) {
+    G.UI.doConfirm = function doConfirm(prompt, onYes) {
         if (confirm(prompt)) {
             onYes();
         }
@@ -90,13 +90,13 @@
         if (error) return;
 
         document.getElementById("settingsButton")
-            .addEventListener("click", showSettings);
+            .addEventListener("click", G.UI.showSettings);
         document.getElementById("closeSettings")
-            .addEventListener("click", closeSettings);
+            .addEventListener("click", G.UI.closeSettings);
         document.getElementById("creditsButton")
-            .addEventListener("click", showCredits);
+            .addEventListener("click", G.UI.showCredits);
         document.getElementById("closeCredits")
-            .addEventListener("click", closeCredits);
+            .addEventListener("click", G.UI.closeCredits);
         document.getElementById("newButton")
             .addEventListener("click", function() {
             doConfirm("Are you sure you want to start a new game?", G.newGame); });
@@ -108,7 +108,7 @@
         });
         G.eSaveButton.addEventListener("click", G.saveGame);
 
-        applySettings();
+        G.UI.applySettings();
 
         var loadGameData = new XMLHttpRequest();
         loadGameData.addEventListener("load", G.parseGameFile);
