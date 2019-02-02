@@ -99,10 +99,10 @@
             .addEventListener("click", G.UI.closeCredits);
         document.getElementById("newButton")
             .addEventListener("click", function() {
-            doConfirm("Are you sure you want to start a new game?", G.newGame); });
+            G.UI.doConfirm("Are you sure you want to start a new game?", G.newGame); });
         document.getElementById("loadButton")
             .addEventListener("click", function() {
-            doConfirm("Are you sure you want to start a load the saved game?", G.loadGame); });
+            G.UI.doConfirm("Are you sure you want to start a load the saved game?", G.loadGame); });
         G.eNoSaveButton.addEventListener("click", function() {
             alert("You cannot save the game at this time.");
         });
@@ -263,6 +263,12 @@
 
         G.gameLoaded = false;
         G.strings.length = G.stringCount;
+        G.inPage = false;
+        G.pages = {};
+        const pageButtons = document.getElementsByClassName("pageButton");
+        while (pageButtons.length > 0) {
+            pageButtons[0].parentElement.removeChild(pageButtons[0]);
+        }
 
         G.lists = [ undefined ];
         G.raw.lists.forEach(function(oldList) {

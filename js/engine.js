@@ -399,6 +399,7 @@ const G = {
             throw new G.RuntimeError("Tried to add page \"" + G.getString(pageId) + "\" but page already exists.");
         }
         const button = document.createElement("button");
+        button.classList.add("pageButton");
         button.textContent = G.getString(pageId);
         button.title = G.getString(pageId) + " (" + String.fromCodePoint(pageInfo.hotkey.value) + ")";
         button.addEventListener("click", function() {
