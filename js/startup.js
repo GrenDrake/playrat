@@ -56,6 +56,12 @@
         settingsDialog.style.display = "none";
     }
 
+    function doConfirm(prompt, onYes) {
+        if (confirm(prompt)) {
+            onYes();
+        }
+    }
+
 // ////////////////////////////////////////////////////////////////////////////
 // Engine Startup Code
 // ////////////////////////////////////////////////////////////////////////////
@@ -87,7 +93,8 @@
             document.getElementById("closeCredits")
                 .addEventListener("click", closeCredits);
             document.getElementById("newButton")
-                .addEventListener("click", G.newGame);
+                .addEventListener("click", function() {
+                doConfirm("Are you sure you want to start a new game?", G.newGame); });
             document.getElementById("loadButton")
                 .addEventListener("click", notImplemented);
             document.getElementById("saveButton")
