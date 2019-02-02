@@ -59,6 +59,8 @@
         GetRandom:              55,
         GetKeys:                56,
         StackSwap:              57,
+        GetSetting:             58,
+        SetSetting:             59,
         GetKey:                 60,
         GetOption:              61,
         GetLine:                62,
@@ -620,6 +622,18 @@
                     const tmp = G.callStack.stack.stack[v1.value];
                     G.callStack.stack.stack[v1.value] = G.callStack.stack.stack[v2.value];
                     G.callStack.stack.stack[v2.value] = tmp;
+                    break; }
+
+                case Opcode.GetSetting: {
+                    const settingNo = G.callStack.pop(G.callStack.locals);
+                    settingNo.requireType(G.ValueType.Integer);
+                    G.getSetting(settingNo);
+                    break; }
+                case Opcode.SetSetting: {
+                    const settingNo = G.callStack.pop(G.callStack.locals);
+                    const newValue  = G.callStack.pop(G.callStack.locals);
+                    settingNo.requireType(G.ValueType.Integer);
+                    G.setSetting(settingNo, newValue);
                     break; }
 
                 case Opcode.GetKey:

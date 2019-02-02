@@ -18,6 +18,8 @@ const G = {
     eBottomLeft: undefined,
     eBottomRight: undefined,
     eButtons: undefined,
+    eSaveButton: undefined,
+    eNoSaveButton: undefined,
 
     textBuffer: [],
 
@@ -33,6 +35,7 @@ const G = {
         textBuffer: undefined,
         options: undefined,
     },
+    saveAllowed: false,
 
     garbageCollectionFrequency: 5,
     eventCount: 0,
@@ -689,6 +692,15 @@ const G = {
         }
     }
 
+    G.getSetting = function setSetting(settingNumber) {
+        switch(settingNumber.value) {
+            case 0:
+                return new G.Value(G.ValueType.Integer, +G.saveAllowed);
+            default:
+                throw new G.RuntimeError("Tried to get unknown setting " + settingNumber.value + ".");
+        }
+    }
+
     G.getString = function getString(stringNumber) {
         return G.getData(G.ValueType.String, G.strings, stringNumber);
     }
@@ -823,6 +835,24 @@ const G = {
         }
         const theObject = G.getObject(objectId);
         theObject[propertyId] = newValue;
+    }
+
+    G.setSetting = function setSetting(settingNumber, settingValue) {
+        switch(settingNumber.value) {
+            case 0:
+                if (settingValue.isTrue()) {
+                    G.eSaveButton.style.display = 'inline';
+                    G.eNoSaveButton.style.display = 'none';
+                    G.saveAllowed = true;
+                } else {
+                    G.eSaveButton.style.display = 'none';
+                    G.eNoSaveButton.style.display = 'inline';
+                    G.saveAllowed = false;
+                }
+                break;
+            default:
+                throw new G.RuntimeError("Tried to set unknown setting " + settingNumber.value + ".");
+        }
     }
 
     G.objectByIdent = function objectByIdent(objectId) {

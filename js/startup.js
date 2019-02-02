@@ -67,18 +67,24 @@
 // ////////////////////////////////////////////////////////////////////////////
     if (typeof QUnit === "undefined") {
         window.addEventListener("load", function() {
+            var error = false;
+
             G.eOutput = document.getElementById("text");
             G.eTopLeft = document.getElementById("top-left");
             G.eTopRight = document.getElementById("top-right");
             G.eBottomLeft = document.getElementById("bottom-left");
             G.eBottomRight = document.getElementById("bottom-right");
             G.eButtons = document.getElementById("bottom-centre");
+            G.eSaveButton = document.getElementById("saveButton");
+            G.eNoSaveButton = document.getElementById("nosaveButton");
 
             if (!G.eOutput || !G.eTopLeft || !G.eTopRight || !G.eButtons ||
                     !G.eBottomLeft || !G.eBottomRight) {
                 this.console.error("Failed to find all display regions.");
                 return;
             }
+            if (!G.eSaveButton)     { error = true; this.console.error("Failed to find enabled save button."); }
+            if (!G.eNoSaveButton)   { error = true; this.console.error("Failed to find disabled save button."); }
 
             const notImplemented = function() {
                 alert("Not implemented yet.");
@@ -98,8 +104,10 @@
             document.getElementById("loadButton")
                 .addEventListener("click", function() {
                 doConfirm("Are you sure you want to start a load the saved game?", G.loadGame); });
-            document.getElementById("saveButton")
-                .addEventListener("click", G.saveGame);
+            G.eNoSaveButton.addEventListener("click", function() {
+                alert("You cannot save the game at this time.");
+            });
+            G.eSaveButton.addEventListener("click", G.saveGame);
 
             applySettings();
 
@@ -292,6 +300,11 @@
     }
 
     G.saveGame = function saveGame() {
+        if (!G.saveAllowed) {
+            alert("You cannot save the game at this time.");
+            return;
+        }
+
         const saveData = {
             data: {},
         };
