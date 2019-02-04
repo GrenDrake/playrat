@@ -70,6 +70,7 @@
         StringAppend:           66,
         StringLength:           67,
         StringCompare:          68,
+        Error:                  69,
         SetInfo:                70,
         AddPage:                71,
         DeletePage:             72,
@@ -689,6 +690,17 @@
                     const theResult = 0 + !(s1 === s2);
                     G.callStack.stack.push(new G.Value(G.ValueType.Integer, theResult));
                     break; }
+
+                case Opcode.Error:
+                    if (G.callStack.stackSize === 0) {
+                        throw new G.RuntimeError("User Error: Thrown with wmpty stack.");
+                    }
+                    v1 = G.callStack.pop();
+                    if (v1.type === G.ValueType.String) {
+                        throw new G.RuntimeError("User Error: " + G.getString(v1.value));
+                    } else {
+                        throw new G.RuntimeError("User Error: " + v1.toString());
+                    }
 
                 case Opcode.SetInfo:
                     v1 = G.callStack.pop();
