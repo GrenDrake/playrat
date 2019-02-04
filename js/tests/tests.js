@@ -77,13 +77,19 @@ QUnit.test("Push and pop with local values", function(assert) {
     callstack.locals.push(new G.Value(G.ValueType.String, 99));
 
     callstack.push(new G.Value(G.ValueType.Integer, 4));
+    callstack.push(new G.Value(G.ValueType.LocalVar, 1));
     callstack.push(new G.Value(G.ValueType.LocalVar, 2));
-    assert.strictEqual(callstack.stackSize, 2, "Initial size correct");
+    assert.strictEqual(callstack.stackSize, 3, "Initial size correct");
 
     const value = callstack.pop();
-    assert.strictEqual(callstack.stackSize, 1, "New size correct");
-    assert.strictEqual(value.type, G.ValueType.String, "Top value correct type");
-    assert.strictEqual(value.value, 67, "Top value correct value");
+    assert.strictEqual(callstack.stackSize, 2, "pop: correct size");
+    assert.strictEqual(value.type, G.ValueType.String, "pop: correct type");
+    assert.strictEqual(value.value, 67, "pop: correct value");
+
+    const rawValue = callstack.popRaw();
+    assert.strictEqual(callstack.stackSize, 1, "popRaw: size correct");
+    assert.strictEqual(rawValue.type, G.ValueType.LocalVar, "popRaw: correct type");
+    assert.strictEqual(rawValue.value, 1, "popRaw: correct value");
 });
 
 

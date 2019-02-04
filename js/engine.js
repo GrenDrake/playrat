@@ -292,17 +292,24 @@ const G = {
             if (this.frames.length === 0) {
                 throw new G.RuntimeError("Tried to pop with empty callstack.");
             }
+            const result = this.popRaw();
+            if (result.type == G.ValueType.LocalVar) {
+                return this.evaluate(result);
+            } else {
+                return result;
+            }
+        }
+        popRaw() {
+            if (this.frames.length === 0) {
+                throw new G.RuntimeError("Tried to pop with empty callstack.");
+            }
             return this.stack.pop();
         }
         push(value) {
             if (this.frames.length === 0) {
                 throw new G.RuntimeError("Tried to pop with empty callstack.");
             }
-            if (value.type == G.ValueType.LocalVar) {
-                return this.stack.push(this.evaluate(value));
-            } else {
-                return this.stack.push(value);
-            }
+            this.stack.push(value);
         }
 
         popFrame() {
