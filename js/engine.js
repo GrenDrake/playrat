@@ -277,6 +277,17 @@ const G = {
             return value;
         }
 
+        peek(pos) {
+            pos = pos || 0;
+            if (this.frames.length === 0) {
+                throw new G.RuntimeError("Tried to pop with empty callstack.");
+            }
+            if (pos < 0 || pos >= this.stackSize) {
+                throw new G.RuntimeError("Tried to peek invalid stack position.");
+            }
+            const result = this.stack.stack[this.stackSize - 1 - pos];
+            return result;
+        }
         pop() {
             if (this.frames.length === 0) {
                 throw new G.RuntimeError("Tried to pop with empty callstack.");
@@ -292,12 +303,6 @@ const G = {
             } else {
                 return this.stack.push(value);
             }
-        }
-        top() {
-            if (this.frames.length === 0) {
-                throw new G.RuntimeError("Tried to pop with empty callstack.");
-            }
-            return this.stack.top();
         }
 
         popFrame() {
