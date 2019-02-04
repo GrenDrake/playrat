@@ -342,7 +342,6 @@ const G = {
             return this.frames.pop()
         }
         pushFrame(functionId, baseAddress, returnAddress, selfValue) {
-            returnAddress = returnAddress || -1;
             selfValue = selfValue || G.noneValue;
             this.frames.push(new G.CallStackFrame(functionId, baseAddress, returnAddress, selfValue));
         }
@@ -362,13 +361,6 @@ const G = {
             this.selfValue = selfValue;
             this.stack = new G.Stack();
             this.locals = [];
-
-            //             who: functionId,
-            // base: functionDef[2],
-            // retAddress: -1,
-            // self: G.noneValue,
-            // locals: [],
-            // stackSize: 0
         }
 
     }
@@ -786,7 +778,6 @@ const G = {
             default:
                 return new G.Value(G.ValueType.Integer, 1);
         }
-        return new G.Value(G.ValueType.Integer, 0);
     }
 
     G.makeNew = function makeNew(type) {
@@ -816,7 +807,6 @@ const G = {
                 throw new G.RuntimeError("Cannot instantiate objects of type "
                                         + G.typeNames[type]);
         }
-        return new G.Value(G.ValueType.None, 0);
     }
 
     G.say = function say(value, ucFirst) {
