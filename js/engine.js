@@ -263,6 +263,9 @@ const G = {
         get stack() {
             return this.topFrame().stack;
         }
+        get stackSize() {
+            return this.topFrame().stack.length;
+        }
 
         evaluate(value) {
             while (value.type === G.ValueType.LocalVar) {
@@ -273,17 +276,28 @@ const G = {
             }
             return value;
         }
+
         pop() {
             if (this.frames.length === 0) {
                 throw new G.RuntimeError("Tried to pop with empty callstack.");
             }
-            return this.evaluate(this.stack.pop());
+            return this.stack.pop();
         }
         push(value) {
             if (this.frames.length === 0) {
                 throw new G.RuntimeError("Tried to pop with empty callstack.");
             }
-            return this.stack.push(value);
+            if (value.type == G.ValueType.LocalVar) {
+                return this.stack.push(this.evaluate(value));
+            } else {
+                return this.stack.push(value);
+            }
+        }
+        top() {
+            if (this.frames.length === 0) {
+                throw new G.RuntimeError("Tried to pop with empty callstack.");
+            }
+            return this.stack.top();
         }
 
         popFrame() {

@@ -68,23 +68,22 @@ QUnit.test("Get top item (.top)", function(assert) {
     assert.strictEqual(poppedValue, newStack.stack[newStack.stack.length - 1], "Return value is same object");
 });
 
-QUnit.test("Pop item with translated locals (.popAsLocal)", function(assert) {
-    const localArray = [
-        new G.Value(G.ValueType.String, 22),
-        new G.Value(G.ValueType.String, 43),
-        new G.Value(G.ValueType.String, 67),
-        new G.Value(G.ValueType.String, 99),
-    ];
+QUnit.test("Push and pop with local values", function(assert) {
+    const callstack = new G.CallStack();
+    callstack.pushFrame();
+    callstack.locals.push(new G.Value(G.ValueType.String, 22));
+    callstack.locals.push(new G.Value(G.ValueType.String, 43));
+    callstack.locals.push(new G.Value(G.ValueType.String, 67));
+    callstack.locals.push(new G.Value(G.ValueType.String, 99));
 
-    const newStack = new G.Stack();
-    newStack.push(new G.Value(G.ValueType.Integer, 4));
-    newStack.push(new G.Value(G.ValueType.LocalVar, 2));
-    assert.strictEqual(newStack.stack.length, 2, "Initial size correct");
+    callstack.push(new G.Value(G.ValueType.Integer, 4));
+    callstack.push(new G.Value(G.ValueType.LocalVar, 2));
+    assert.strictEqual(callstack.stackSize, 2, "Initial size correct");
 
-    const value = newStack.popAsLocal(localArray);
-    assert.strictEqual(newStack.stack.length, 1, "New size correct");
+    const value = callstack.pop();
+    assert.strictEqual(callstack.stackSize, 1, "New size correct");
     assert.strictEqual(value.type, G.ValueType.String, "Top value correct type");
-    assert.ok(value.value, 67, "Top value correct value");
+    assert.strictEqual(value.value, 67, "Top value correct value");
 });
 
 
