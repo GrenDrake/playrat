@@ -13,6 +13,24 @@ QUnit.test("Create stack (new)", function(assert) {
     assert.strictEqual(callstack.length, 0, "Pop frame");
 });
 
+QUnit.test("Reading and updating local values", function(assert) {
+    const theArg = new G.Value(G.ValueType.Integer, 1);
+    const callstack = new G.CallStack();
+    callstack.pushFrame();
+    callstack.buildLocals([theArg, theArg], 1, 4);
+    assert.strictEqual(callstack.length, 1, "Push frame");
+    assert.strictEqual(callstack.locals.length, 4, "Frame has four locals");
+
+    assert.strictEqual(callstack.get(0), theArg, "Argument value starts set");
+    assert.strictEqual(callstack.get(1), G.noneValue, "Local value starts as none");
+    const newValue = new G.Value(G.ValueType.Integer, 2);
+    callstack.set(2, newValue);
+    assert.strictEqual(callstack.get(2), newValue, "Successfully updated and read local value");
+    callstack.set(2);
+    assert.strictEqual(callstack.get(2), G.noneValue, "Successfully cleared local value");
+
+});
+
 QUnit.test("Push items (.push)", function(assert) {
     const callstack = new G.CallStack();
     callstack.pushFrame();

@@ -277,6 +277,29 @@ const G = {
             return value;
         }
 
+        buildLocals(argList, maxArgs, totalLocals) {
+            for (var i = 0; i < totalLocals; ++i) {
+                if (i < argList.length && i < maxArgs) {
+                    this.locals.push(argList[i]);
+                } else {
+                    this.locals.push(G.noneValue);
+                }
+            }
+        }
+        get(position) {
+            if (position < 0 || position > this.locals.length) {
+                throw new G.RuntimeError("Tried to read invalid local number " + position + ".");
+            }
+            return this.locals[position];
+        }
+        set(position, newValue) {
+            newValue = newValue || G.noneValue;
+            if (position < 0 || position > this.locals.length) {
+                throw new G.RuntimeError("Tried to update invalid local number " + position + ".");
+            }
+            this.locals[position] = newValue;
+        }
+
         peek(pos) {
             pos = pos || 0;
             if (this.frames.length === 0) {

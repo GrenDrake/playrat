@@ -94,14 +94,7 @@
         G.operations = 0;
         G.callStack = new G.CallStack();
         G.callStack.pushFrame(functionId, functionDef[2], 0, selfObj);
-
-        for (var i = 0; i < functionDef[0] + functionDef[1]; ++i) {
-            if (i < argList.length && i < functionDef[0]) {
-                G.callStack.locals.push(argList[i]);
-            } else {
-                G.callStack.locals.push(new G.Value(0,0));
-            }
-        }
+        G.callStack.buildLocals(argList, functionDef[0], functionDef[0] + functionDef[1]);
         var IP = functionDef[2];
         var rawType, rawValue, v1, v2, v3, target;
 
@@ -167,10 +160,7 @@
                     var localId = G.callStack.popRaw();
                     var value = G.callStack.pop();
                     localId.requireType(G.ValueType.LocalVar);
-                    if (localId.value < 0 || localId.value >= G.callStack.locals.length) {
-                        throw new G.RuntimeError("Opcode.Store: Invalid local number " + localId.value + ".");
-                    }
-                    G.callStack.locals[localId.value] = value;
+                    G.callStack.set(localId.value, value);
                     break;
 
                 case Opcode.Say:
@@ -237,14 +227,8 @@
                         theArgs.push(G.callStack.pop());
                         v1.value -= 1;
                     }
-                    while (theArgs.length > theFunc[0]) {
-                        theArgs.pop();
-                    }
-                    while (theArgs.length < theFunc[0] + theFunc[1]) {
-                        theArgs.push(G.noneValue);
-                    }
                     G.callStack.pushFrame(target.value, theFunc[2], IP, mySelf);
-                    G.callStack.topFrame().locals = theArgs;
+                    G.callStack.buildLocals(theArgs, theFunc[0], theFunc[0] + theFunc[1]);
                     IP = theFunc[2];
                     break; }
                 case Opcode.Self:
