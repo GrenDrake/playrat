@@ -571,6 +571,7 @@ const G = {
         G.textBuffer = [];
         G.clearOutput();
 
+        let errorDiv = undefined;
         try {
             if (functionId instanceof G.Value) {
                 functionId.requireType(G.ValueType.Node);
@@ -580,7 +581,7 @@ const G = {
             G.callFunction(G, G.noneValue, functionId, argsList);
         } catch (error) {
             if (!(error instanceof G.RuntimeError))    throw error;
-            const errorDiv = document.createElement("pre");
+            errorDiv = document.createElement("pre");
             errorDiv.classList.add("error");
             const errorMessage = [];
 
@@ -597,10 +598,9 @@ const G = {
             fatalErrorText.classList.add("errorTitle");
             fatalErrorText.textContent = error.toString() + "\n";
             errorDiv.insertBefore(fatalErrorText, errorDiv.firstChild);
-            G.eOutput.appendChild(errorDiv);
         }
 
-        G.doOutput();
+        G.doOutput(errorDiv);
         ++G.eventCount;
         const end = performance.now();
         const runGC = G.eventCount % G.garbageCollectionFrequency ===  0;
@@ -625,7 +625,7 @@ const G = {
         G.eBottomLeft.textContent = systemInfo.join("; ");
     }
 
-    G.doOutput = function doOutput() {
+    G.doOutput = function doOutput(errorMessage) {
         const outputText = G.textBuffer.join("").split("\n");
         outputText.forEach(function(line) {
             line = line.trim();
@@ -652,7 +652,8 @@ const G = {
                 G.eOutput.appendChild(p);
             }
         });
-        G.showOptions();
+        if (errorMessage)   G.eOutput.appendChild(errorMessage);
+        else                G.showOptions();
     }
 
     G.doPage = function doPage(pageId, argsList, fromEvent) {
