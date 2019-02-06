@@ -160,7 +160,8 @@
                 case Opcode.Store:
                     var localId = G.callStack.popRaw();
                     var value = G.callStack.pop();
-                    localId.requireType(G.ValueType.LocalVar);
+                    localId.requireType(G.ValueType.VarRef);
+                    value.forbidType(G.ValueType.VarRef);
                     G.callStack.set(localId.value, value);
                     break;
 
@@ -258,6 +259,7 @@
                     v3 = G.callStack.pop();
                     v1.requireType(G.ValueType.Object);
                     v2.requireType(G.ValueType.Property);
+                    v3.forbidType(G.ValueType.VarRef);
                     G.setObjectProperty(v1, v2, v3);
                     break;
 
@@ -315,6 +317,7 @@
                     v1 = G.callStack.pop();
                     v2 = G.callStack.pop();
                     v3 = G.callStack.pop();
+                    v3.forbidType(G.ValueType.VarRef);
                     if (v1.type === G.ValueType.List) {
                         v2.requireType(G.ValueType.Integer);
                         G.getList(v1.value)[v2.value] = v3;
@@ -353,6 +356,7 @@
                     }
                     v1.requireType(G.ValueType.List);
                     v2.requireType(G.ValueType.Integer);
+                    v3.forbidType(G.ValueType.VarRef);
                     const theList = G.getList(v1.value);
                     if (v2.value <= 0) v2.value = 0;
                     theList.splice(v2.value, 0, v3);

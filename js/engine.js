@@ -81,6 +81,7 @@ const G = {
         Property:     7,
         Stream:       8,
         JumpTarget:   9,
+        VarRef:       10,
         LocalVar:     15,
         MaxType:      15,
     };
@@ -96,7 +97,8 @@ const G = {
         "Object",
         "Property",
         "LocalVar",
-        "JumpTarget"
+        "JumpTarget",
+        "VarRef",
     ];
     Object.freeze(G.typeNames);
 
@@ -406,6 +408,12 @@ const G = {
                 return false;
             } else {
                 return true;
+            }
+        }
+        forbidType(type) {
+            if (this.type === type) {
+                throw new G.RuntimeError(
+                    G.typeNames[type] + " is forbidden here.");
             }
         }
         requireType(type) {
