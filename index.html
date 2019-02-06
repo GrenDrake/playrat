@@ -33,6 +33,36 @@
 </body>
 
 <div id='overlay'>
+    <div id='saveDialog' class='dialog'>
+        <div class='dialogTitle'>
+            Save Game
+        </div>
+        <select id='saveList' style='width:100%'></select><br><br>
+        <div style='display:flex'>
+            <div>New Save Name: &nbsp;</div>
+            <div style='flex-grow: 1'><input style='width:100%' type="text" id='savegamename'></div>
+        </div>
+
+        <div class='dialogButtons'>
+            <button id='newSaveButton'>Save New Game</button>
+            <button id='overwriteSaveButton'>Overwrite Saved Game</button>
+            <button id='deleteSaveButton'>Delete Saved Game</button>
+            <button id='saveCancel'>Cancel</button>
+        </div>
+    </div>
+
+    <div id='loadDialog' class='dialog'>
+        <div class='dialogTitle'>
+            Load Game
+        </div>
+        <select id='loadList' style='width:100%'></select><br><br>
+
+        <div class='dialogButtons'>
+            <button id='loadGameButton'>Load Game</button>
+            <button id='loadCancel'>Cancel</button>
+        </div>
+    </div>
+
     <div id='settings' class='dialog'>
         <div class='dialogTitle'>
             Options

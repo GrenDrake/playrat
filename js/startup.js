@@ -60,10 +60,139 @@
         G.UI.inDialog = false;
     }
 
+    G.UI.doAlert = function doConfirm(message) {
+        alert(message);
+    }
     G.UI.doConfirm = function doConfirm(prompt, onYes) {
         if (confirm(prompt)) {
             onYes();
         }
+    }
+
+    G.UI.refreshSaveList = function refreshSaveList() {
+        const savedGames = G.getSaveIndex();
+        const saveList = document.getElementById("saveList");
+        while (saveList.childElementCount > 0) {
+            saveList.removeChild(saveList.firstChild);
+        }
+        savedGames.forEach(function(saveData, saveIndex) {
+            const item = document.createElement("option");
+            item.textContent = saveData.name;
+            item.id = "savegamelist__" + saveIndex;
+            saveList.appendChild(item);
+        });
+        if (saveList.childElementCount > 0) {
+            saveList.options[0].selected = true;
+        }
+    }
+    G.UI.showSaveGame = function showSaveGame() {
+        document.getElementById("savegamename").value = "";
+        G.UI.refreshSaveList();
+
+        const overlay = document.getElementById("overlay");
+        overlay.style.display = "block";
+        const saveDialog = document.getElementById("saveDialog");
+        saveDialog.style.display = "block";
+        G.UI.inDialog = {id:"saveDialog", close:G.UI.closeSaveDialog, allowSpace:false};
+    }
+    G.UI.saveNewGame = function saveNewGame() {
+        const savedGameName = document.getElementById("savegamename").value;
+        if (!savedGameName) {
+            G.UI.doAlert("Please name your saved game.");
+            return;
+        }
+        const fileSaveName = savedGameName;
+        G.saveGame([fileSaveName, -1]);
+        G.UI.closeSaveDialog();
+    }
+    G.UI.overwriteSavedGame = function overwriteSavedGame() {
+        const saveList = document.getElementById("saveList");
+        const selected = saveList.selectedIndex;
+        if (selected < 0) {
+            G.UI.doAlert("Please select game to overwrite first.");
+            return;
+        }
+        const fileSaveName = saveList.options[selected].textContent;
+        G.UI.doConfirm("Overwrite game \""+fileSaveName+"\"?", function() {
+            G.saveGame([fileSaveName, selected]);
+            G.UI.closeSaveDialog();
+        });
+    }
+    G.UI.deleteSavedGame = function deleteSavedGame() {
+        const saveList = document.getElementById("saveList");
+        const selected = saveList.selectedIndex;
+        if (selected < 0) {
+            G.UI.doAlert("Please select game to delete first.");
+            return;
+        }
+        const fileSaveName = saveList.options[selected].textContent;
+        G.UI.doConfirm("Permanently delete game \""+fileSaveName+"\"?", function() {
+            const savedGames = G.getSaveIndex();
+            const deletedGame = savedGames[selected];
+            savedGames.splice(selected, 1);
+            localStorage.removeItem("savedgame_" + deletedGame.index);
+            G.saveSaveIndex(savedGames);
+            G.UI.refreshSaveList();
+        });
+    }
+    G.UI.closeSaveDialog = function closeSaveDialog() {
+        const overlay = document.getElementById("overlay");
+        overlay.style.display = "none";
+        const saveDialog = document.getElementById("saveDialog");
+        saveDialog.style.display = "none";
+        G.UI.inDialog = undefined;
+    }
+
+    G.UI.showLoadGame = function showLoadGame() {
+        document.getElementById("savegamename").value = "";
+        const savedGames = G.getSaveIndex();
+
+        const loadList = document.getElementById("loadList");
+        while (loadList.childElementCount > 0) {
+            loadList.removeChild(loadList.firstChild);
+        }
+        savedGames.forEach(function(saveData, saveIndex) {
+            const item = document.createElement("option");
+            item.textContent = saveData.name;
+            item.id = "savegamelist__" + saveIndex;
+            loadList.appendChild(item);
+        });
+        if (loadList.childElementCount > 0) {
+            loadList.options[0].selected = true;
+            if (loadList.childElementCount === 1) {
+                G.UI.pickLoadGame();
+                return;
+            }
+        } else {
+            G.UI.doAlert("You do not have any saved games.");
+            return;
+        }
+
+        const overlay = document.getElementById("overlay");
+        overlay.style.display = "block";
+        const loadDialog = document.getElementById("loadDialog");
+        loadDialog.style.display = "block";
+        G.UI.inDialog = {id:"loadDialog", close:G.UI.closeloadDialog, allowSpace:false};
+    }
+    G.UI.pickLoadGame = function pickLoadGame() {
+        const loadList = document.getElementById("loadList");
+        const selected = loadList.selectedIndex;
+        if (selected < 0) {
+            G.UI.doAlert("Please select game to load first.");
+            return;
+        }
+        const fileSaveName = loadList.options[selected].textContent;
+        G.UI.doConfirm("Abandon current game to load \""+fileSaveName+"\"?", function() {
+            G.loadGame(selected);
+            G.UI.closeLoadDialog();
+        });
+    }
+    G.UI.closeLoadDialog = function closeLoadDialog() {
+        const overlay = document.getElementById("overlay");
+        overlay.style.display = "none";
+        const saveDialog = document.getElementById("loadDialog");
+        saveDialog.style.display = "none";
+        G.UI.inDialog = undefined;
     }
 
 // ////////////////////////////////////////////////////////////////////////////
@@ -104,13 +233,26 @@
         document.getElementById("newButton")
             .addEventListener("click", function() {
             G.UI.doConfirm("Are you sure you want to start a new game?", G.newGame); });
+
         document.getElementById("loadButton")
-            .addEventListener("click", function() {
-            G.UI.doConfirm("Are you sure you want to start a load the saved game?", G.loadGame); });
+            .addEventListener("click", G.UI.showLoadGame);
+        document.getElementById("loadCancel")
+            .addEventListener("click", G.UI.closeLoadDialog);
+        document.getElementById("loadGameButton")
+            .addEventListener("click", G.UI.pickLoadGame);
+
         G.eNoSaveButton.addEventListener("click", function() {
             alert("You cannot save the game at this time.");
         });
-        G.eSaveButton.addEventListener("click", G.saveGame);
+        G.eSaveButton.addEventListener("click", G.UI.showSaveGame);
+        document.getElementById("newSaveButton")
+            .addEventListener("click", G.UI.saveNewGame);
+        document.getElementById("overwriteSaveButton")
+            .addEventListener("click", G.UI.overwriteSavedGame);
+        document.getElementById("deleteSaveButton")
+            .addEventListener("click", G.UI.deleteSavedGame);
+        document.getElementById("saveCancel")
+            .addEventListener("click", G.UI.closeSaveDialog);
 
         G.UI.applySettings();
 
@@ -258,6 +400,17 @@
         G.newGame();
     }
 
+    G.getSaveIndex = function getSaveIndex() {
+        let savedGames = [];
+        let savedGameStr = localStorage.getItem("save_index");
+        if (savedGameStr) savedGames = JSON.parse(savedGameStr);
+        return savedGames;
+    }
+    G.saveSaveIndex = function saveSaveIndex(newIndex) {
+        const saveIndex = JSON.stringify(newIndex);
+        localStorage.setItem("save_index", saveIndex);
+    }
+
     G.newGame = function newGame(callMain) {
         callMain = callMain || true;
         G.setInfo(G.Info.LeftHeader, "Untitled Game");
@@ -307,11 +460,25 @@
         if (callMain) G.doEvent(G.mainFunction, [new G.Value(G.ValueType.Integer, G.StartupSource.NewGame)]);
     }
 
-    G.saveGame = function saveGame() {
+    G.saveGame = function saveGame(saveInfo) {
         if (!G.saveAllowed) {
             alert("You cannot save the game at this time.");
             return;
         }
+
+        const indexData = { name: saveInfo[0], ts: Date.now() };
+        const saveIndex = G.getSaveIndex();
+        if (saveInfo[1] < 0) {
+            indexData.index = Date.now() + Math.random();
+            saveInfo[1] = saveIndex.length;
+        } else {
+            indexData.index = saveIndex[saveInfo[1]].index;
+        }
+        saveIndex[saveInfo[1]] = indexData;
+        saveIndex.sort(function(left, right) {
+            return right.ts - left.ts;
+        });
+        const saveGameKey = "savedgame_" + indexData.index;
 
         const saveData = {
             data: {},
@@ -335,13 +502,21 @@
         });
 
         const saveDataStr = JSON.stringify(saveData);
-        localStorage.setItem("savegame", saveDataStr);
-        console.log(saveDataStr);
+        G.saveSaveIndex(saveIndex);
+        localStorage.setItem(saveGameKey, saveDataStr);
         G.setInfo(G.Info.Status, "Game saved.");
     }
 
-    G.loadGame = function loadGame() {
-        const loadDataStr = localStorage.getItem("savegame");
+    G.loadGame = function loadGame(loadIndex) {
+        const saveIndex = G.getSaveIndex();
+        if (loadIndex < 0 || loadIndex >= saveIndex.length) {
+            console.error("Tried to load invalid save index.");
+            return;
+        }
+        const indexData = saveIndex[loadIndex];
+        const saveGameKey = "savedgame_" + indexData.index;
+
+        const loadDataStr = localStorage.getItem(saveGameKey);
         if (!loadDataStr) {
             alert("No saved game to load!");
             return;
