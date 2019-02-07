@@ -79,7 +79,6 @@ const G = {
         Node:         5,
         Object:       6,
         Property:     7,
-        Stream:       8,
         JumpTarget:   9,
         VarRef:       10,
         LocalVar:     15,
@@ -88,17 +87,22 @@ const G = {
     Object.freeze(G.ValueType);
 
     G.typeNames = [
-        "None",
-        "Integer",
-        "String",
-        "List",
-        "Map",
-        "Function",
-        "Object",
-        "Property",
-        "LocalVar",
-        "JumpTarget",
-        "VarRef",
+        "None",         // 0
+        "Integer",      // 1
+        "String",       // 2
+        "List",         // 3
+        "Map",          // 4
+        "Function",     // 5
+        "Object",       // 6
+        "Property",     // 7
+        "(unused)",     // 8
+        "JumpTarget",   // 9
+        "Reference",    // 10
+        "(unused)",     // 11
+        "(unused)",     // 12
+        "(unused)",     // 13
+        "(unused)",     // 14
+        "LocalVar",     // 15
     ];
     Object.freeze(G.typeNames);
 
