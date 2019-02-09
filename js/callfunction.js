@@ -621,7 +621,6 @@
                 case Opcode.SetSetting: {
                     const settingNo = G.callStack.pop();
                     const newValue  = G.callStack.pop();
-                    settingNo.requireType(G.ValueType.Integer);
                     G.setSetting(settingNo, newValue);
                     break; }
 
@@ -706,12 +705,6 @@
                         throw new G.RuntimeError("User Error: " + v1.toString());
                     }
 
-                case Opcode.SetInfo:
-                    v1 = G.callStack.pop();
-                    v2 = G.callStack.pop();
-                    v1.requireType(G.ValueType.Integer);
-                    G.setInfo(v1.value, v2);
-                    break;
                 case Opcode.AddPage:
                     v1 = G.callStack.pop();
                     v2 = G.callStack.pop();

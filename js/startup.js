@@ -413,10 +413,9 @@
 
     G.newGame = function newGame(callMain) {
         callMain = callMain || true;
-        G.setInfo(G.Info.LeftHeader, "Untitled Game");
-        G.setInfo(G.Info.LeftHeader, "");
-        G.setInfo(G.Info.RightHeader, "");
-        G.setInfo(G.Info.Footer, "");
+        G.setSetting(G.Settings.InfobarLeft, "");
+        G.setSetting(G.Settings.InfobarRight, "");
+        G.setSetting(G.Settings.InfobarFooter, "");
 
         G.gameLoaded = false;
         G.strings.length = G.stringCount;
@@ -504,7 +503,7 @@
         const saveDataStr = JSON.stringify(saveData);
         G.saveSaveIndex(saveIndex);
         localStorage.setItem(saveGameKey, saveDataStr);
-        G.setInfo(G.Info.Status, "Game saved.");
+        G.setStatus("Game saved.");
     }
 
     G.loadGame = function loadGame(loadIndex) {
@@ -553,7 +552,7 @@
         });
 
         G.doEvent(G.mainFunction, [new G.Value(G.ValueType.Integer, G.StartupSource.Restore)]);
-        G.setInfo(G.Info.Status, "Game loaded.");
+        G.setStatus("Game loaded.");
     }
 
 })();

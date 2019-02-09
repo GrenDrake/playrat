@@ -60,14 +60,14 @@ const G = {
         NewGame:        0,
         Restore:        1,
     }
-    G.Info = {
-        LeftHeader:     0,
-        RightHeader:    1,
-        Footer:         2,
-        Title:          3,
-        Status:         4,
+    G.Settings = {
+        SaveAllowed:    0,
+        InfobarLeft:    1,
+        InfobarRight:   2,
+        InfobarFooter:  3,
+        Title:          4,
     };
-    Object.freeze(G.Info);
+    Object.freeze(G.Settings);
 
     G.ValueType = {
         None:         0,
@@ -760,6 +760,10 @@ const G = {
     }
 
     G.getString = function getString(stringNumber) {
+        if (stringNumber instanceof G.Value) {
+            stringNumber.requireType(G.ValueType.String);
+            stringNumber = stringNumber.value;
+        }
         return G.getData(G.ValueType.String, G.strings, stringNumber);
     }
 
@@ -853,29 +857,6 @@ const G = {
         }
     }
 
-    G.setInfo = function setInfo(area, toValue) {
-        if (toValue instanceof G.Value) {
-            toValue.requireType(G.ValueType.String);
-            toValue = G.getString(toValue.value);
-        }
-
-        var eArea = undefined;
-        switch(area) {
-            case G.Info.LeftHeader:     eArea = G.eTopLeft;     break;
-            case G.Info.RightHeader:    eArea = G.eTopRight;    break;
-            case G.Info.Footer:         eArea = G.eBottomRight; break;
-            case G.Info.Status:         eArea = G.eBottomLeft;  break;
-            case G.Info.Title:
-                document.title = toValue;
-                return;
-        }
-        if (!eArea) {
-            throw new G.RuntimeError("Unknown info area " + area);
-        }
-        if (toValue)    eArea.textContent = toValue;
-        else            eArea.innerHTML = "&nbsp;";
-    }
-
     G.setObjectProperty = function setObjectProperty(objectId, propertyId,
                                                      newValue) {
         if (objectId instanceof G.Value) {
@@ -894,8 +875,13 @@ const G = {
     }
 
     G.setSetting = function setSetting(settingNumber, settingValue) {
-        switch(settingNumber.value) {
-            case 0:
+        if (settingNumber instanceof G.Value) {
+            settingNumber.requireType(G.ValueType.Integer);
+            settingNumber = settingNumber.value;
+        }
+
+        switch(settingNumber) {
+            case G.Settings.SaveAllowed:
                 if (settingValue.isTrue()) {
                     G.eSaveButton.style.display = 'inline';
                     G.eNoSaveButton.style.display = 'none';
@@ -906,9 +892,41 @@ const G = {
                     G.saveAllowed = false;
                 }
                 break;
+            case G.Settings.InfobarLeft:
+                if (settingValue instanceof G.Value)
+                    G.eTopLeft.textContent = G.getString(settingValue);
+                else
+                    G.eTopLeft.textContent = settingValue;
+                break;
+            case G.Settings.InfobarRight:
+                if (settingValue instanceof G.Value)
+                    G.eTopRight.textContent = G.getString(settingValue);
+                else
+                    G.eTopRight.textContent = settingValue;
+                break;
+            case G.Settings.InfobarFooter:
+                if (settingValue instanceof G.Value)
+                    G.eBottomRight.textContent = G.getString(settingValue);
+                else
+                    G.eBottomRight.textContent = settingValue;
+                break;
+            case G.Settings.Title:
+                if (settingValue instanceof G.Value)
+                    document.title = G.getString(settingValue);
+                else
+                    document.title = settingValue;
+                break;
             default:
-                throw new G.RuntimeError("Tried to set unknown setting " + settingNumber.value + ".");
+                throw new G.RuntimeError("Tried to set unknown setting " + settingNumber + ".");
         }
+    }
+
+    G.setStatus = function setStatus(toValue) {
+        if (toValue instanceof G.Value) {
+            toValue.requireType(G.ValueType.String);
+            toValue = G.getString(toValue.value);
+        }
+        G.eBottomLeft = toValue;
     }
 
     G.objectByIdent = function objectByIdent(objectId) {
