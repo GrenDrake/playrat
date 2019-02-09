@@ -5,7 +5,7 @@
         Return:                 0,
         Push0:                  1,
         Push1:                  2,
-        PushNeg1:               3,
+        PushNone:               3,
         Push8:                  4,
         Push16:                 5,
         Push32:                 6,
@@ -130,10 +130,8 @@
                     ++IP;
                     G.callStack.stack.push(new G.Value(rawType,1));
                     break;
-                case Opcode.PushNeg1:
-                    rawType = G.bytecode.getUint8(IP);
-                    ++IP;
-                    G.callStack.stack.push(new G.Value(rawType,-1));
+                case Opcode.PushNone:
+                    G.callStack.stack.push(G.noneValue);
                     break;
                 case Opcode.Push8:
                     rawType = G.bytecode.getUint8(IP);
