@@ -14,6 +14,7 @@ const G = {
         lists: [],
         maps: []
     },
+    sourceFiles: [],
 
     eOutput: undefined,
     eTopLeft: undefined,
@@ -759,6 +760,49 @@ const G = {
         }
     }
 
+    G.getSource = function getSource(ofWhat) {
+        var stringData = undefined;
+        var data;
+        switch(ofWhat.type) {
+            case G.ValueType.String:        stringData = "(string)";    break;
+            case G.ValueType.Integer:       stringData = "(integer)";   break;
+            case G.ValueType.JumpTarget:    stringData = "(label)";     break;
+            case G.ValueType.LocalVar:      stringData = "(localvar)";  break;
+            case G.ValueType.VarRef:        stringData = "(varref)";    break;
+            case G.ValueType.Property:      stringData = "(property)";  break;
+            case G.ValueType.Map:
+                if (ofWhat.value < 0 || ofWhat.value >= G.maps.length)
+                    throw new G.RuntimeError("Tried to get origin of invalid map.");
+                data = G.maps[ofWhat.value];
+                break;
+            case G.ValueType.List:
+                if (ofWhat.value < 0 || ofWhat.value >= G.lists.length)
+                    throw new G.RuntimeError("Tried to get origin of invalid list.");
+                data = G.lists[ofWhat.value];
+                break;
+            case G.ValueType.Object:
+                if (ofWhat.value < 0 || ofWhat.value >= G.objects.length)
+                    throw new G.RuntimeError("Tried to get origin of invalid object.");
+                data = G.objects[ofWhat.value];
+                break;
+            case G.ValueType.Function:
+                if (ofWhat.value < 0 || ofWhat.value >= G.functions.length)
+                    throw new G.RuntimeError("Tried to get origin of invalid function.");
+                data = G.functions[ofWhat.value];
+                break;
+            default:                        stringData = "(unhandled type " + G.typeNames[ofWhat.type] + ")";
+        }
+        const newStr = G.makeNew(G.ValueType.String);
+        if (stringData === undefined) {
+            if (data.sourceFile === -1) stringData = "(unknown)";
+            else if (data.sourceFile === -2) stringData = "(dynamic)";
+            else if (data.sourceLine === -1) stringData = G.sourceFiles[data.sourceFile];
+            else stringData = G.sourceFiles[data.sourceFile] + ":" + data.sourceLine;
+        }
+        G.strings[newStr.value].data = stringData;
+        return newStr;
+    }
+
     G.getString = function getString(stringNumber) {
         if (stringNumber instanceof G.Value) {
             stringNumber.requireType(G.ValueType.String);
@@ -806,15 +850,15 @@ const G = {
         switch (type) {
             case G.ValueType.List:
                 nextId = G.lists.length;
-                G.lists[nextId] = {data:[]};
+                G.lists[nextId] = {data:[], sourceFile: -2, sourceLine: -1};
                 return new G.Value(G.ValueType.List, nextId);
             case G.ValueType.Map:
                 nextId = G.maps.length;
-                G.maps[nextId] = {data:{}};
+                G.maps[nextId] = {data:{}, sourceFile: -2, sourceLine: -1};
                 return new G.Value(G.ValueType.Map, nextId);
             case G.ValueType.Object:
                 nextId = G.objects.length;
-                G.objects[nextId] = {data:{}};
+                G.objects[nextId] = {data:{}, sourceFile: -2, sourceLine: -1};
                 return new G.Value(G.ValueType.Object, nextId);
             case G.ValueType.String:
                 nextId = G.strings.length;

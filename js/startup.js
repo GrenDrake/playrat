@@ -310,6 +310,10 @@
         filePos += 4;
         for (var i = 0; i < G.listCount; ++i) {
             const thisList = [];
+            const sourceFileIdx = gamedataSrc.getUint32(filePos, true);
+            filePos += 4;
+            const sourceLine = gamedataSrc.getUint32(filePos, true);
+            filePos += 4;
             const listSize = gamedataSrc.getUint16(filePos, true);
             filePos += 2;
             for (var j = 0; j < listSize; ++j) {
@@ -319,7 +323,11 @@
                 filePos += 4;
                 thisList.push(new G.Value(itemType, itemValue));
             }
-            G.raw.lists.push(thisList);
+            G.raw.lists.push({
+                data: thisList,
+                sourceFile: sourceFileIdx,
+                sourceLine: sourceLine
+            });
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -328,6 +336,10 @@
         filePos += 4;
         for (var i = 0; i < G.mapCount; ++i) {
             const thisMap = {};
+            const sourceFileIdx = gamedataSrc.getUint32(filePos, true);
+            filePos += 4;
+            const sourceLine = gamedataSrc.getUint32(filePos, true);
+            filePos += 4;
             const mapSize = gamedataSrc.getUint16(filePos, true);
             filePos += 2;
             for (var j = 0; j < mapSize; ++j) {
@@ -345,7 +357,11 @@
 
                 thisMap[valueOne.toKey()] = valueTwo;
             }
-            G.raw.maps.push(thisMap);
+            G.raw.maps.push({
+                data: thisMap,
+                sourceFile: sourceFileIdx,
+                sourceLine: sourceLine
+            });
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -354,6 +370,10 @@
         filePos += 4;
         for (var i = 0; i < G.objectCount; ++i) {
             const thisObject = {};
+            const sourceFileIdx = gamedataSrc.getUint32(filePos, true);
+            filePos += 4;
+            const sourceLine = gamedataSrc.getUint32(filePos, true);
+            filePos += 4;
             // thisObject.key = gamedataSrc.getUint32(filePos, true);
             const objectSize = gamedataSrc.getUint16(filePos, true);
             filePos += 2;
@@ -366,7 +386,11 @@
                 filePos += 4;
                 thisObject[propId] = new G.Value(itemType, itemValue);
             }
-            G.raw.objects.push(thisObject);
+            G.raw.objects.push({
+                data: thisObject,
+                sourceFile: sourceFileIdx,
+                sourceLine: sourceLine
+            });
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -375,13 +399,34 @@
         filePos += 4;
         G.functions.push(undefined);
         for (var i = 0; i < G.functionCount; ++i) {
+            const sourceFileIdx = gamedataSrc.getUint32(filePos, true);
+            filePos += 4;
+            const sourceLine = gamedataSrc.getUint32(filePos, true);
+            filePos += 4;
             const argCount = gamedataSrc.getUint16(filePos, true);
             filePos += 2;
             const localCount = gamedataSrc.getUint16(filePos, true);
             filePos += 2;
             const codePosition = gamedataSrc.getUint32(filePos, true);
             filePos += 4;
-            G.functions.push({data: [argCount, localCount, codePosition]});
+            G.functions.push({
+                data: [argCount, localCount, codePosition],
+                sourceFile: sourceFileIdx,
+                sourceLine: sourceLine
+            });
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        // Read stored source file names
+        G.sourceFileCount = gamedataSrc.getUint32(filePos, true);
+        filePos += 4;
+        for (var i = 0; i < G.sourceFileCount; ++i) {
+            const stringLength = gamedataSrc.getUint16(filePos, true);
+            filePos += 2;
+            const rawStringData = new Uint8Array(rawSource, filePos,
+                                                 stringLength);
+            filePos += stringLength;
+            G.sourceFiles.push(decoder.decode(rawStringData));
         }
 
         ///////////////////////////////////////////////////////////////////////
@@ -429,30 +474,42 @@
         G.lists = [ undefined ];
         G.raw.lists.forEach(function(oldList) {
             const newList = [];
-            oldList.forEach(function(value) {
+            oldList.data.forEach(function(value) {
                 newList.push(value.clone());
             });
-            G.lists.push({data:newList});
+            G.lists.push({
+                data:newList,
+                sourceFile: oldList.sourceFile,
+                sourceLine: oldList.sourceLine
+            });
         });
 
         G.maps = [ undefined ];
         G.raw.maps.forEach(function(oldMap) {
             const newMap = [];
-            const mapKeys = Object.getOwnPropertyNames(oldMap);
+            const mapKeys = Object.getOwnPropertyNames(oldMap.data);
             mapKeys.forEach(function(key) {
-                newMap[key] = oldMap[key].clone();
+                newMap[key] = oldMap.data[key].clone();
             });
-            G.maps.push({data:newMap});
+            G.maps.push({
+                data: newMap,
+                sourceFile: oldMap.sourceFile,
+                sourceLine: oldMap.sourceLine
+            });
         });
 
         G.objects = [ undefined ];
         G.raw.objects.forEach(function(oldObject) {
             const newObject = [];
-            const objectProperties = Object.getOwnPropertyNames(oldObject);
+            const objectProperties = Object.getOwnPropertyNames(oldObject.data);
             objectProperties.forEach(function(propId) {
-                newObject[propId] = oldObject[propId].clone();
+                newObject[propId] = oldObject.data[propId].clone();
             });
-            G.objects.push({data:newObject});
+            G.objects.push({
+                data: newObject,
+                sourceFile: oldObject.sourceFile,
+                sourceLine: oldObject.sourceLine
+            });
         });
 
         G.gameLoaded = true;
