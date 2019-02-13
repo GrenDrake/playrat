@@ -284,10 +284,6 @@
         G.magicNumber = gamedataSrc.getUint32(0, true);
         G.formatVersion = gamedataSrc.getUint32(4, true);
         G.mainFunction = gamedataSrc.getUint32(8, true);
-        G.propInternalName = gamedataSrc.getUint8(12);
-        G.propIdent = gamedataSrc.getUint8(13);
-        G.propSave = gamedataSrc.getUint8(14);
-        G.propLoad = gamedataSrc.getUint8(15);
 
         ///////////////////////////////////////////////////////////////////////
         // Read strings from datafile

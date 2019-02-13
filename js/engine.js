@@ -49,6 +49,11 @@ const G = {
     showEventDuration: true,
     showOperationsCount: true,
     showGarbageCollectionDuration: true,
+
+    propInternalName: 1,
+    propIdent: 2,
+    propSave: 3,
+    propLoad: 4,
 };
 
 (function() {
