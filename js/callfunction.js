@@ -19,7 +19,6 @@
         StackPeek:              15, // peek at the stack item X items from the top
         StackSize:              16, // get the current size of the stack
         Call:                   17, // call a value as a function
-        CallMethod:             18, // call an object property as a function
         Self:                   19, // get object the current function is a property of
         GetProp:                20,
         HasProp:                21, // check if property is set on object
@@ -197,31 +196,17 @@
                     G.callStack.stack.push(new G.Value(G.ValueType.Integer, G.callStack.stackSize));
                     break;
 
-                case Opcode.CallMethod:
                 case Opcode.Call: {
-                    let theFunc = undefined;
-                    let mySelf = G.noneValue;
-                    if (opcode == Opcode.CallMethod) {
-                        //        v1       v2       target
-                        // [args] argcount property object call-method
-                        target = G.callStack.pop();
-                        v2 = G.callStack.pop();
-                        v1 = G.callStack.pop();
-                        target.requireType(G.ValueType.Object);
-                        v1.requireType(G.ValueType.Integer);
-                        v2.requireType(G.ValueType.Property);
-                        const funcValue = G.getObjectProperty(target, v2);
-                        theFunc = G.getFunction(funcValue.value);
-                        mySelf = target;
-                    } else {
-                        //        v1       target
-                        // [args] argcount function call
-                        target = G.callStack.pop();
-                        v1 = G.callStack.pop();
-                        target.requireType(G.ValueType.Node);
-                        v1.requireType(G.ValueType.Integer);
-                        theFunc = G.getFunction(target.value);
-                    }
+                    //        v1       target
+                    // [args] argcount function call
+                    target = G.callStack.pop();
+                    v1 = G.callStack.pop();
+                    target.requireType(G.ValueType.Node);
+                    v1.requireType(G.ValueType.Integer);
+
+                    const theFunc = G.getFunction(target.value);
+                    const mySelf = target.selfobj;
+
                     const theArgs = [];
                     while (v1.value > 0) {
                         theArgs.push(G.callStack.pop());

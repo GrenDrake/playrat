@@ -392,6 +392,7 @@ const G = {
                 throw new G.RuntimeError("Value must have value");
             this.type = type;
             this.value = value;
+            this.selfobj = G.noneValue;
         }
 
         get type() {
@@ -750,7 +751,9 @@ const G = {
         }
         const theObject = G.getObject(objectId);
         if (theObject.hasOwnProperty(propertyId)) {
-            return theObject[propertyId];
+            const result = theObject[propertyId];
+            result.selfobj = new G.Value(G.ValueType.Object, objectId);
+            return result;
         } else {
             return new G.Value(G.ValueType.Integer, 0);
         }
