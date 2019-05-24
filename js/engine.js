@@ -409,7 +409,7 @@ const G = {
         }
 
         clone() {
-            return new G.Value(this.mType, this.mValue);
+            return new G.Value(this.mType, this.mValue, this.selfobj);
         }
         isFalse() {
             return !this.isTrue();
