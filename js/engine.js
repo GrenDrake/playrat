@@ -580,6 +580,7 @@ const G = {
 
     G.doEvent = function doEvent(functionId, argsList) {
         argsList = argsList || [];
+        argsList.unshift(G.noneValue);
         if (G.inPage) {
             G.doPage(G.inPage, argsList, functionId);
             return;
