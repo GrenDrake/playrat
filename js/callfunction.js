@@ -19,25 +19,29 @@
         StackPeek:              15, // peek at the stack item X items from the top
         StackSize:              16, // get the current size of the stack
         Call:                   17, // call a value as a function
-        GetProp:                20,
-        HasProp:                21, // check if property is set on object
-        SetProp:                22, // set object property to value
-        GetItem:                23, // get item from list (index) or map (key)
-        HasItem:                24, // check if index (for list) or key (for map) exists
-        GetSize:                25, // get size of list or map
-        SetItem:                26, // set item in list (by index) of map (by key)
-        TypeOf:                 27, // get value type
-        DelItem:                28, // remove an item from a list or a key from a map
-        AddItem:                29, // add an item to a list (use set-item for maps)
-        AsType:                 30, // type coercion
-        Compare:                31, // compare two values and push the result
-        Jump:                   32, // unconditional jump
-        JumpZero:               33, // jump if top of stack == 0
-        JumpNotZero:            34, // jump if top of stack != 0
-        JumpLessThan:           35, // jump if top of stack < 0
-        JumpLessThanEqual:      36, // jump if top of stack <= 0
-        JumpGreaterThan:        37, // jump if top of stack > 0
-        JumpGreaterThanEqual:   38, // jump if top of stack >= 0
+        GetProp:                19,
+        HasProp:                20, // check if property is set on object
+        SetProp:                21, // set object property to value
+        GetItem:                22, // get item from list (index) or map (key)
+        HasItem:                23, // check if index (for list) or key (for map) exists
+        GetSize:                24, // get size of list or map
+        SetItem:                25, // set item in list (by index) of map (by key)
+        TypeOf:                 26, // get value type
+        DelItem:                27, // remove an item from a list or a key from a map
+        AddItem:                28, // add an item to a list (use set-item for maps)
+        AsType:                 29, // type coercion
+
+        Equal:                  30, // compare two values and push the result
+        NotEqual:               31, // compare two values and push the negated result
+        LessThan:               32, // jump if top of stack < 0
+        LessThanEqual:          33, // jump if top of stack <= 0
+        GreaterThan:            34, // jump if top of stack > 0
+        GreaterThanEqual:       35, // jump if top of stack >= 0
+
+        Jump:                   36, // unconditional jump
+        JumpZero:               37, // jump if top of stack == 0
+        JumpNotZero:            38, // jump if top of stack != 0
+
         Not:                    39,
         Add:                    40,
         Sub:                    41,
@@ -79,6 +83,21 @@
     Object.freeze(Opcode);
 
     const maxOperationCount = 10000;
+
+    G.doCompare = function doCompare(left, right) {
+        if (left.type !== right.type) {
+            return 1;
+        } else {
+            switch(right.type) {
+                case G.ValueType.Integer:
+                    return right.value - left.value;
+                case G.ValueType.None:
+                    return 0;
+                default:
+                    return (right.value === left.value) ? 0 : 1;
+            }
+        }
+    }
 
     G.callFunction = function callFunction(G, selfObj, functionId, argList) {
         "use strict";
@@ -347,28 +366,21 @@
                     G.callStack.stack.push(value);
                     break; }
 
-                case Opcode.Compare: {
+                case Opcode.Equal: {
                     // LHS RHS cmp
                     // 5   10  cmp   5 gt
-                    const rhs = G.callStack.pop();
-                    const lhs = G.callStack.pop();
-                    if (lhs.type !== rhs.type) {
-                        G.callStack.stack.push(new G.Value(G.ValueType.Integer, 1));
-                    } else {
-                        switch(rhs.type) {
-                            case G.ValueType.Integer:
-                                G.callStack.stack.push(new G.Value(G.ValueType.Integer,
-                                    lhs.value - rhs.value));
-                                break;
-                            case G.ValueType.None:
-                                G.callStack.stack.push(new G.Value(G.ValueType.Integer, 0));
-                                break;
-                            default:
-                                G.callStack.stack.push(new G.Value(G.ValueType.Integer,
-                                    (rhs.value === lhs.value) ? 0 : 1));
-                                break;
-                        }
-                    }
+                    v1 = G.callStack.pop();
+                    v2 = G.callStack.pop();
+                    target = G.doCompare(v1, v2);
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer, +(target === 0)));
+                    break; }
+                case Opcode.NotEqual: {
+                    // LHS RHS cmp
+                    // 5   10  cmp   5 gt
+                    v1 = G.callStack.pop();
+                    v2 = G.callStack.pop();
+                    target = G.doCompare(v1, v2);
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer, +(target !== 0)));
                     break; }
 
                 case Opcode.Jump:
@@ -392,37 +404,29 @@
                         IP = G.callStack.base + target.value;
                     }
                     break;
-                case Opcode.JumpLessThan:
-                    target = G.callStack.pop();
+                case Opcode.LessThan:
                     v1 = G.callStack.pop();
-                    target.requireType(G.ValueType.JumpTarget);
-                    if (v1.value < 0) {
-                        IP = G.callStack.base + target.value;
-                    }
+                    v2 = G.callStack.pop();
+                    target = G.doCompare(v1, v2);
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer, +(target < 0)));
                     break;
-                case Opcode.JumpLessThanEqual:
-                    target = G.callStack.pop();
+                case Opcode.LessThanEqual:
                     v1 = G.callStack.pop();
-                    target.requireType(G.ValueType.JumpTarget);
-                    if (v1.value <= 0) {
-                        IP = G.callStack.base + target.value;
-                    }
+                    v2 = G.callStack.pop();
+                    target = G.doCompare(v1, v2);
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer, +(target <= 0)));
                     break;
-                case Opcode.JumpGreaterThan:
-                    target = G.callStack.pop();
+                case Opcode.GreaterThan:
                     v1 = G.callStack.pop();
-                    target.requireType(G.ValueType.JumpTarget);
-                    if (v1.value > 0) {
-                        IP = G.callStack.base + target.value;
-                    }
+                    v2 = G.callStack.pop();
+                    target = G.doCompare(v1, v2);
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer, +(target > 0)));
                     break;
-                case Opcode.JumpGreaterThanEqual:
-                    target = G.callStack.pop();
+                case Opcode.GreaterThanEqual:
                     v1 = G.callStack.pop();
-                    target.requireType(G.ValueType.JumpTarget);
-                    if (v1.value >= 0) {
-                        IP = G.callStack.base + target.value;
-                    }
+                    v2 = G.callStack.pop();
+                    target = G.doCompare(v1, v2);
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer, +(target >= 0)));
                     break;
 
                 case Opcode.Not:
