@@ -56,8 +56,6 @@
         BitXor:                 50,
         BitNot:                 51,
         Random:                 52,
-        Inc:                    53,
-        Dec:                    54,
         GetRandom:              55,
         GetKeys:                56,
         StackSwap:              57,
@@ -539,18 +537,6 @@
                                                    * (v1.value - v2.value)
                                                    + v2.value);
                     G.callStack.stack.push(new G.Value(G.ValueType.Integer, randomValue));
-                    break;
-                case Opcode.Dec:
-                    v1 = G.callStack.pop();
-                    v1.requireType(G.ValueType.Integer);
-                    v1.value -= 1;
-                    G.callStack.stack.push(v1);
-                    break;
-                case Opcode.Inc:
-                    v1 = G.callStack.pop();
-                    v1.requireType(G.ValueType.Integer);
-                    v1.value += 1;
-                    G.callStack.stack.push(v1);
                     break;
                 case Opcode.GetRandom: {
                     v1 = G.callStack.pop();
