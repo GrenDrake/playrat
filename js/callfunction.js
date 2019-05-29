@@ -449,7 +449,7 @@
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
                     G.callStack.stack.push(new G.Value(G.ValueType.Integer,
-                                           (v2.value - v1.value) | 0));
+                                           (v1.value - v2.value) | 0));
                     break;
                 case Opcode.Mult:
                     v1 = G.callStack.pop();
@@ -465,7 +465,7 @@
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
                     G.callStack.stack.push(new G.Value(G.ValueType.Integer,
-                                           (v2.value / v1.value) | 0));
+                                           (v1.value / v2.value) | 0));
                     break;
                 case Opcode.Mod:
                     v1 = G.callStack.pop();
@@ -473,7 +473,7 @@
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
                     G.callStack.stack.push(new G.Value(G.ValueType.Integer,
-                                           (v2.value % v1.value) | 0));
+                                           (v1.value % v2.value) | 0));
                     break;
                 case Opcode.Pow:
                     v1 = G.callStack.pop();
