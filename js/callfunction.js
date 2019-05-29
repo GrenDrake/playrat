@@ -481,7 +481,7 @@
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
                     G.callStack.stack.push(new G.Value(G.ValueType.Integer,
-                                           (Math.pow(v2.value, v1.value)) | 0));
+                                           (Math.pow(v1.value, v2.value)) | 0));
                     break;
                 case Opcode.BitLeft:
                     v1 = G.callStack.pop();
@@ -489,7 +489,7 @@
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
                     G.callStack.stack.push(new G.Value(G.ValueType.Integer,
-                                           v2.value << v1.value));
+                                           v1.value << v2.value));
                     break;
                 case Opcode.BitRight:
                     v1 = G.callStack.pop();
@@ -497,7 +497,7 @@
                     v1.requireType(G.ValueType.Integer);
                     v2.requireType(G.ValueType.Integer);
                     G.callStack.stack.push(new G.Value(G.ValueType.Integer,
-                                           v2.value >>> v1.value));
+                                           v1.value >>> v2.value));
                     break;
                 case Opcode.BitAnd:
                     v1 = G.callStack.pop();
