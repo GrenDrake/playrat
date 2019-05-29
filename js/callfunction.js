@@ -88,7 +88,7 @@
         } else {
             switch(right.type) {
                 case G.ValueType.Integer:
-                    return right.value - left.value;
+                    return left.value - right.value;
                 case G.ValueType.None:
                     return 0;
                 default:
