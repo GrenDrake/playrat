@@ -637,12 +637,17 @@
                     v1 = G.callStack.pop();
                     v2 = G.callStack.pop();
                     v1.requireType(G.ValueType.String);
-                    v2.requireType(G.ValueType.String);
                     if (G.isStatic(v1).value) {
                         throw new G.RuntimeError("Cannot modify static string");
                     }
-                    const s2 = G.getString(v2.value);
-                    G.strings[v1.value].data += s2;
+                    if (v2.type == G.ValueType.String) {
+                        const s2 = G.getString(v2.value);
+                        G.strings[v1.value].data += s2;
+                    } else if (v2.type == G.ValueType.Integer) {
+                        G.strings[v1.value].data += ""+v2.value;
+                    } else {
+                        throw new G.RuntimeError("Cannot append value type to string");
+                    }
                     break;
                 case Opcode.StringLength: {
                     v1 = G.callStack.pop();
