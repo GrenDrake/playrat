@@ -66,7 +66,7 @@
         GetLine:                62,
         AddOption:              63,
         AddOptionExtra:         64,
-        StringCopy:             65,
+        StringClear:            65,
         StringAppend:           66,
         StringLength:           67,
         StringCompare:          68,
@@ -620,18 +620,15 @@
                     G.options.push(new G.Option(v3, v2, v1));
                     break;
 
-                case Opcode.StringCopy: {
+                case Opcode.StringClear: {
                     // v2  v1       v2 -> v1
                     // 5   10  strcpy
                     v1 = G.callStack.pop();
-                    v2 = G.callStack.pop();
                     v1.requireType(G.ValueType.String);
-                    v2.requireType(G.ValueType.String);
                     if (G.isStatic(v1).value) {
                         throw new G.RuntimeError("Cannot modify static string");
                     }
-                    const s2 = G.getString(v2.value);
-                    G.strings[v1.value].data = s2;
+                    G.strings[v1.value].data = "";
                     break; }
                 case Opcode.StringAppend:
                     v1 = G.callStack.pop();
