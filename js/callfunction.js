@@ -19,7 +19,6 @@
         StackPeek:              15, // peek at the stack item X items from the top
         StackSize:              16, // get the current size of the stack
         Call:                   17, // call a value as a function
-        GetProp:                19,
         HasProp:                20, // check if property is set on object
         SetProp:                21, // set object property to value
         GetItem:                22, // get item from list (index) or map (key)
@@ -231,14 +230,6 @@
                     IP = theFunc[2];
                     break; }
 
-                case Opcode.GetProp:
-                    v1 = G.callStack.pop();
-                    v2 = G.callStack.pop();
-                    v1.requireType(G.ValueType.Object);
-                    v2.requireType(G.ValueType.Property);
-                    const propValue = G.getObjectProperty(v1, v2);
-                    G.callStack.stack.push(propValue);
-                    break;
                 case Opcode.HasProp:
                     v1 = G.callStack.pop();
                     v2 = G.callStack.pop();
@@ -260,7 +251,11 @@
                 case Opcode.GetItem:
                     v1 = G.callStack.pop();
                     v2 = G.callStack.pop();
-                    if (v1.type === G.ValueType.List) {
+                    if (v1.type === G.ValueType.Object) {
+                        v2.requireType(G.ValueType.Property);
+                        const propValue = G.getObjectProperty(v1, v2);
+                        G.callStack.stack.push(propValue);
+                    } else if (v1.type === G.ValueType.List) {
                         v2.requireType(G.ValueType.Integer);
                         const theList = G.getList(v1.value);
                         if (v2.value < 0 || v2.value >= theList.length) {
