@@ -230,24 +230,6 @@
                     IP = theFunc[2];
                     break; }
 
-                case Opcode.HasProp:
-                    v1 = G.callStack.pop();
-                    v2 = G.callStack.pop();
-                    v1.requireType(G.ValueType.Object);
-                    v2.requireType(G.ValueType.Property);
-                    const propExists = G.objectHasProperty(v1, v2);
-                    G.callStack.stack.push(propExists);
-                    break;
-                case Opcode.SetProp:
-                    v1 = G.callStack.pop();
-                    v2 = G.callStack.pop();
-                    v3 = G.callStack.pop();
-                    v1.requireType(G.ValueType.Object);
-                    v2.requireType(G.ValueType.Property);
-                    v3.forbidType(G.ValueType.VarRef);
-                    G.setObjectProperty(v1, v2, v3);
-                    break;
-
                 case Opcode.GetItem:
                     v1 = G.callStack.pop();
                     v2 = G.callStack.pop();
@@ -278,7 +260,11 @@
                 case Opcode.HasItem:
                     v1 = G.callStack.pop();
                     v2 = G.callStack.pop();
-                    if (v1.type === G.ValueType.List) {
+                    if (v1.type === G.ValueType.Object) {
+                        v2.requireType(G.ValueType.Property);
+                        const propExists = G.objectHasProperty(v1, v2);
+                        G.callStack.stack.push(propExists);
+                    } else if (v1.type === G.ValueType.List) {
                         v2.requireType(G.ValueType.Integer);
                         if (v2.value < 1 || v2.value > G.getList(v1.value).length) {
                             G.callStack.stack.push(new G.Value(G.ValueType.Integer, 0));
@@ -307,7 +293,11 @@
                     v2 = G.callStack.pop();
                     v3 = G.callStack.pop();
                     v3.forbidType(G.ValueType.VarRef);
-                    if (v1.type === G.ValueType.List) {
+                    if (v1.type === G.ValueType.Object) {
+                        v2.requireType(G.ValueType.Property);
+                        v3.forbidType(G.ValueType.VarRef);
+                        G.setObjectProperty(v1, v2, v3);
+                    } else if (v1.type === G.ValueType.List) {
                         v2.requireType(G.ValueType.Integer);
                         G.getList(v1.value)[v2.value] = v3;
                     } else if (v1.type === G.ValueType.Map) {
