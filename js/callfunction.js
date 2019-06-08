@@ -64,7 +64,6 @@
         GetOption:              61,
         GetLine:                62,
         AddOption:              63,
-        AddOptionExtra:         64,
         StringClear:            65,
         StringAppend:           66,
         StringLength:           67,
@@ -592,12 +591,6 @@
                     G.optionFunction = v1.value;
                     break;
                 case Opcode.AddOption:
-                    v1 = G.callStack.pop();
-                    v2 = G.callStack.pop();
-                    v2.requireType(G.ValueType.String);
-                    G.options.push(new G.Option(v2, v1));
-                    break;
-                case Opcode.AddOptionExtra:
                     v1 = G.callStack.pop();
                     v2 = G.callStack.pop();
                     v3 = G.callStack.pop();
