@@ -75,12 +75,33 @@ body {
 #text hr {
     width: 50%;
 }
-#optionslist {
+#optionsCore {
     border-top: 1px dashed black;
     padding-top: 1em;
     font-style: italic;
+    display: flex;
+}
+.anOptionList {
+    flex-grow: 1;
+    margin-bottom: 0.5em;
+}
+.anOptionList + .anOptionList {
+    border-left: 1px dashed black;
+}
+
+@media (max-width: 400px) {
+    #optionsCore {
+        flex-direction: column;
+    }
+    .anOptionList + .anOptionList {
+        border-left: none;
+    }
 }
 .fakeLink {
+    font-family: serif;
+    font-size: 100%;
+    background: none;
+    border: none;
     color: darkblue;
     text-decoration: underline;
     cursor: pointer;

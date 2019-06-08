@@ -124,10 +124,15 @@ const G = {
 // Option class
 // ////////////////////////////////////////////////////////////////////////////
     G.Option = class Option {
-        constructor(displayText, value, extraValue) {
+        constructor(displayText, value, extraValue, hotkey) {
             this.displayText = displayText;
             this.value = value;
             this.extra = extraValue || G.noneValue;
+            if (hotkey && hotkey.type === G.ValueType.Integer) {
+                this.hotkey = hotkey.value;
+            } else {
+                this.hotkey = 0;
+            }
         }
 
         toString() {
@@ -1016,30 +1021,52 @@ const G = {
     }
 
     G.showOptions = function showOptions() {
-        const optionsList = document.getElementById("optionsList");
-        if (optionsList) {
+        const oldOptionsCore = document.getElementById("optionsCore");
+        if (oldOptionsCore) {
             optionsList.parentElement.removeChild(optionsList);
         }
+        const optionsCore = document.createElement("div");
+        optionsCore.id = "optionsCore";
+        G.eOutput.appendChild(optionsCore);
 
         if (G.options.length === 0) return;
 
         switch(G.optionType) {
             case G.OptionType.MenuItem:
-                const optionsList = document.createElement("ol");
+                const optionsList = document.createElement("div");
                 optionsList.id = "optionslist";
+                optionsList.classList.add("anOptionList");
+                const specialList = document.createElement("div");
+                specialList.id = "speciallist";
+                specialList.classList.add("anOptionList");
+                var nextNum = 1;
                 G.options.forEach(function(option) {
                     option.displayText.requireType(G.ValueType.String);
-                    const li = document.createElement("li");
-                    const liSpan = document.createElement("span");
-                    liSpan.textContent = G.getString(option.displayText.value);
-                    liSpan.classList.add("fakeLink");
-                    liSpan.addEventListener("click", function() {
+                    const button = document.createElement("button");
+                    var keyString, target = optionsList;
+                    if (option.hotkey) {
+                        keyString = String.fromCharCode(option.hotkey).toUpperCase();
+                        target = specialList;
+                    } else {
+                        if (nextNum < 10) {
+                            option.hotkey = 48 + nextNum;
+                        } else if (nextNum == 10) {
+                            option.hotkey = 48;
+                        }
+                        keyString = ""+nextNum;
+                        ++nextNum;
+                    }
+                    button.textContent = keyString + ") " + G.getString(option.displayText.value);
+                    button.classList.add("fakeLink");
+                    button.addEventListener("click", function() {
                         G.doEvent(G.optionFunction, [option.value, option.extra]);
                     });
-                    li.appendChild(liSpan);
-                    optionsList.appendChild(li);
+                    target.appendChild(button);
+                    const newBr = document.createElement("br");
+                    target.appendChild(newBr);
                 });
-                G.eOutput.appendChild(optionsList);
+                optionsCore.appendChild(optionsList);
+                optionsCore.appendChild(specialList);
                 break;
             case G.OptionType.KeyInput:
                 const theOption = G.options[0];
@@ -1071,7 +1098,7 @@ const G = {
         if (!G.gameLoaded) return;
 
         var code = -1;
-        if (event.key.length === 1) code = event.key.codePointAt(0);
+        if (event.key.length === 1) code = event.key.toLowerCase().codePointAt(0);
 
         if (G.options.length === 0) return;
 
@@ -1085,19 +1112,14 @@ const G = {
                     return;
                 }
 
-                // handle number keys for activiting specific options
-                var choice = -1;
-                if (code === 48) {
-                    choice = 9;
-                } else if (code >= 49 && code <= 57) {
-                    choice = code - 49;
+                if (code <= 0) break;
+                console.log(code, String.fromCharCode(code));
+                for (var i = 0; i < G.options.length; ++i) {
+                    if (G.options[i].hotkey === code) {
+                        G.doEvent(G.optionFunction, [G.options[i].value, G.options[i].extra]);
+                        event.preventDefault();
+                    }
                 }
-                if (choice < 0 || choice >= G.options.length) {
-                    break;
-                }
-
-                G.doEvent(G.optionFunction, [G.options[choice].value, G.options[choice].extra]);
-                event.preventDefault();
                 break;
             case G.OptionType.KeyInput:
                 if (code === -1) {

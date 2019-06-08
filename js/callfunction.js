@@ -110,7 +110,7 @@
         G.callStack.pushFrame(functionId, functionDef[2], 0, selfObj);
         G.callStack.buildLocals(argList, functionDef[0], functionDef[0] + functionDef[1]);
         var IP = functionDef[2];
-        var rawType, rawValue, v1, v2, v3, target;
+        var rawType, rawValue, v1, v2, v3, v4, target;
 
         while (1) {
             const opcode = G.bytecode.getUint8(IP);
@@ -591,11 +591,14 @@
                     G.optionFunction = v1.value;
                     break;
                 case Opcode.AddOption:
+                    v4 = G.callStack.pop();
                     v1 = G.callStack.pop();
                     v2 = G.callStack.pop();
                     v3 = G.callStack.pop();
                     v3.requireType(G.ValueType.String);
-                    G.options.push(new G.Option(v3, v2, v1));
+                    if (v4.type !== G.ValueType.None)
+                        v4.requireType(G.ValueType.Integer);
+                    G.options.push(new G.Option(v3, v2, v1, v4));
                     break;
 
                 case Opcode.StringClear: {
