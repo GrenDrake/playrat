@@ -10,8 +10,8 @@
         Push16:                 5,
         Push32:                 6,
         Store:                  7,
-        Say:                    10,
         SayUCFirst:             9,
+        Say:                    10,
         SayUnsigned:            11,
         SayChar:                12,
         StackPop:               13, // remove the top item from the stack
@@ -19,8 +19,6 @@
         StackPeek:              15, // peek at the stack item X items from the top
         StackSize:              16, // get the current size of the stack
         Call:                   17, // call a value as a function
-        HasProp:                20, // check if property is set on object
-        SetProp:                21, // set object property to value
         GetItem:                22, // get item from list (index) or map (key)
         HasItem:                23, // check if index (for list) or key (for map) exists
         GetSize:                24, // get size of list or map
@@ -69,7 +67,6 @@
         StringLength:           67,
         StringCompare:          68,
         Error:                  69,
-        SetInfo:                70,
         AddPage:                71,
         DeletePage:             72,
         EndPage:                73,
