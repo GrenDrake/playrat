@@ -19,6 +19,7 @@
         StackPeek:              15, // peek at the stack item X items from the top
         StackSize:              16, // get the current size of the stack
         Call:                   17, // call a value as a function
+        Sort:                   21, // sorts a list
         GetItem:                22, // get item from list (index) or map (key)
         HasItem:                23, // check if index (for list) or key (for map) exists
         GetSize:                24, // get size of list or map
@@ -90,6 +91,22 @@
                     return (right.value === left.value) ? 0 : 1;
             }
         }
+    }
+
+    G.sortList = function sortList(G, theList) {
+        theList.sort(function(left, right) {
+            if (left.type < right.type) return -1;
+            if (left.type > right.type) return 1;
+            if (left.type === G.ValueType.String) {
+                const l = G.getString(left.value).toLowerCase();
+                const r = G.getString(right.value).toLowerCase();
+                if (l < r) return -1;
+                if (l > r) return 1;
+                return 0;
+            } else {
+                return left.value - right.value;
+            }
+        });
     }
 
     G.callFunction = function callFunction(G, selfObj, functionId, argList) {
@@ -226,6 +243,12 @@
                     IP = theFunc[2];
                     break; }
 
+                case Opcode.Sort: {
+                    v1 = G.callStack.pop();
+                    v1.requireType(G.ValueType.List);
+                    const theList = G.getList(v1.value);
+                    G.sortList(G, theList);
+                    break; }
                 case Opcode.GetItem:
                     v1 = G.callStack.pop();
                     v2 = G.callStack.pop();
