@@ -1113,7 +1113,6 @@ const G = {
                 }
 
                 if (code <= 0) break;
-                console.log(code, String.fromCharCode(code));
                 for (var i = 0; i < G.options.length; ++i) {
                     if (G.options[i].hotkey === code) {
                         G.doEvent(G.optionFunction, [G.options[i].value, G.options[i].extra]);
