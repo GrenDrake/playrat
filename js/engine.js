@@ -1142,7 +1142,6 @@ const G = {
                 return;
             }
             document.getElementById("lineinput").focus();
-            console.log(code, event.key);
             return;
         }
 
