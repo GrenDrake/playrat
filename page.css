@@ -85,9 +85,6 @@ body {
     flex-grow: 1;
     margin-bottom: 0.5em;
 }
-.anOptionList + .anOptionList {
-    border-left: 1px dashed black;
-}
 .optionslineinput {
     display: flex;
     align-items: center;
@@ -187,7 +184,7 @@ body {
     #optionsCore {
         flex-direction: column;
     }
-    .anOptionList + .anOptionList {
-        border-left: none;
+    .anOptionList {
+        flex-grow: unset;
     }
 }
