@@ -610,6 +610,15 @@
                     G.optionType = G.OptionType.MenuItem;
                     G.optionFunction = v1.value;
                     break;
+                case Opcode.GetLine:
+                    v1 = G.callStack.pop();
+                    v2 = G.callStack.pop();
+                    v1.requireType(G.ValueType.Node);
+                    v2.requireType(G.ValueType.String);
+                    G.optionType = G.OptionType.LineInput;
+                    G.options = [ new G.Option(v2, v1) ];
+                    G.optionFunction = v1.value;
+                    break;
                 case Opcode.AddOption:
                     v4 = G.callStack.pop();
                     v1 = G.callStack.pop();

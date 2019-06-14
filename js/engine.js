@@ -1068,6 +1068,32 @@ const G = {
                 optionsCore.appendChild(optionsList);
                 optionsCore.appendChild(specialList);
                 break;
+            case G.OptionType.LineInput: {
+                const theOption = G.options[0];
+                const options = document.createElement("div");
+                options.id = "optionslist";
+                options.classList.add("optionslist");
+                options.classList.add("optionslineinput");
+
+                const prompt = document.createElement("label");
+                prompt.for = "lineinput";
+                prompt.textContent = G.getString(theOption.displayText.value);
+                options.append(prompt);
+
+                const textLine = document.createElement("input");
+                textLine.type = "text";
+                textLine.id = "lineinput";
+                options.appendChild(textLine);
+
+                const goButton = document.createElement("button");
+                goButton.id = "gobutton";
+                goButton.textContent = "Enter";
+                goButton.addEventListener("click", G.goButtonHandler);
+                options.appendChild(goButton);
+
+                G.eOutput.appendChild(options);
+                textLine.focus();
+                break; }
             case G.OptionType.KeyInput:
                 const theOption = G.options[0];
                 const options = document.createElement("p");
@@ -1083,6 +1109,16 @@ const G = {
 // ////////////////////////////////////////////////////////////////////////////
 // Keyboard input handler
 // ////////////////////////////////////////////////////////////////////////////
+    G.goButtonHandler = function goButtonHandler() {
+        if (G.options.length >= 1) {
+            const eInput = document.getElementById("lineinput");
+
+            const newStr = G.makeNew(G.ValueType.String);
+            G.strings[newStr.value].data = eInput.value;
+
+            G.doEvent(G.optionFunction, [newStr]);
+        }
+    }
     G.keyPressHandler = function keyPressHandler(event) {
         // handle dialog keyboard events
         if (G.UI.inDialog) {
@@ -1099,6 +1135,16 @@ const G = {
 
         var code = -1;
         if (event.key.length === 1) code = event.key.toLowerCase().codePointAt(0);
+
+        if (G.optionType === G.OptionType.LineInput) {
+            if (event.key === "Enter") {
+                G.goButtonHandler();
+                return;
+            }
+            document.getElementById("lineinput").focus();
+            console.log(code, event.key);
+            return;
+        }
 
         if (G.options.length === 0) return;
 

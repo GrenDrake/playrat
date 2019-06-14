@@ -88,6 +88,23 @@ body {
 .anOptionList + .anOptionList {
     border-left: 1px dashed black;
 }
+.optionslineinput {
+    display: flex;
+    align-items: center;
+}
+#lineinput {
+    flex-grow: 1;
+    /* width: 100%; */
+    border: none;
+    background: lightgrey;
+    color: black;
+    font-size: 120%;
+    margin: auto 0.25em;
+}
+#gobutton {
+    font-size: 100%;
+    /* width: 9% */
+}
 
 .fakeLink {
     font-family: serif;
