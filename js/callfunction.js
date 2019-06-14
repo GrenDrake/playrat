@@ -364,8 +364,8 @@
                     const value = G.callStack.pop();
                     const type = G.callStack.pop();
                     type.requireType(G.ValueType.Integer);
-                    value.type = type.value;
-                    G.callStack.stack.push(value);
+                    const newValue = new G.Value(type.value, value.value);
+                    G.callStack.stack.push(newValue);
                     break; }
 
                 case Opcode.Equal: {
