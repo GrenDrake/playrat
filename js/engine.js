@@ -486,19 +486,19 @@ const G = {
     G.collectGarbage = function collectGarbage() {
         ////////////////////////////////////////
         // COLLECTING
-        function markObject(object) {
+        function markObject(object, xtra) {
             if (!object || object.marked || !object.data) return;
             object.marked = true;
             const keys = Object.keys(object.data);
             keys.forEach(function(key) {
-                markValue(object.data[key].value);
+                markValue(object.data[key]);
             });
         };
         function markList(list) {
             if (!list || list.marked || !list.data) return;
             list.marked = true;
             list.data.forEach(function(value) {
-                markValue(value.value);
+                markValue(value);
             });
         };
         function markMap(map) {
@@ -530,6 +530,16 @@ const G = {
                 case G.ValueType.List:
                     markList(G.getList(what.value));
                     break;
+                case G.ValueType.Map:
+                    markMap(G.getList(what.value));
+                    break;
+                case G.ValueType.Integer:
+                case G.ValueType.Function:
+                case G.ValueType.Property:
+                    // no need to mark
+                    break;
+                default:
+                    console.error("Found unknown type ", what.type, " during garbage collection.");
             }
             if (!what || what.marked || !what.data) return;
             what.marked = true;
