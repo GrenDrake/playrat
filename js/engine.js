@@ -466,6 +466,7 @@ const G = {
             throw new G.RuntimeError("Tried to add page \"" + G.getString(pageId) + "\" but page already exists.");
         }
         const button = document.createElement("button");
+        button.type = "button";
         button.classList.add("pageButton");
         button.textContent = G.getString(pageId);
         button.title = G.getString(pageId) + " (" + String.fromCodePoint(pageInfo.hotkey.value) + ")";
@@ -1053,6 +1054,7 @@ const G = {
                 G.options.forEach(function(option) {
                     option.displayText.requireType(G.ValueType.String);
                     const button = document.createElement("button");
+                    button.type = "button";
                     var keyString, target = optionsList;
                     if (option.hotkey) {
                         keyString = String.fromCharCode(option.hotkey).toUpperCase();
@@ -1096,6 +1098,7 @@ const G = {
                 options.appendChild(textLine);
 
                 const goButton = document.createElement("button");
+                goButton.type = "button";
                 goButton.id = "gobutton";
                 goButton.textContent = "Enter";
                 goButton.addEventListener("click", G.goButtonHandler);
