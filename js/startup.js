@@ -413,19 +413,6 @@
         }
 
         ///////////////////////////////////////////////////////////////////////
-        // Read stored source file names
-        G.sourceFileCount = gamedataSrc.getUint32(filePos, true);
-        filePos += 4;
-        for (var i = 0; i < G.sourceFileCount; ++i) {
-            const stringLength = gamedataSrc.getUint16(filePos, true);
-            filePos += 2;
-            const rawStringData = new Uint8Array(rawSource, filePos,
-                                                 stringLength);
-            filePos += stringLength;
-            G.sourceFiles.push(decoder.decode(rawStringData));
-        }
-
-        ///////////////////////////////////////////////////////////////////////
         // Read bytecode section from datafile
         G.bytecodeSize = gamedataSrc.getInt32(filePos, true);
         filePos += 4;
