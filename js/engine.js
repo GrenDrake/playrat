@@ -486,6 +486,13 @@ const G = {
 
     G.collectGarbage = function collectGarbage() {
         ////////////////////////////////////////
+        // UNMARK ALL
+        G.objects.forEach(function(item) { if (item) item.marked = false; });
+        G.lists.forEach(function(item)   { if (item) item.marked = false; });
+        G.maps.forEach(function(item)    { if (item) item.marked = false; });
+        G.strings.forEach(function(item) { if (item) item.marked = false; });
+
+        ////////////////////////////////////////
         // COLLECTING
         function markObject(object, xtra) {
             if (!object || object.marked || !object.data) return;
