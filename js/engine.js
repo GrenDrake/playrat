@@ -14,7 +14,6 @@ const G = {
         lists: [],
         maps: []
     },
-    sourceFiles: [],
 
     eOutput: undefined,
     eTopLeft: undefined,
@@ -242,6 +241,14 @@ const G = {
                 callStr.push(i);
                 callStr.push(" FunctionID:");
                 callStr.push(line.functionId);
+                if (line.functionId < G.functions.length) {
+                    const value = new G.Value(G.ValueType.Function, line.functionId);
+                    const sourceStr = G.getSource(value);
+                    callStr.push(" @ ");
+                    callStr.push(G.getString(sourceStr));
+                } else {
+                    callStr.push(" (invalid)");
+                }
                 callStr.push(" SELF:");
                 callStr.push(line.selfValue.toString());
                 callStr.push("\n    LOCALS:[");
@@ -791,17 +798,30 @@ const G = {
                 throw new G.RuntimeError("Tried to get unknown setting " + settingNumber.value + ".");
         }
     }
+/*
+                    const theFunction = G.functions[line.functionId];
+                    if (theFunction.sourceFile >= 0) {
+                        callStr.push( " (" + G.getString(theFunction.sourceFile));
+                        if (theFunction.sourceLine >= 0) {
+                            callStr.push(":");
+                            callStr.push(theFunction.sourceLine);
+                        }
+                        callStr.push(")");
+                    } else {
+                        callStr.push(" (no debug info)");
+                    }
 
+*/
     G.getSource = function getSource(ofWhat) {
         var stringData = undefined;
         var data;
         switch(ofWhat.type) {
-            case G.ValueType.String:        stringData = "(string)";    break;
-            case G.ValueType.Integer:       stringData = "(integer)";   break;
-            case G.ValueType.JumpTarget:    stringData = "(label)";     break;
-            case G.ValueType.LocalVar:      stringData = "(localvar)";  break;
-            case G.ValueType.VarRef:        stringData = "(varref)";    break;
-            case G.ValueType.Property:      stringData = "(property)";  break;
+            case G.ValueType.String:        return G.noneValue;
+            case G.ValueType.Integer:       return G.noneValue;
+            case G.ValueType.JumpTarget:    return G.noneValue;
+            case G.ValueType.LocalVar:      return G.noneValue;
+            case G.ValueType.VarRef:        return G.noneValue;
+            case G.ValueType.Property:      return G.noneValue;
             case G.ValueType.Map:
                 if (ofWhat.value < 0 || ofWhat.value >= G.maps.length)
                     throw new G.RuntimeError("Tried to get origin of invalid map.");
@@ -822,14 +842,19 @@ const G = {
                     throw new G.RuntimeError("Tried to get origin of invalid function.");
                 data = G.functions[ofWhat.value];
                 break;
-            default:                        stringData = "(unhandled type " + G.typeNames[ofWhat.type] + ")";
+            default:
+                stringData = "(unhandled type " + G.typeNames[ofWhat.type] + ")";
         }
         const newStr = G.makeNew(G.ValueType.String);
         if (stringData === undefined) {
-            if (data.sourceFile === -1) stringData = "(unknown)";
-            else if (data.sourceFile === -2) stringData = "(dynamic)";
-            else if (data.sourceLine === -1) stringData = G.sourceFiles[data.sourceFile];
-            else stringData = G.sourceFiles[data.sourceFile] + ":" + data.sourceLine;
+            if (data.sourceFile === -1)
+                stringData = "no debug info";
+            else if (data.sourceFile === -2)
+                stringData = "dynamic";
+            else if (data.sourceLine === -1)
+                stringData = G.getString(data.sourceFile);
+            else
+                stringData = G.getString(data.sourceFile) + ":" + data.sourceLine;
         }
         G.strings[newStr.value].data = stringData;
         return newStr;

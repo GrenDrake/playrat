@@ -306,9 +306,9 @@
         filePos += 4;
         for (var i = 0; i < G.listCount; ++i) {
             const thisList = [];
-            const sourceFileIdx = gamedataSrc.getUint32(filePos, true);
+            const sourceFileIdx = gamedataSrc.getInt32(filePos, true);
             filePos += 4;
-            const sourceLine = gamedataSrc.getUint32(filePos, true);
+            const sourceLine = gamedataSrc.getInt32(filePos, true);
             filePos += 4;
             const listSize = gamedataSrc.getUint16(filePos, true);
             filePos += 2;
@@ -332,9 +332,9 @@
         filePos += 4;
         for (var i = 0; i < G.mapCount; ++i) {
             const thisMap = {};
-            const sourceFileIdx = gamedataSrc.getUint32(filePos, true);
+            const sourceFileIdx = gamedataSrc.getInt32(filePos, true);
             filePos += 4;
-            const sourceLine = gamedataSrc.getUint32(filePos, true);
+            const sourceLine = gamedataSrc.getInt32(filePos, true);
             filePos += 4;
             const mapSize = gamedataSrc.getUint16(filePos, true);
             filePos += 2;
@@ -366,9 +366,9 @@
         filePos += 4;
         for (var i = 0; i < G.objectCount; ++i) {
             const thisObject = {};
-            const sourceFileIdx = gamedataSrc.getUint32(filePos, true);
+            const sourceFileIdx = gamedataSrc.getInt32(filePos, true);
             filePos += 4;
-            const sourceLine = gamedataSrc.getUint32(filePos, true);
+            const sourceLine = gamedataSrc.getInt32(filePos, true);
             filePos += 4;
             // thisObject.key = gamedataSrc.getUint32(filePos, true);
             const objectSize = gamedataSrc.getUint16(filePos, true);
@@ -395,9 +395,9 @@
         filePos += 4;
         G.functions.push(undefined);
         for (var i = 0; i < G.functionCount; ++i) {
-            const sourceFileIdx = gamedataSrc.getUint32(filePos, true);
+            const sourceFileIdx = gamedataSrc.getInt32(filePos, true);
             filePos += 4;
-            const sourceLine = gamedataSrc.getUint32(filePos, true);
+            const sourceLine = gamedataSrc.getInt32(filePos, true);
             filePos += 4;
             const argCount = gamedataSrc.getUint16(filePos, true);
             filePos += 2;

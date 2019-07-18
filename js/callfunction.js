@@ -68,6 +68,7 @@
         StringLength:           67,
         StringCompare:          68,
         Error:                  69,
+        Origin:                 70,
         AddPage:                71,
         DeletePage:             72,
         EndPage:                73,
@@ -683,6 +684,10 @@
                     } else {
                         throw new G.RuntimeError("User Error: " + v1.toString());
                     }
+                case Opcode.Origin:
+                    v1 = G.callStack.pop();
+                    G.callStack.stack.push(G.getSource(v1));
+                    break;
 
                 case Opcode.AddPage:
                     v1 = G.callStack.pop();
