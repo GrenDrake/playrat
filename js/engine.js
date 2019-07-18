@@ -851,10 +851,18 @@ const G = {
                 stringData = "no debug info";
             else if (data.sourceFile === -2)
                 stringData = "dynamic";
-            else if (data.sourceLine === -1)
-                stringData = G.getString(data.sourceFile);
-            else
-                stringData = G.getString(data.sourceFile) + ":" + data.sourceLine;
+            else {
+                if (data.hasOwnProperty("sourceName")) {
+                    stringData = "\"" + G.getString(data.sourceName) + "\" ";
+                } else {
+                    stringData = "";
+                }
+
+                if (data.sourceLine === -1)
+                    stringData += G.getString(data.sourceFile);
+                else
+                    stringData += G.getString(data.sourceFile) + ":" + data.sourceLine;
+            }
         }
         G.strings[newStr.value].data = stringData;
         return newStr;

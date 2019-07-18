@@ -366,6 +366,8 @@
         filePos += 4;
         for (var i = 0; i < G.objectCount; ++i) {
             const thisObject = {};
+            const sourceName = gamedataSrc.getInt32(filePos, true);
+            filePos += 4;
             const sourceFileIdx = gamedataSrc.getInt32(filePos, true);
             filePos += 4;
             const sourceLine = gamedataSrc.getInt32(filePos, true);
@@ -384,6 +386,7 @@
             }
             G.raw.objects.push({
                 data: thisObject,
+                sourceName: sourceName,
                 sourceFile: sourceFileIdx,
                 sourceLine: sourceLine
             });
@@ -395,6 +398,8 @@
         filePos += 4;
         G.functions.push(undefined);
         for (var i = 0; i < G.functionCount; ++i) {
+            const sourceName = gamedataSrc.getInt32(filePos, true);
+            filePos += 4;
             const sourceFileIdx = gamedataSrc.getInt32(filePos, true);
             filePos += 4;
             const sourceLine = gamedataSrc.getInt32(filePos, true);
@@ -407,6 +412,7 @@
             filePos += 4;
             G.functions.push({
                 data: [argCount, localCount, codePosition],
+                sourceName: sourceName,
                 sourceFile: sourceFileIdx,
                 sourceLine: sourceLine
             });
@@ -490,6 +496,7 @@
             });
             G.objects.push({
                 data: newObject,
+                sourceName: oldObject.sourceName,
                 sourceFile: oldObject.sourceFile,
                 sourceLine: oldObject.sourceLine
             });
