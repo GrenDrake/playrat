@@ -790,7 +790,7 @@ const G = {
         }
     }
 
-    G.getSetting = function setSetting(settingNumber) {
+    G.getSetting = function getSetting(settingNumber) {
         switch(settingNumber.value) {
             case 0:
                 return new G.Value(G.ValueType.Integer, +G.saveAllowed);
