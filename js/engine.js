@@ -798,20 +798,7 @@ const G = {
                 throw new G.RuntimeError("Tried to get unknown setting " + settingNumber.value + ".");
         }
     }
-/*
-                    const theFunction = G.functions[line.functionId];
-                    if (theFunction.sourceFile >= 0) {
-                        callStr.push( " (" + G.getString(theFunction.sourceFile));
-                        if (theFunction.sourceLine >= 0) {
-                            callStr.push(":");
-                            callStr.push(theFunction.sourceLine);
-                        }
-                        callStr.push(")");
-                    } else {
-                        callStr.push(" (no debug info)");
-                    }
 
-*/
     G.getSource = function getSource(ofWhat) {
         var stringData = undefined;
         var data;
