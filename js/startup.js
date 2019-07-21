@@ -296,6 +296,9 @@
             filePos += 2;
             const rawStringData = new Uint8Array(rawSource, filePos,
                                                  stringLength);
+            for (let i = 0; i < stringLength; ++i) {
+                rawStringData[i] ^= 0x7B;
+            }
             filePos += stringLength;
             G.strings.push({data:decoder.decode(rawStringData)});
         }
