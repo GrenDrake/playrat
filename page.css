@@ -2,6 +2,7 @@ body {
     margin: 0;
     padding: 0;
     background: grey;
+    font-size: 1.25em;
 }
 #contentArea {
     display: flex;
@@ -70,7 +71,7 @@ body {
     padding: 0.25em 1em;
     flex-grow: 5;
     overflow: scroll;
-    background: white;
+    background: #eee;
 }
 #text hr {
     width: 50%;
