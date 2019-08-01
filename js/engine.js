@@ -1202,6 +1202,7 @@ const G = {
                     if (G.options[i].hotkey === code) {
                         G.doEvent(G.optionFunction, [G.options[i].value, G.options[i].extra]);
                         event.preventDefault();
+                        break;
                     }
                 }
                 break;
