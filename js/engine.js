@@ -546,7 +546,7 @@ const G = {
                     markList(G.getList(what.value));
                     break;
                 case G.ValueType.Map:
-                    markMap(G.getList(what.value));
+                    markMap(G.getMap(what.value));
                     break;
                 case G.ValueType.Integer:
                 case G.ValueType.Function:
