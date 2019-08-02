@@ -747,7 +747,7 @@ const G = {
     G.getData = function getData(type, dataArray, index) {
         if (index instanceof G.Value) {
             index.requireType(type);
-            index = stringNumber.value;
+            index = index.value;
         }
         if (index < 0 || index >= dataArray.length || (type !== G.ValueType.String && index === 0)) {
             throw new G.RuntimeError("Tried to access invalid " + G.typeNames[type] + " #" + index);
