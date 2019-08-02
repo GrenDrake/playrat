@@ -19,6 +19,8 @@
         StackPeek:              15, // peek at the stack item X items from the top
         StackSize:              16, // get the current size of the stack
         Call:                   17, // call a value as a function
+        ListPush:               19, // add item to end of list
+        ListPop:                20, // remove and return item from end of list
         Sort:                   21, // sorts a list
         GetItem:                22, // get item from list (index) or map (key)
         HasItem:                23, // check if index (for list) or key (for map) exists
@@ -244,6 +246,28 @@
                     IP = theFunc[2];
                     break; }
 
+                case Opcode.ListPush: {
+                    v1 = G.callStack.pop();
+                    v2 = G.callStack.pop();
+                    v1.requireType(G.ValueType.List);
+                    console.log(v1);
+                    const theList = G.getList(v1);
+                    theList.push(v2);
+                    break; }
+                case Opcode.ListPop: {
+                    v1 = G.callStack.pop();
+                    console.log(v1);
+                    v1.requireType(G.ValueType.List);
+                    const theList = G.getList(v1);
+                    if (theList.length > 0) {
+                        console.log(theList.length);
+                        G.callStack.push(theList.pop());
+                        console.log(theList.length,"DSA");
+                        console.log(G.getList(v1).length,"DSA");
+                    } else {
+                        throw new G.RuntimeError("used list_pop on empty list.");
+                    }
+                    break; }
                 case Opcode.Sort: {
                     v1 = G.callStack.pop();
                     v1.requireType(G.ValueType.List);
