@@ -77,14 +77,8 @@ body {
     width: 50%;
 }
 #optionsCore {
-    border-top: 1px dashed black;
+    border-top: 1px dashed grey;
     padding-top: 1em;
-    font-style: italic;
-    display: flex;
-}
-.anOptionList {
-    flex-grow: 1;
-    margin-bottom: 0.5em;
 }
 .optionslineinput {
     display: flex;
@@ -92,7 +86,6 @@ body {
 }
 #lineinput {
     flex-grow: 1;
-    /* width: 100%; */
     border: none;
     background: lightgrey;
     color: black;
@@ -101,10 +94,9 @@ body {
 }
 #gobutton {
     font-size: 100%;
-    /* width: 9% */
 }
 
-.fakeLink {
+.optionsButton {
     font-family: serif;
     font-size: 100%;
     background: none;
@@ -166,7 +158,7 @@ body {
 }
 
 
-@media (max-width: 400px) {
+@media (max-width: 500px) {
     #top-statusbar {
         flex-direction: column;
         align-items: center;
@@ -182,10 +174,15 @@ body {
     #bottom-centre {
         margin: 0.25em 0;
     }
-    #optionsCore {
+    .optionslineinput {
         flex-direction: column;
     }
-    .anOptionList {
-        flex-grow: unset;
+    #lineinput {
+        width: 100%;
+        margin-top: 0.1em;
+        margin-bottom: 0.2em;
+    }
+    .optionsButton {
+        margin-bottom: 0.2em;
     }
 }

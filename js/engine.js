@@ -1063,6 +1063,7 @@ const G = {
         if (oldOptionsCore) {
             optionsList.parentElement.removeChild(optionsList);
         }
+
         const optionsCore = document.createElement("div");
         optionsCore.id = "optionsCore";
         G.eOutput.appendChild(optionsCore);
@@ -1073,19 +1074,18 @@ const G = {
             case G.OptionType.MenuItem:
                 const optionsList = document.createElement("div");
                 optionsList.id = "optionslist";
-                optionsList.classList.add("anOptionList");
-                const specialList = document.createElement("div");
-                specialList.id = "speciallist";
-                specialList.classList.add("anOptionList");
+                const standardOptions = [];
+                const hotkeyOptions = [];
                 var nextNum = 1;
+
                 G.options.forEach(function(option) {
                     option.displayText.requireType(G.ValueType.String);
                     const button = document.createElement("button");
                     button.type = "button";
-                    var keyString, target = optionsList;
+                    var keyString;
                     if (option.hotkey) {
                         keyString = String.fromCharCode(option.hotkey).toUpperCase();
-                        target = specialList;
+                        hotkeyOptions.push(button);
                     } else {
                         if (nextNum < 10) {
                             option.hotkey = 48 + nextNum;
@@ -1094,19 +1094,28 @@ const G = {
                         }
                         keyString = ""+nextNum;
                         ++nextNum;
+                        standardOptions.push(button);
                     }
                     button.textContent = keyString + ") " + G.getString(option.displayText.value);
-                    button.classList.add("fakeLink");
+                    button.classList.add("optionsButton");
                     button.addEventListener("click", function() {
                         G.doEvent(G.optionFunction, [option.value, option.extra]);
                     });
-                    target.appendChild(button);
-                    const newBr = document.createElement("br");
-                    target.appendChild(newBr);
+
                 });
+
+                function appendOption(optionElement) {
+                    if (optionElement) {
+                        optionsList.appendChild(optionElement);
+                    }
+                    const newBr = document.createElement("br");
+                    optionsList.appendChild(newBr);
+                }
+                standardOptions.forEach(appendOption);
+                hotkeyOptions.forEach(appendOption);
                 optionsCore.appendChild(optionsList);
-                optionsCore.appendChild(specialList);
                 break;
+
             case G.OptionType.LineInput: {
                 const theOption = G.options[0];
                 const options = document.createElement("div");
