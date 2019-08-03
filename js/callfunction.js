@@ -256,14 +256,10 @@
                     break; }
                 case Opcode.ListPop: {
                     v1 = G.callStack.pop();
-                    console.log(v1);
                     v1.requireType(G.ValueType.List);
                     const theList = G.getList(v1);
                     if (theList.length > 0) {
-                        console.log(theList.length);
                         G.callStack.push(theList.pop());
-                        console.log(theList.length,"DSA");
-                        console.log(G.getList(v1).length,"DSA");
                     } else {
                         throw new G.RuntimeError("used list_pop on empty list.");
                     }
