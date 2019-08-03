@@ -600,9 +600,10 @@
                         || v2.value < 0 || v2.value >= G.callStack.stackSize) {
                         throw new G.RuntimeError("Invalid stack position.");
                     }
-                    const tmp = G.callStack.stack.stack[v1.value];
-                    G.callStack.stack.stack[v1.value] = G.callStack.stack.stack[v2.value];
-                    G.callStack.stack.stack[v2.value] = tmp;
+                    const stackTop = G.callStack.stack.stack.length - 1;
+                    const tmp = G.callStack.stack.stack[stackTop - v1.value];
+                    G.callStack.stack.stack[stackTop - v1.value] = G.callStack.stack.stack[stackTop - v2.value];
+                    G.callStack.stack.stack[stackTop - v2.value] = tmp;
                     break; }
 
                 case Opcode.GetSetting: {
