@@ -51,8 +51,9 @@ const G = {
 
     propInternalName: 1,
     propIdent: 2,
-    propSave: 3,
-    propLoad: 4,
+    propParent: 3,
+    propSave: 4,
+    propLoad: 5,
 };
 
 (function() {
@@ -786,7 +787,11 @@ const G = {
             result.selfobj = new G.Value(G.ValueType.Object, objectId);
             return result;
         } else {
-            return new G.Value(G.ValueType.Integer, 0);
+            if (theObject.hasOwnProperty(G.propParent)) {
+                return G.getObjectProperty(theObject[G.propParent], propertyId);
+            } else {
+                return new G.Value(G.ValueType.Integer, 0);
+            }
         }
     }
 
