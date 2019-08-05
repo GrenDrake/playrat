@@ -536,6 +536,7 @@ const G = {
             string.marked = true;
         }
         function markValue(what) {
+            if (!what || !(what instanceof G.Value)) return;
             switch(what.type) {
                 case G.ValueType.String:
                     markString(G.strings[what.value]);
@@ -549,6 +550,7 @@ const G = {
                 case G.ValueType.Map:
                     markMap(G.getMap(what.value));
                     break;
+                case G.ValueType.None:
                 case G.ValueType.Integer:
                 case G.ValueType.Function:
                 case G.ValueType.Property:
@@ -557,12 +559,16 @@ const G = {
                 default:
                     console.error("Found unknown type ", what.type, " during garbage collection.");
             }
-            if (!what || what.marked || !what.data) return;
             what.marked = true;
         }
         for (var i = 0; i <= G.objectCount; ++i)    markObject(G.objects[i]);
         for (var i = 0; i <= G.listCount; ++i)      markList(G.lists[i]);
-        for (var i = 0; i <= G.mapsCount; ++i)      markMap(G.maps[i]);
+        for (var i = 0; i <= G.mapCount; ++i)       markMap(G.maps[i]);
+        G.options.forEach(function(option) {
+            markValue(option.displayText);
+            markValue(option.extra);
+            markValue(option.value);
+        });
 
         ////////////////////////////////////////
         // COLLECTING
