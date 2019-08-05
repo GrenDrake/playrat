@@ -505,6 +505,9 @@
             });
         });
 
+        while (G.eOutput.childElementCount > 0) {
+            G.eOutput.removeChild(G.eOutput.firstChild);
+        }
         G.gameLoaded = true;
         if (callMain) G.doEvent(G.mainFunction, [new G.Value(G.ValueType.Integer, G.StartupSource.NewGame)]);
     }

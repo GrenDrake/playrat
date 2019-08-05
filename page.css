@@ -11,6 +11,12 @@ body {
     height: 100vh;
     margin: 0 auto;
 }
+.optionNode {
+    font-family: monospace;
+    border: 1px solid black;
+    padding: 0.25em 0.2em;
+    background: lightyellow;
+}
 .limitWidth {
     max-width: 700px;
     border-left: 1px solid black;
@@ -79,6 +85,7 @@ body {
 #optionsCore {
     border-top: 1px dashed grey;
     padding-top: 1em;
+    padding-bottom: 30em;
 }
 .optionslineinput {
     display: flex;

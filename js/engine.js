@@ -626,7 +626,6 @@ const G = {
         const start = performance.now();
         G.options = [];
         G.textBuffer = [];
-        G.clearOutput();
 
         let errorDiv = undefined;
         try {
@@ -683,6 +682,8 @@ const G = {
     }
 
     G.doOutput = function doOutput(errorMessage) {
+        const nextDiv = document.createElement("div");
+        nextDiv.classList.add("sceneNode");
         const outputText = G.textBuffer.join("").split("\n");
         outputText.forEach(function(line) {
             line = line.trim();
@@ -690,7 +691,7 @@ const G = {
 
             if (line.match(/^---+$/) !== null) {
                 const p = document.createElement("hr");
-                G.eOutput.appendChild(p);
+                nextDiv.appendChild(p);
             } else {
                 line = line.replace(/&/g, "&amp;");
                 line = line.replace(/</g, "&lt;");
@@ -706,9 +707,10 @@ const G = {
                 } else {
                     p.innerHTML = line;
                 }
-                G.eOutput.appendChild(p);
+                nextDiv.appendChild(p);
             }
         });
+        G.eOutput.appendChild(nextDiv);
         if (errorMessage)   G.eOutput.appendChild(errorMessage);
         else                G.showOptions();
     }
@@ -1089,10 +1091,11 @@ const G = {
                 const hotkeyOptions = [];
                 var nextNum = 1;
 
-                G.options.forEach(function(option) {
+                G.options.forEach(function(option, optionIndex) {
                     option.displayText.requireType(G.ValueType.String);
                     const button = document.createElement("button");
                     button.type = "button";
+                    button.optionIndex = optionIndex;
                     var keyString;
                     if (option.hotkey) {
                         keyString = String.fromCharCode(option.hotkey).toUpperCase();
@@ -1109,10 +1112,7 @@ const G = {
                     }
                     button.textContent = keyString + ") " + G.getString(option.displayText.value);
                     button.classList.add("optionsButton");
-                    button.addEventListener("click", function() {
-                        G.doEvent(G.optionFunction, [option.value, option.extra]);
-                    });
-
+                    button.addEventListener("click", G.optionClickHandler);
                 });
 
                 function appendOption(optionElement) {
@@ -1151,7 +1151,7 @@ const G = {
                 goButton.addEventListener("click", G.goButtonHandler);
                 options.appendChild(goButton);
 
-                G.eOutput.appendChild(options);
+                optionsCore.appendChild(options);
                 textLine.focus();
                 break; }
             case G.OptionType.KeyInput:
@@ -1160,7 +1160,7 @@ const G = {
                 options.id = "optionslist";
                 options.classList.add("optionslist");
                 options.textContent = G.getString(theOption.displayText.value);
-                G.eOutput.appendChild(options);
+                optionsCore.appendChild(options);
                 break;
         }
     }
@@ -1169,15 +1169,32 @@ const G = {
 // ////////////////////////////////////////////////////////////////////////////
 // Keyboard input handler
 // ////////////////////////////////////////////////////////////////////////////
+    G.execOption = function(optionNumber) {
+        const optionText = document.createElement("p");
+        optionText.classList.add("optionNode");
+        optionText.textContent = "> " + G.getString(G.options[optionNumber].displayText.value);
+        G.eOutput.appendChild(optionText);
+        G.doEvent(G.optionFunction, [G.options[optionNumber].value, G.options[optionNumber].extra]);
+        optionText.scrollIntoView();
+    }
     G.goButtonHandler = function goButtonHandler() {
         if (G.options.length >= 1) {
             const eInput = document.getElementById("lineinput");
+
+            const optionText = document.createElement("p");
+            optionText.classList.add("optionNode");
+            optionText.textContent = G.getString(G.options[0].displayText.value) + " " + eInput.value;
+            G.eOutput.appendChild(optionText);
 
             const newStr = G.makeNew(G.ValueType.String);
             G.strings[newStr.value].data = eInput.value;
 
             G.doEvent(G.optionFunction, [newStr]);
+            optionText.scrollIntoView();
         }
+    }
+    G.optionClickHandler = function optionClickHandler(event) {
+        G.execOption(event.target.optionIndex);
     }
     G.keyPressHandler = function keyPressHandler(event) {
         // handle dialog keyboard events
@@ -1212,7 +1229,8 @@ const G = {
                 // handle space/enter for activating single options
                 if (code == 32 || event.key === "Enter") {
                     if (G.options.length == 1) {
-                        G.doEvent(G.optionFunction, [G.options[0].value, G.options[0].extra]);
+                        G.execOption(0);
+                        event.preventDefault();
                     }
                     return;
                 }
@@ -1220,7 +1238,7 @@ const G = {
                 if (code <= 0) break;
                 for (var i = 0; i < G.options.length; ++i) {
                     if (G.options[i].hotkey === code) {
-                        G.doEvent(G.optionFunction, [G.options[i].value, G.options[i].extra]);
+                        G.execOption(i);
                         event.preventDefault();
                         break;
                     }
@@ -1255,6 +1273,7 @@ const G = {
 
         if (code == 111) {
             G.UI.showSettings();
+            event.preventDefault();
             return;
         }
 
