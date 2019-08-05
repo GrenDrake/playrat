@@ -1066,7 +1066,7 @@ const G = {
     G.showOptions = function showOptions() {
         const oldOptionsCore = document.getElementById("optionsCore");
         if (oldOptionsCore) {
-            optionsList.parentElement.removeChild(optionsList);
+            oldOptionsCore.parentElement.removeChild(oldOptionsCore);
         }
 
         const optionsCore = document.createElement("div");
