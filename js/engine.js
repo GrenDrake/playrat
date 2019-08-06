@@ -713,6 +713,7 @@ const G = {
         G.eOutput.appendChild(nextDiv);
         if (errorMessage)   G.eOutput.appendChild(errorMessage);
         else                G.showOptions();
+        nextDiv.scrollIntoView();
     }
 
     G.doPage = function doPage(pageId, argsList, fromEvent) {
@@ -1175,7 +1176,6 @@ const G = {
         optionText.textContent = "> " + G.getString(G.options[optionNumber].displayText.value);
         G.eOutput.appendChild(optionText);
         G.doEvent(G.optionFunction, [G.options[optionNumber].value, G.options[optionNumber].extra]);
-        optionText.scrollIntoView();
     }
     G.goButtonHandler = function goButtonHandler() {
         if (G.options.length >= 1) {
@@ -1190,7 +1190,6 @@ const G = {
             G.strings[newStr.value].data = eInput.value;
 
             G.doEvent(G.optionFunction, [newStr]);
-            optionText.scrollIntoView();
         }
     }
     G.optionClickHandler = function optionClickHandler(event) {
