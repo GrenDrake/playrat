@@ -258,6 +258,7 @@
 
         var loadGameData = new XMLHttpRequest();
         loadGameData.addEventListener("load", G.parseGameFile);
+        loadGameData.addEventListener("progress", loadProgress);
         loadGameData.addEventListener("error", failedToLoadGameData);
         loadGameData.addEventListener("abort", failedToLoadGameData);
         loadGameData.open("GET", "./game.bin");
@@ -267,6 +268,19 @@
         window.addEventListener("keydown", G.keyPressHandler);
     })
 
+    function loadProgress(event) {
+        const eText = document.getElementById("loadingText");
+        const eProgress = document.getElementById("loadingProgress");
+        if (!eText || !eProgress) return;
+
+        if (event.lengthComputable) {
+            eText.innerHTML = "<p>Loading: " + Math.round(event.loaded / event.total * 100) + "%";
+            eProgress.max = event.total;
+            eProgress.value = event.loaded;
+        } else {
+            eText.innerHTML = "<p>Loading: " + event.loaded + " bytes";
+        }
+    }
     function failedToLoadGameData(event) {
         G.eOutput.innerHTML += "<div class='error'>[Failed to load game data.]</div>";
     }
