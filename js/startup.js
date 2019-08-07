@@ -523,7 +523,7 @@
             G.eOutput.removeChild(G.eOutput.firstChild);
         }
         G.gameLoaded = true;
-        if (callMain) G.doEvent(G.mainFunction, [new G.Value(G.ValueType.Integer, G.StartupSource.NewGame)]);
+        if (callMain) G.doEvent();
     }
 
     G.saveGame = function saveGame(saveInfo) {

@@ -29,6 +29,7 @@ const G = {
     optionFunction: undefined,
     optionType: -1,
     options: [],
+    nextIP: -1,
     gameLoaded: false,
 
     lastNode: "",
@@ -54,6 +55,7 @@ const G = {
     propParent: 3,
     propSave: 4,
     propLoad: 5,
+    extraValue: undefined,
 };
 
 (function() {
@@ -608,26 +610,21 @@ const G = {
         }
     }
 
-    G.doEvent = function doEvent(functionId, argsList) {
-        argsList = argsList || [];
-        argsList.unshift(G.noneValue);
+    G.doEvent = function doEvent(argsList) {
+        argsList = argsList || G.noneValue;
         if (G.inPage) {
             G.doPage(G.inPage, argsList, functionId);
             return;
         }
 
+        G.optionType = -1;
         const start = performance.now();
         G.options = [];
         G.textBuffer = [];
 
         let errorDiv = undefined;
         try {
-            if (functionId instanceof G.Value) {
-                functionId.requireType(G.ValueType.Node);
-                functionId = functionId.value;
-            }
-
-            G.callFunction(G, functionId, argsList);
+            G.callFunction(G, -1, G.noneValue, argsList);
         } catch (error) {
             if (!(error instanceof G.RuntimeError))    throw error;
             errorDiv = document.createElement("pre");
@@ -960,6 +957,12 @@ const G = {
         }
     }
 
+    G.setExtra = function setExtra(newExtraValue) {
+        if (G.extraValue && G.extraValue.type === G.ValueType.VarRef) {
+            G.callStack.set(G.extraValue.value, newExtraValue);
+        }
+    }
+
     G.setObjectProperty = function setObjectProperty(objectId, propertyId,
                                                      newValue) {
         if (objectId instanceof G.Value) {
@@ -1168,7 +1171,8 @@ const G = {
         optionText.classList.add("optionNode");
         optionText.textContent = "> " + G.getString(G.options[optionNumber].displayText.value);
         G.eOutput.appendChild(optionText);
-        G.doEvent(G.optionFunction, [G.options[optionNumber].value, G.options[optionNumber].extra]);
+        G.setExtra(G.options[optionNumber].extra);
+        G.doEvent(G.options[optionNumber].value);
     }
     G.goButtonHandler = function goButtonHandler() {
         if (G.options.length >= 1) {
@@ -1182,7 +1186,7 @@ const G = {
             const newStr = G.makeNew(G.ValueType.String);
             G.strings[newStr.value].data = eInput.value;
 
-            G.doEvent(G.optionFunction, [newStr]);
+            G.doEvent(newStr);
         }
     }
     G.optionClickHandler = function optionClickHandler(event) {
@@ -1256,9 +1260,8 @@ const G = {
                     }
                 }
 
-                const func = G.options[0].value;
-                func.requireType(G.ValueType.Node);
-                G.doEvent(func.value, [new G.Value(G.ValueType.Integer, code)]);
+                const keyValue = new G.Value(G.ValueType.Integer, code);
+                G.doEvent(keyValue);
                 event.preventDefault();
                 return;
         }

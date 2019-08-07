@@ -112,21 +112,31 @@
         });
     }
 
-    G.callFunction = function callFunction(G, functionId, argList) {
+    G.callFunction = function callFunction(G, functionId, argList, pushValue) {
         "use strict";
         argList = argList || [];
+        G.extraValue = undefined;
 
-        if (functionId instanceof G.Value) {
-            functionId.requireType(G.ValueType.Node);
-            functionId = functionId.value;
+        if (!G.callStack) {
+            const functionDef = G.getFunction(G.mainFunction);
+
+            G.callStack = new G.CallStack();
+            G.callStack.pushFrame(G.mainFunction, functionDef[2], 0);
+            G.callStack.buildLocals(argList, functionDef[0], functionDef[0] + functionDef[1]);
+            G.nextIP = functionDef[2];
         }
-        const functionDef = G.getFunction(functionId);
 
         G.operations = 0;
-        G.callStack = new G.CallStack();
-        G.callStack.pushFrame(functionId, functionDef[2], 0);
-        G.callStack.buildLocals(argList, functionDef[0], functionDef[0] + functionDef[1]);
-        var IP = functionDef[2];
+        var IP = -1;
+        if (functionId >= 0) {
+        } else {
+            IP = G.nextIP;
+            if (pushValue) {
+                if (pushValue instanceof G.Value) {
+                    G.callStack.stack.push(pushValue);
+                }
+            }
+        }
         var rawType, rawValue, v1, v2, v3, v4, target;
 
         while (1) {
@@ -617,29 +627,30 @@
                     break; }
 
                 case Opcode.GetKey:
-                    v1 = G.callStack.pop();
                     v2 = G.callStack.pop();
-                    v1.requireType(G.ValueType.Node);
                     v2.requireType(G.ValueType.String);
                     G.optionType = G.OptionType.KeyInput;
-                    G.optionFunction = v1.value;
                     G.options = [ new G.Option(v2, v1) ];
-                    break;
+                    G.nextIP = IP;
+                    return;
                 case Opcode.GetOption:
-                    v1 = G.callStack.pop();
-                    v1.requireType(G.ValueType.Node);
-                    G.optionType = G.OptionType.MenuItem;
-                    G.optionFunction = v1.value;
-                    break;
-                case Opcode.GetLine:
-                    v1 = G.callStack.pop();
                     v2 = G.callStack.pop();
-                    v1.requireType(G.ValueType.Node);
+                    if (v2.type == G.ValueType.None) {
+                        G.extraValue = G.noneValue;
+                    } else {
+                        v2.requireType(G.ValueType.VarRef);
+                        G.extraValue = v2;
+                    }
+                    G.optionType = G.OptionType.MenuItem;
+                    G.nextIP = IP;
+                    return;
+                case Opcode.GetLine:
+                    v2 = G.callStack.pop();
                     v2.requireType(G.ValueType.String);
                     G.optionType = G.OptionType.LineInput;
-                    G.options = [ new G.Option(v2, v1) ];
-                    G.optionFunction = v1.value;
-                    break;
+                    G.options = [ new G.Option(v2) ];
+                    G.nextIP = IP;
+                    return;
                 case Opcode.AddOption:
                     v4 = G.callStack.pop();
                     v1 = G.callStack.pop();
