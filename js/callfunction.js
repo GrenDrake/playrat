@@ -112,7 +112,7 @@
         });
     }
 
-    G.callFunction = function callFunction(G, selfObj, functionId, argList) {
+    G.callFunction = function callFunction(G, functionId, argList) {
         "use strict";
         argList = argList || [];
 
@@ -124,7 +124,7 @@
 
         G.operations = 0;
         G.callStack = new G.CallStack();
-        G.callStack.pushFrame(functionId, functionDef[2], 0, selfObj);
+        G.callStack.pushFrame(functionId, functionDef[2], 0);
         G.callStack.buildLocals(argList, functionDef[0], functionDef[0] + functionDef[1]);
         var IP = functionDef[2];
         var rawType, rawValue, v1, v2, v3, v4, target;
@@ -145,7 +145,6 @@
                         return top;
                     } else {
                         IP = oldFrame.returnAddress;
-                        selfObj = oldFrame.self;
                         G.callStack.stack.push(top);
                     }
                     break;

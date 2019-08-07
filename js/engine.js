@@ -250,8 +250,6 @@ const G = {
                 } else {
                     callStr.push(" (invalid)");
                 }
-                callStr.push(" SELF:");
-                callStr.push(line.selfValue.toString());
                 callStr.push("\n    LOCALS:[");
                 callStr.push(localStr.join(", "));
                 callStr.push("]\n    STACK:[");
@@ -281,9 +279,6 @@ const G = {
                 return this.evaluate(this.stack.pop());
             else
                 return G.noneValue;
-        }
-        get self() {
-            return this.topFrame().selfValue;
         }
         get stack() {
             return this.topFrame().stack;
@@ -366,9 +361,8 @@ const G = {
             }
             return this.frames.pop()
         }
-        pushFrame(functionId, baseAddress, returnAddress, selfValue) {
-            selfValue = selfValue || G.noneValue;
-            this.frames.push(new G.CallStackFrame(functionId, baseAddress, returnAddress, selfValue));
+        pushFrame(functionId, baseAddress, returnAddress) {
+            this.frames.push(new G.CallStackFrame(functionId, baseAddress, returnAddress));
         }
         topFrame() {
             if (this.frames.length === 0) {
@@ -379,11 +373,10 @@ const G = {
 
     }
     G.CallStackFrame = class CallStackFrame {
-        constructor(functionId, baseAddress, returnAddress, selfValue) {
+        constructor(functionId, baseAddress, returnAddress) {
             this.functionId = functionId;
             this.baseAddress = baseAddress;
             this.returnAddress = returnAddress;
-            this.selfValue = selfValue;
             this.stack = new G.Stack();
             this.locals = [];
         }
@@ -634,7 +627,7 @@ const G = {
                 functionId = functionId.value;
             }
 
-            G.callFunction(G, G.noneValue, functionId, argsList);
+            G.callFunction(G, functionId, argsList);
         } catch (error) {
             if (!(error instanceof G.RuntimeError))    throw error;
             errorDiv = document.createElement("pre");
@@ -734,9 +727,9 @@ const G = {
         G.textBuffer.push(G.getString(pageId));
         G.textBuffer.push("\n");
         if (fromEvent) {
-            G.callFunction(G, G.noneValue, fromEvent, argsList);
+            G.callFunction(G, fromEvent, argsList);
         } else {
-            G.callFunction(G, G.noneValue, G.pages[pageId].callback, argsList);
+            G.callFunction(G, G.pages[pageId].callback, argsList);
         }
         G.doOutput();
         G.eBottomLeft.textContent = "Event run time: (unavailable)";

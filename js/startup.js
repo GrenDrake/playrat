@@ -557,7 +557,7 @@
             const myIdent = theObject[G.propIdent];
             const saveList = G.makeNew(G.ValueType.List);
             try {
-                G.callFunction(G, new G.Value(G.ValueType.Object, objId), theObject[G.propSave], [saveList]);
+                G.callFunction(G, theObject[G.propSave], [saveList]);
             } catch (error) {
                 if (!(error instanceof G.RuntimeError))    throw error;
                 alert("An error occured while saving. Check JavaScript console for details.");
@@ -609,7 +609,7 @@
             });
 
             try {
-                G.callFunction(G, objectValue, theObject[G.propLoad], [loadListValue]);
+                G.callFunction(G, theObject[G.propLoad], [loadListValue]);
             } catch (error) {
                 if (!(error instanceof G.RuntimeError))    throw error;
                 alert("An error occured while loading. Check JavaScript console for details.");
