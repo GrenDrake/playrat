@@ -75,6 +75,7 @@
         DeletePage:             72,
         EndPage:                73,
         New:                    74,
+        StringAppendUF:         75,
         IsStatic:               76,
     };
     Object.freeze(Opcode);
@@ -110,6 +111,25 @@
                 return left.value - right.value;
             }
         });
+    }
+
+    G.stringAppend = function stringAppend(left, right, ucFirst) {
+        left.requireType(G.ValueType.String);
+        if (G.isStatic(left).value) {
+            throw new G.RuntimeError("Cannot modify static string");
+        }
+        if (right.type == G.ValueType.String) {
+            const s2 = G.getString(right.value);
+            if (ucFirst) {
+                G.strings[left.value].data += s2.substring(0,1).toUpperCase() + s2.substring(1);
+            } else {
+                G.strings[left.value].data += s2;
+            }
+        } else if (left.type == G.ValueType.Integer) {
+            G.strings[left.value].data += ""+right.value;
+        } else {
+            throw new G.RuntimeError("Cannot append " + G.typeNames[right.type] + " to string");
+        }
     }
 
     G.callFunction = function callFunction(G, functionId, argList, pushValue) {
@@ -674,18 +694,12 @@
                 case Opcode.StringAppend:
                     v1 = G.callStack.pop();
                     v2 = G.callStack.pop();
-                    v1.requireType(G.ValueType.String);
-                    if (G.isStatic(v1).value) {
-                        throw new G.RuntimeError("Cannot modify static string");
-                    }
-                    if (v2.type == G.ValueType.String) {
-                        const s2 = G.getString(v2.value);
-                        G.strings[v1.value].data += s2;
-                    } else if (v2.type == G.ValueType.Integer) {
-                        G.strings[v1.value].data += ""+v2.value;
-                    } else {
-                        throw new G.RuntimeError("Cannot append value type to string");
-                    }
+                    G.stringAppend(v1, v2, false);
+                    break;
+                case Opcode.StringAppendUF:
+                    v1 = G.callStack.pop();
+                    v2 = G.callStack.pop();
+                    G.stringAppend(v1, v2, true);
                     break;
                 case Opcode.StringLength: {
                     v1 = G.callStack.pop();
