@@ -702,9 +702,13 @@ const G = {
             }
         });
         G.eOutput.appendChild(nextDiv);
-        if (errorMessage)   G.eOutput.appendChild(errorMessage);
-        else                G.showOptions();
-        nextDiv.scrollIntoView();
+        if (errorMessage) {
+            G.eOutput.appendChild(errorMessage);
+            errorMessage.scrollIntoView();
+        } else {
+            G.showOptions();
+            nextDiv.scrollIntoView();
+        }
     }
 
     G.doPage = function doPage(pageId, argsList, fromEvent) {
