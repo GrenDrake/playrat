@@ -118,10 +118,11 @@
         if (G.isStatic(left).value) {
             throw new G.RuntimeError("Cannot modify static string");
         }
+
         if (right.type == G.ValueType.String) {
             const s2 = G.getString(right.value);
             if (ucFirst) {
-                G.strings[left.value].data += s2.substring(0,1).toUpperCase() + s2.substring(1);
+                G.strings[left.value].data += G.ucFirst(s2);
             } else {
                 G.strings[left.value].data += s2;
             }

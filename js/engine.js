@@ -944,8 +944,7 @@ const G = {
             case G.ValueType.String: {
                 let theString = G.getString(value.value);
                 if (ucFirst) {
-                    theString = theString.substring(0,1).toUpperCase()
-                                + theString.substring(1);
+                    theString = G.ucFirst(theString);
                 }
                 G.textBuffer.push(theString);
                 break; }
@@ -1165,6 +1164,11 @@ const G = {
                 optionsCore.appendChild(options);
                 break;
         }
+    }
+
+    G.ucFirst = function ucFirst(strText) {
+        if (!strText || strText === "") return "";
+        return strText.substring(0,1).toUpperCase() + strText.substring(1);
     }
 
 
