@@ -125,7 +125,7 @@
             } else {
                 G.strings[left.value].data += s2;
             }
-        } else if (left.type == G.ValueType.Integer) {
+        } else if (right.type == G.ValueType.Integer) {
             G.strings[left.value].data += ""+right.value;
         } else {
             throw new G.RuntimeError("Cannot append " + G.typeNames[right.type] + " to string");
