@@ -259,7 +259,6 @@
                     v1 = G.callStack.pop();
                     v2 = G.callStack.pop();
                     v1.requireType(G.ValueType.List);
-                    console.log(v1);
                     const theList = G.getList(v1);
                     theList.push(v2);
                     break; }
