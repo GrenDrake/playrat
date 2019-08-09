@@ -4,96 +4,25 @@
 <title>Loading...</title>
 <meta charset='utf-8'>
 <link rel="shortcut icon" href="./favicon.png">
-<link rel="stylesheet" href="page.css" type="text/css">
+<style>
+    body {
+        background: white;
+        color: black;
+        font-size: 1.25em;
+    }
+    h1 {
+        border-bottom: 1px dotted grey;
+    }
+</style>
 </head>
 <body>
-<div id='contentArea'>
-    <div id='top-statusbar'>
-        <div id='top-left'></div>
-        <div id='top-right'></div>
-    </div>
-    <div id='text'><p id='loadingText'>Loading: 0%<p><progress id='loadingProgress' value='0'></progress></div>
-    <div id='bottom-statusbar'>
-        <div id='bottom-left'>&nbsp;</div>
-        <div id='bottom-centre'>
-            <!-- https://game-icons.net/delapouite/originals/anticlockwise-rotation.html -->
-            <img src='gfx/new.svg' id='newButton' class='button' alt='Start new game' title='New game'>
-            <!-- https://game-icons.net/delapouite/originals/load.html -->
-            <img src='gfx/load.svg' id='loadButton' class='button' alt='Load a game' title='Load game'>
-            <!-- https://game-icons.net/delapouite/originals/save.html -->
-            <img src='gfx/save.svg' id='saveButton' class='button' alt='Save the game' title='Save game' style='display:none'>
-            <img src='gfx/nosave.svg' id='nosaveButton' class='button' alt='Save the game (disabled)' title='Cannot save game now'>
-            <!-- https://game-icons.net/lorc/originals/cog.html -->
-            <img src='gfx/settings.svg' id='settingsButton' class='button' alt='Open options menu' title='Options menu (o)'>
-            <!-- https://game-icons.net/delapouite/originals/info.html -->
-            <img src='gfx/credits.svg' id='creditsButton' class='button' alt='Open credits window' title='Credits window'>
-        </div>
-        <div id='bottom-right'></div>
-    </div>
-</div>
+<h1>GTRPGE</h1>
+<p>Welcome to the GTRPGE games list! Select the game of interest from the list below:
+<ul>
+    <li><a href='game.html'>Demo Game</a>
+    <li><a href='game.html?game=auto_tests'>Automatic Tests</a>
+    <li><a href='game.html?game=user_tests'>User Tests</a>
+</ul>
 </body>
 
-<div id='overlay'>
-    <div id='saveDialog' class='dialog'>
-        <div class='dialogTitle'>
-            Save Game
-        </div>
-        <select id='saveList' style='width:100%'></select><br><br>
-        <div style='display:flex'>
-            <div>New Save Name: &nbsp;</div>
-            <div style='flex-grow: 1'><input style='width:100%' type="text" id='savegamename'></div>
-        </div>
-
-        <div class='dialogButtons'>
-            <button id='newSaveButton'>Save New Game</button>
-            <button id='overwriteSaveButton'>Overwrite Saved Game</button>
-            <button id='deleteSaveButton'>Delete Saved Game</button>
-            <button id='saveCancel'>Cancel</button>
-        </div>
-    </div>
-
-    <div id='loadDialog' class='dialog'>
-        <div class='dialogTitle'>
-            Load Game
-        </div>
-        <select id='loadList' style='width:100%'></select><br><br>
-
-        <div class='dialogButtons'>
-            <button id='loadGameButton'>Load Game</button>
-            <button id='loadCancel'>Cancel</button>
-        </div>
-    </div>
-
-    <div id='settings' class='dialog'>
-        <div class='dialogTitle'>
-            Options
-        </div>
-        <label><input type='checkbox' id='limitWidth'> Limit display width</label><br>
-        <br><b>Debugging features:</b><br>
-        <label><input type='checkbox' id='showEventDuration'> Show Event Duration</label><br>
-        <label><input type='checkbox' id='showOperationsCount'> Show Operation Count</label><br>
-        <label><input type='checkbox' id='showGarbageCollectionDuration'> Show Garbage Collection Duration</label><br>
-
-        <div class='dialogButtons'>
-            <button id='closeSettings'>Close</button>
-        </div>
-    </div>
-
-    <div id='creditsWindow' class='dialog'>
-        <div class='dialogTitle'>
-            Credits
-        </div>
-        <p>GTRPGE Game Engine by <a href='https://github.com/GrenDrake'>Gren Drake</a>
-        <p>Options icon by <a href='http://lorcblog.blogspot.com/' target='_blank'>Lorc</a>. Credits, new, load, and save icons by <a href='https://delapouite.com/' target='_blank'>Delapouite</a>. All courtesy of <a href='http://game-icons.net/' target='_blank'>game-icons.net</a>.
-
-        <div class='dialogButtons'>
-            <button id='closeCredits'>Close</button>
-        </div>
-    </div>
-</div>
-
-<script src="js/encoding.js"></script>
-<script src='js/engine.js'></script>
-<script src='js/callfunction.js'></script>
-<script src='js/startup.js'></script>
 </html>

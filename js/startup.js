@@ -261,7 +261,24 @@
         loadGameData.addEventListener("progress", loadProgress);
         loadGameData.addEventListener("error", failedToLoadGameData);
         loadGameData.addEventListener("abort", failedToLoadGameData);
-        loadGameData.open("GET", "./game.bin");
+
+        let gameFile = G.gameDir + "game.bin";
+        if ("URLSearchParams" in window) {
+            const args = new URLSearchParams(window.location.search);
+            if (args.has("game")) {
+                let newName = args.get("game");
+                const valid = newName.match(/^[a-zA-Z0-9_]+$/) !== null;
+                if (valid) {
+                    gameFile = G.gameDir + newName + ".bin";
+                } else {
+                    G.eOutput.innerHTML +=
+                        "<div class='error'>[Game file not valid: "
+                        + newName + ".]</div>";
+                }
+            }
+        }
+
+        loadGameData.open("GET", gameFile);
         loadGameData.responseType = "arraybuffer";
         loadGameData.send();
 
@@ -282,13 +299,20 @@
         }
     }
     function failedToLoadGameData(event) {
-        G.eOutput.innerHTML += "<div class='error'>[Failed to load game data.]</div>";
+        G.eOutput.innerHTML = "<div class='error'>[Failed to load game data.]</div>";
     }
 
 // ////////////////////////////////////////////////////////////////////////////
 // Game file parser
 // ////////////////////////////////////////////////////////////////////////////
     G.parseGameFile = function parseGameFile(event) {
+        if (event.target.status !== 200) {
+            G.eOutput.innerHTML
+                = "<div class='error'>Failed to load game data: "
+                + event.target.status + " "
+                + event.target.statusText + "</div>";
+            return;
+        }
         const rawSource = event.target.response;
         const gamedataSrc = new DataView(rawSource);
 

@@ -56,6 +56,7 @@ const G = {
     propSave: 4,
     propLoad: 5,
     extraValue: undefined,
+    gameDir: "./games/"
 };
 
 (function() {
