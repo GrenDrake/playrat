@@ -43,6 +43,7 @@ const G = {
 
     garbageCollectionFrequency: 5,
     eventCount: 0,
+    eventStartTime: 0,
     operations: 0,
     callStack: undefined,
 
@@ -618,14 +619,18 @@ const G = {
             return;
         }
 
+        let updateOnly = false;
         G.optionType = -1;
-        const start = performance.now();
+        if (G.eventStartTime <= 0)
+            G.eventStartTime = performance.now();
         G.options = [];
         G.textBuffer = [];
 
         let errorDiv = undefined;
         try {
-            G.callFunction(G, -1, G.noneValue, argsList);
+            if (G.callFunction(G, -1, G.noneValue, argsList) === 1) {
+                updateOnly = true;
+            }
         } catch (error) {
             if (!(error instanceof G.RuntimeError))    throw error;
             errorDiv = document.createElement("pre");
@@ -647,9 +652,17 @@ const G = {
             errorDiv.insertBefore(fatalErrorText, errorDiv.firstChild);
         }
 
+        const end = performance.now();
+        if (updateOnly) {
+            const runtime = Math.round((end - G.eventStartTime) * 1000) / 1000000;
+            G.eBottomLeft.textContent =
+                "Runtime: " + runtime + "s; " +
+                G.operations + " opcodes; running";
+            setTimeout(doEvent, 0);
+            return;
+        }
         G.doOutput(errorDiv);
         ++G.eventCount;
-        const end = performance.now();
         const runGC = G.eventCount % G.garbageCollectionFrequency ===  0;
         const gcStart = performance.now();
         if (runGC) {
@@ -659,7 +672,7 @@ const G = {
 
         const systemInfo = [];
         if (G.showEventDuration) {
-            const runtime = Math.round((end - start) * 1000) / 1000000;
+            const runtime = Math.round((end - G.eventStartTime) * 1000) / 1000000;
             systemInfo.push("Runtime: " + runtime + "s");
         }
         if (G.showOperationsCount) {
@@ -670,6 +683,7 @@ const G = {
             systemInfo.push("GC: " + runtime + "s");
         }
         G.eBottomLeft.textContent = systemInfo.join("; ");
+        G.eventStartTime = 0;
     }
 
     G.doOutput = function doOutput(errorMessage) {

@@ -161,6 +161,9 @@
             const opcode = G.bytecode.getUint8(IP);
             ++IP;
             ++G.operations;
+            if (G.operations % 500000 === 0) {
+                return 1;
+            }
 
             switch(opcode) {
                 case Opcode.Return: {
