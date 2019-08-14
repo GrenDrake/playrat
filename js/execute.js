@@ -80,30 +80,25 @@
     };
     Object.freeze(Opcode);
 
-    G.resumeExec = function resumeExec(G, functionId, argList, pushValue) {
+    G.resumeExec = function resumeExec(pushValue) {
         "use strict";
-        argList = argList || [];
-        G.extraValue = undefined;
 
         if (!G.callStack) {
             const functionDef = G.getFunction(G.mainFunction);
-
             G.callStack = new G.CallStack();
             G.callStack.pushFrame(G.mainFunction, functionDef[2], 0);
-            G.callStack.buildLocals(argList, functionDef[0], functionDef[0] + functionDef[1]);
+            G.callStack.buildLocals([], functionDef[0], functionDef[0] + functionDef[1]);
             G.nextIP = functionDef[2];
         }
 
-        var IP = -1;
-        if (functionId >= 0) {
-        } else {
-            IP = G.nextIP;
-            if (pushValue) {
-                if (pushValue instanceof G.Value) {
-                    G.callStack.stack.push(pushValue);
-                }
+        G.extraValue = undefined;
+        let IP = G.nextIP;
+        if (pushValue) {
+            if (pushValue instanceof G.Value) {
+                G.callStack.stack.push(pushValue);
             }
         }
+
         var rawType, rawValue, v1, v2, v3, v4, target;
 
         while (1) {

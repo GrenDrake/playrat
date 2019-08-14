@@ -637,7 +637,7 @@ const G = {
 
         let errorDiv = undefined;
         try {
-            if (G.resumeExec(G, -1, G.noneValue, argsList) === 1) {
+            if (G.resumeExec(argsList) === 1) {
                 updateOnly = true;
             }
         } catch (error) {
