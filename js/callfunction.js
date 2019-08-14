@@ -80,8 +80,6 @@
     };
     Object.freeze(Opcode);
 
-    const maxOperationCount = 10000;
-
     G.doCompare = function doCompare(left, right) {
         if (left.type !== right.type) {
             return 1;
@@ -147,7 +145,6 @@
             G.nextIP = functionDef[2];
         }
 
-        G.operations = 0;
         var IP = -1;
         if (functionId >= 0) {
         } else {
@@ -164,9 +161,6 @@
             const opcode = G.bytecode.getUint8(IP);
             ++IP;
             ++G.operations;
-            if (G.operations > maxOperationCount) {
-                throw new G.RuntimeError("Script exceeded maximum runtime.");
-            }
 
             switch(opcode) {
                 case Opcode.Return: {
