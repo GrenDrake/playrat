@@ -247,7 +247,7 @@
         G.UI.applySettings();
 
         var loadGameData = new XMLHttpRequest();
-        loadGameData.addEventListener("load", G.parseGameFile);
+        loadGameData.addEventListener("load", loadedDataFile);
         loadGameData.addEventListener("progress", loadProgress);
         loadGameData.addEventListener("error", failedToLoadGameData);
         loadGameData.addEventListener("abort", failedToLoadGameData);
@@ -292,10 +292,7 @@
         G.eOutput.innerHTML = "<div class='error'>[Failed to load game data.]</div>";
     }
 
-// ////////////////////////////////////////////////////////////////////////////
-// Game file parser
-// ////////////////////////////////////////////////////////////////////////////
-    G.parseGameFile = function parseGameFile(event) {
+    function loadedDataFile(event) {
         if (event.target.status !== 200) {
             G.eOutput.innerHTML
                 = "<div class='error'>Failed to load game data: "
@@ -303,26 +300,31 @@
                 + event.target.statusText + "</div>";
             return;
         }
-        const rawSource = event.target.response;
-        const gamedataSrc = new DataView(rawSource);
+        G.rawSource = event.target.response;
+        G.gamedataSrc = new DataView(G.rawSource);
+        G.parseGameFile();
+    }
 
-
+// ////////////////////////////////////////////////////////////////////////////
+// Game file parser
+// ////////////////////////////////////////////////////////////////////////////
+    G.parseGameFile = function parseGameFile(event) {
         ///////////////////////////////////////////////////////////////////////
         // Read header data from datafile
-        G.magicNumber = gamedataSrc.getUint32(0, true);
-        G.formatVersion = gamedataSrc.getUint32(4, true);
-        G.mainFunction = gamedataSrc.getUint32(8, true);
+        G.magicNumber = G.gamedataSrc.getUint32(0, true);
+        G.formatVersion = G.gamedataSrc.getUint32(4, true);
+        G.mainFunction = G.gamedataSrc.getUint32(8, true);
 
         ///////////////////////////////////////////////////////////////////////
         // Read strings from datafile
         var filePos = 64;
-        G.stringCount = gamedataSrc.getUint32(filePos, true);
+        G.stringCount = G.gamedataSrc.getUint32(filePos, true);
         filePos += 4;
         const decoder = new TextDecoder('utf8');
         for (var i = 0; i < G.stringCount; ++i) {
-            const stringLength = gamedataSrc.getUint16(filePos, true);
+            const stringLength = G.gamedataSrc.getUint16(filePos, true);
             filePos += 2;
-            const rawStringData = new Uint8Array(rawSource, filePos,
+            const rawStringData = new Uint8Array(G.rawSource, filePos,
                                                  stringLength);
             for (let i = 0; i < stringLength; ++i) {
                 rawStringData[i] ^= 0x7B;
@@ -333,24 +335,25 @@
 
         ///////////////////////////////////////////////////////////////////////
         // Read lists from datafile
-        G.listCount = gamedataSrc.getUint32(filePos, true);
+        G.listCount = G.gamedataSrc.getUint32(filePos, true);
         filePos += 4;
+        G.lists.push(undefined);
         for (var i = 0; i < G.listCount; ++i) {
             const thisList = [];
-            const sourceFileIdx = gamedataSrc.getInt32(filePos, true);
+            const sourceFileIdx = G.gamedataSrc.getInt32(filePos, true);
             filePos += 4;
-            const sourceLine = gamedataSrc.getInt32(filePos, true);
+            const sourceLine = G.gamedataSrc.getInt32(filePos, true);
             filePos += 4;
-            const listSize = gamedataSrc.getUint16(filePos, true);
+            const listSize = G.gamedataSrc.getUint16(filePos, true);
             filePos += 2;
             for (var j = 0; j < listSize; ++j) {
-                const itemType = gamedataSrc.getUint8(filePos, true);
+                const itemType = G.gamedataSrc.getUint8(filePos, true);
                 filePos += 1;
-                const itemValue = gamedataSrc.getInt32(filePos, true);
+                const itemValue = G.gamedataSrc.getInt32(filePos, true);
                 filePos += 4;
                 thisList.push(new G.Value(itemType, itemValue));
             }
-            G.raw.lists.push({
+            G.lists.push({
                 data: thisList,
                 sourceFile: sourceFileIdx,
                 sourceLine: sourceLine
@@ -359,32 +362,33 @@
 
         ///////////////////////////////////////////////////////////////////////
         // Read maps from datafile
-        G.mapCount = gamedataSrc.getUint32(filePos, true);
+        G.mapCount = G.gamedataSrc.getUint32(filePos, true);
         filePos += 4;
+        G.maps.push(undefined);
         for (var i = 0; i < G.mapCount; ++i) {
             const thisMap = {};
-            const sourceFileIdx = gamedataSrc.getInt32(filePos, true);
+            const sourceFileIdx = G.gamedataSrc.getInt32(filePos, true);
             filePos += 4;
-            const sourceLine = gamedataSrc.getInt32(filePos, true);
+            const sourceLine = G.gamedataSrc.getInt32(filePos, true);
             filePos += 4;
-            const mapSize = gamedataSrc.getUint16(filePos, true);
+            const mapSize = G.gamedataSrc.getUint16(filePos, true);
             filePos += 2;
             for (var j = 0; j < mapSize; ++j) {
-                const item1Type = gamedataSrc.getUint8(filePos, true);
+                const item1Type = G.gamedataSrc.getUint8(filePos, true);
                 filePos += 1;
-                const item1Value = gamedataSrc.getInt32(filePos, true);
+                const item1Value = G.gamedataSrc.getInt32(filePos, true);
                 filePos += 4;
                 const valueOne = new G.Value(item1Type, item1Value);
 
-                const item2Type = gamedataSrc.getUint8(filePos, true);
+                const item2Type = G.gamedataSrc.getUint8(filePos, true);
                 filePos += 1;
-                const item2Value = gamedataSrc.getInt32(filePos, true);
+                const item2Value = G.gamedataSrc.getInt32(filePos, true);
                 filePos += 4;
                 const valueTwo = new G.Value(item2Type, item2Value);
 
                 thisMap[valueOne.toKey()] = valueTwo;
             }
-            G.raw.maps.push({
+            G.maps.push({
                 data: thisMap,
                 sourceFile: sourceFileIdx,
                 sourceLine: sourceLine
@@ -393,29 +397,30 @@
 
         ///////////////////////////////////////////////////////////////////////
         // Read game objects from datafile
-        G.objectCount = gamedataSrc.getUint32(filePos, true);
+        G.objectCount = G.gamedataSrc.getUint32(filePos, true);
         filePos += 4;
+        G.objects.push(undefined);
         for (var i = 0; i < G.objectCount; ++i) {
             const thisObject = {};
-            const sourceName = gamedataSrc.getInt32(filePos, true);
+            const sourceName = G.gamedataSrc.getInt32(filePos, true);
             filePos += 4;
-            const sourceFileIdx = gamedataSrc.getInt32(filePos, true);
+            const sourceFileIdx = G.gamedataSrc.getInt32(filePos, true);
             filePos += 4;
-            const sourceLine = gamedataSrc.getInt32(filePos, true);
+            const sourceLine = G.gamedataSrc.getInt32(filePos, true);
             filePos += 4;
-            // thisObject.key = gamedataSrc.getUint32(filePos, true);
-            const objectSize = gamedataSrc.getUint16(filePos, true);
+            // thisObject.key = G.gamedataSrc.getUint32(filePos, true);
+            const objectSize = G.gamedataSrc.getUint16(filePos, true);
             filePos += 2;
             for (var j = 0; j < objectSize; ++j) {
-                const propId = gamedataSrc.getUint16(filePos, true);
+                const propId = G.gamedataSrc.getUint16(filePos, true);
                 filePos += 2;
-                const itemType = gamedataSrc.getUint8(filePos, true);
+                const itemType = G.gamedataSrc.getUint8(filePos, true);
                 filePos += 1;
-                const itemValue = gamedataSrc.getInt32(filePos, true);
+                const itemValue = G.gamedataSrc.getInt32(filePos, true);
                 filePos += 4;
                 thisObject[propId] = new G.Value(itemType, itemValue);
             }
-            G.raw.objects.push({
+            G.objects.push({
                 data: thisObject,
                 sourceName: sourceName,
                 sourceFile: sourceFileIdx,
@@ -425,21 +430,21 @@
 
         ///////////////////////////////////////////////////////////////////////
         // Read function headers from datafile
-        G.functionCount = gamedataSrc.getUint32(filePos, true);
+        G.functionCount = G.gamedataSrc.getUint32(filePos, true);
         filePos += 4;
         G.functions.push(undefined);
         for (var i = 0; i < G.functionCount; ++i) {
-            const sourceName = gamedataSrc.getInt32(filePos, true);
+            const sourceName = G.gamedataSrc.getInt32(filePos, true);
             filePos += 4;
-            const sourceFileIdx = gamedataSrc.getInt32(filePos, true);
+            const sourceFileIdx = G.gamedataSrc.getInt32(filePos, true);
             filePos += 4;
-            const sourceLine = gamedataSrc.getInt32(filePos, true);
+            const sourceLine = G.gamedataSrc.getInt32(filePos, true);
             filePos += 4;
-            const argCount = gamedataSrc.getUint16(filePos, true);
+            const argCount = G.gamedataSrc.getUint16(filePos, true);
             filePos += 2;
-            const localCount = gamedataSrc.getUint16(filePos, true);
+            const localCount = G.gamedataSrc.getUint16(filePos, true);
             filePos += 2;
-            const codePosition = gamedataSrc.getUint32(filePos, true);
+            const codePosition = G.gamedataSrc.getUint32(filePos, true);
             filePos += 4;
             G.functions.push({
                 data: [argCount, localCount, codePosition],
@@ -451,9 +456,9 @@
 
         ///////////////////////////////////////////////////////////////////////
         // Read bytecode section from datafile
-        G.bytecodeSize = gamedataSrc.getInt32(filePos, true);
+        G.bytecodeSize = G.gamedataSrc.getInt32(filePos, true);
         filePos += 4;
-        G.bytecodeBuffer = rawSource.slice(filePos);
+        G.bytecodeBuffer = G.rawSource.slice(filePos);
         G.bytecode = new DataView(G.bytecodeBuffer);
 
         ///////////////////////////////////////////////////////////////////////
@@ -462,7 +467,8 @@
 
         ///////////////////////////////////////////////////////////////////////
         // Start the game running
-        G.newGame();
+        G.gameLoaded = true;
+        G.doEvent();
     }
 
     G.getSaveIndex = function getSaveIndex() {
@@ -476,8 +482,7 @@
         localStorage.setItem("save_index", saveIndex);
     }
 
-    G.newGame = function newGame(callMain) {
-        callMain = callMain || true;
+    G.newGame = function newGame() {
         G.setSetting(G.Settings.InfobarLeft, "");
         G.setSetting(G.Settings.InfobarRight, "");
         G.setSetting(G.Settings.InfobarFooter, "");
@@ -486,57 +491,16 @@
         G.strings.length = G.stringCount;
         G.inPage = false;
         G.pages = {};
+        G.callStack = undefined;
         const pageButtons = document.getElementsByClassName("pageButton");
         while (pageButtons.length > 0) {
             pageButtons[0].parentElement.removeChild(pageButtons[0]);
         }
 
-        G.lists = [ undefined ];
-        G.raw.lists.forEach(function(oldList) {
-            const newList = [];
-            oldList.data.forEach(function(value) {
-                newList.push(value.clone());
-            });
-            G.lists.push({
-                data:newList,
-                sourceFile: oldList.sourceFile,
-                sourceLine: oldList.sourceLine
-            });
-        });
-
-        G.maps = [ undefined ];
-        G.raw.maps.forEach(function(oldMap) {
-            const newMap = [];
-            const mapKeys = Object.getOwnPropertyNames(oldMap.data);
-            mapKeys.forEach(function(key) {
-                newMap[key] = oldMap.data[key].clone();
-            });
-            G.maps.push({
-                data: newMap,
-                sourceFile: oldMap.sourceFile,
-                sourceLine: oldMap.sourceLine
-            });
-        });
-
-        G.objects = [ undefined ];
-        G.raw.objects.forEach(function(oldObject) {
-            const newObject = [];
-            const objectProperties = Object.getOwnPropertyNames(oldObject.data);
-            objectProperties.forEach(function(propId) {
-                newObject[propId] = oldObject.data[propId].clone();
-            });
-            G.objects.push({
-                data: newObject,
-                sourceName: oldObject.sourceName,
-                sourceFile: oldObject.sourceFile,
-                sourceLine: oldObject.sourceLine
-            });
-        });
-
         while (G.eOutput.childElementCount > 0) {
             G.eOutput.removeChild(G.eOutput.firstChild);
         }
-        G.gameLoaded = true;
-        if (callMain) G.doEvent();
+
+        G.parseGameFile();
     }
 })();
