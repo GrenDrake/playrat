@@ -80,57 +80,6 @@
     };
     Object.freeze(Opcode);
 
-    G.doCompare = function doCompare(left, right) {
-        if (left.type !== right.type) {
-            return 1;
-        } else {
-            switch(right.type) {
-                case G.ValueType.Integer:
-                    return left.value - right.value;
-                case G.ValueType.None:
-                    return 0;
-                default:
-                    return (right.value === left.value) ? 0 : 1;
-            }
-        }
-    }
-
-    G.sortList = function sortList(G, theList) {
-        theList.sort(function(left, right) {
-            if (left.type < right.type) return -1;
-            if (left.type > right.type) return 1;
-            if (left.type === G.ValueType.String) {
-                const l = G.getString(left.value).toLowerCase();
-                const r = G.getString(right.value).toLowerCase();
-                if (l < r) return -1;
-                if (l > r) return 1;
-                return 0;
-            } else {
-                return left.value - right.value;
-            }
-        });
-    }
-
-    G.stringAppend = function stringAppend(left, right, ucFirst) {
-        left.requireType(G.ValueType.String);
-        if (G.isStatic(left).value) {
-            throw new G.RuntimeError("Cannot modify static string");
-        }
-
-        if (right.type == G.ValueType.String) {
-            const s2 = G.getString(right.value);
-            if (ucFirst) {
-                G.strings[left.value].data += G.ucFirst(s2);
-            } else {
-                G.strings[left.value].data += s2;
-            }
-        } else if (right.type == G.ValueType.Integer) {
-            G.strings[left.value].data += ""+right.value;
-        } else {
-            throw new G.RuntimeError("Cannot append " + G.typeNames[right.type] + " to string");
-        }
-    }
-
     G.callFunction = function callFunction(G, functionId, argList, pushValue) {
         "use strict";
         argList = argList || [];
@@ -294,7 +243,7 @@
                     v1 = G.callStack.pop();
                     v1.requireType(G.ValueType.List);
                     const theList = G.getList(v1.value);
-                    G.sortList(G, theList);
+                    G.sortList(theList);
                     break; }
                 case Opcode.GetItem:
                     v1 = G.callStack.pop();
