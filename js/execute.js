@@ -80,7 +80,7 @@
     };
     Object.freeze(Opcode);
 
-    G.callFunction = function callFunction(G, functionId, argList, pushValue) {
+    G.resumeExec = function resumeExec(G, functionId, argList, pushValue) {
         "use strict";
         argList = argList || [];
         G.extraValue = undefined;

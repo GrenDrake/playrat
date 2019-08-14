@@ -637,7 +637,7 @@ const G = {
 
         let errorDiv = undefined;
         try {
-            if (G.callFunction(G, -1, G.noneValue, argsList) === 1) {
+            if (G.resumeExec(G, -1, G.noneValue, argsList) === 1) {
                 updateOnly = true;
             }
         } catch (error) {
@@ -752,9 +752,9 @@ const G = {
         G.textBuffer.push(G.getString(pageId));
         G.textBuffer.push("\n");
         if (fromEvent) {
-            G.callFunction(G, fromEvent, argsList);
+            G.resumeExec(G, fromEvent, argsList);
         } else {
-            G.callFunction(G, G.pages[pageId].callback, argsList);
+            G.resumeExec(G, G.pages[pageId].callback, argsList);
         }
         G.doOutput();
         G.eBottomLeft.textContent = "Event run time: (unavailable)";
