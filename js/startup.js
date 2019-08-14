@@ -467,6 +467,9 @@
 
         ///////////////////////////////////////////////////////////////////////
         // Start the game running
+        while (G.eOutput.childElementCount > 0) {
+            G.eOutput.removeChild(G.eOutput.firstChild);
+        }
         G.gameLoaded = true;
         G.doEvent();
     }
@@ -495,10 +498,6 @@
         const pageButtons = document.getElementsByClassName("pageButton");
         while (pageButtons.length > 0) {
             pageButtons[0].parentElement.removeChild(pageButtons[0]);
-        }
-
-        while (G.eOutput.childElementCount > 0) {
-            G.eOutput.removeChild(G.eOutput.firstChild);
         }
 
         G.parseGameFile();
