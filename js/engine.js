@@ -21,8 +21,6 @@ const G = {
     eBottomLeft: undefined,
     eBottomRight: undefined,
     eButtons: undefined,
-    eSaveButton: undefined,
-    eNoSaveButton: undefined,
 
     textBuffer: [],
 
@@ -39,7 +37,6 @@ const G = {
         textBuffer: undefined,
         options: undefined,
     },
-    saveAllowed: false,
 
     garbageCollectionFrequency: 5,
     eventCount: 0,
@@ -54,8 +51,6 @@ const G = {
     propInternalName: 1,
     propIdent: 2,
     propParent: 3,
-    propSave: 4,
-    propLoad: 5,
     extraValue: undefined,
     gameDir: "./games/"
 };
@@ -71,7 +66,6 @@ const G = {
         Restore:        1,
     }
     G.Settings = {
-        SaveAllowed:    0,
         InfobarLeft:    1,
         InfobarRight:   2,
         InfobarFooter:  3,
@@ -815,8 +809,6 @@ const G = {
 
     G.getSetting = function getSetting(settingNumber) {
         switch(settingNumber.value) {
-            case 0:
-                return new G.Value(G.ValueType.Integer, +G.saveAllowed);
             default:
                 throw new G.RuntimeError("Tried to get unknown setting " + settingNumber.value + ".");
         }
@@ -1005,17 +997,6 @@ const G = {
         }
 
         switch(settingNumber) {
-            case G.Settings.SaveAllowed:
-                if (settingValue.isTrue()) {
-                    G.eSaveButton.style.display = 'inline';
-                    G.eNoSaveButton.style.display = 'none';
-                    G.saveAllowed = true;
-                } else {
-                    G.eSaveButton.style.display = 'none';
-                    G.eNoSaveButton.style.display = 'inline';
-                    G.saveAllowed = false;
-                }
-                break;
             case G.Settings.InfobarLeft:
                 if (settingValue instanceof G.Value)
                     G.eTopLeft.textContent = G.getString(settingValue);
