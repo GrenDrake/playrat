@@ -29,12 +29,12 @@
             showGarbageCollectionDuration: document.getElementById("showGarbageCollectionDuration").checked,
         };
         G.UI.inDialog = false;
-        localStorage["gtrpge_options"] = JSON.stringify(results);
+        localStorage["quollvm_options"] = JSON.stringify(results);
         G.UI.applySettings();
     }
 
     G.UI.applySettings = function applySettings() {
-        const rawResults = localStorage.getItem("gtrpge_options");
+        const rawResults = localStorage.getItem("quollvm_options");
         if (rawResults) {
             const results = JSON.parse(rawResults);
             document.getElementById("contentArea").classList.toggle("limitWidth", results.limitWidth);
@@ -252,14 +252,14 @@
         loadGameData.addEventListener("error", failedToLoadGameData);
         loadGameData.addEventListener("abort", failedToLoadGameData);
 
-        let gameFile = G.gameDir + "game.bin";
+        let gameFile = G.gameDir + "game.qvm";
         if ("URLSearchParams" in window) {
             const args = new URLSearchParams(window.location.search);
             if (args.has("game")) {
                 let newName = args.get("game");
                 const valid = newName.match(/^[a-zA-Z0-9_]+$/) !== null;
                 if (valid) {
-                    gameFile = G.gameDir + newName + ".bin";
+                    gameFile = G.gameDir + newName + ".qvm";
                 } else {
                     G.eOutput.innerHTML +=
                         "<div class='error'>[Game file not valid: "
