@@ -478,6 +478,25 @@ const G = {
         G.pages[pageId] = pageInfo;
     }
 
+    G.asString = function asString(aValue) {
+        if (!(aValue instanceof G.Value)) {
+            throw new G.RuntimeError("Called asString() on non-value.");
+        }
+        switch(aValue.type) {
+            case G.ValueType.String:
+                return G.getString(aValue.value);
+            case G.ValueType.Integer:
+                return ""+aValue.value;
+            default:
+                var text = "<" + G.typeNames[aValue.type];
+                if (aValue.type != G.ValueType.None) {
+                    text += " " + aValue.value;
+                }
+                text += ">";
+                return text;
+        }
+    }
+
     G.clearOutput = function clearOutput() {
         while (G.eOutput.childElementCount > 0) {
             G.eOutput.removeChild(G.eOutput.firstChild);
@@ -962,25 +981,9 @@ const G = {
             return;
         }
 
-        switch(value.type) {
-            case G.ValueType.String: {
-                let theString = G.getString(value.value);
-                if (ucFirst) {
-                    theString = G.ucFirst(theString);
-                }
-                G.textBuffer.push(theString);
-                break; }
-            case G.ValueType.Integer:
-                G.textBuffer.push(value.value);
-                break;
-            default:
-                var text = "<" + G.typeNames[value.type];
-                if (value.type != G.ValueType.None) {
-                    text += " " + value.value;
-                }
-                text += ">";
-                G.textBuffer.push(text);
-        }
+        let text = G.asString(value);
+        if (ucFirst) text = G.ucFirst(text);
+        G.textBuffer.push(text);
     }
 
     G.setExtra = function setExtra(newExtraValue) {
@@ -1072,18 +1075,9 @@ const G = {
             throw new G.RuntimeError("Cannot modify static string");
         }
 
-        if (right.type == G.ValueType.String) {
-            const s2 = G.getString(right.value);
-            if (ucFirst) {
-                G.strings[left.value].data += G.ucFirst(s2);
-            } else {
-                G.strings[left.value].data += s2;
-            }
-        } else if (right.type == G.ValueType.Integer) {
-            G.strings[left.value].data += ""+right.value;
-        } else {
-            throw new G.RuntimeError("Cannot append " + G.typeNames[right.type] + " to string");
-        }
+        let text = G.asString(right);
+        if (ucFirst) text = G.ucFirst(text);
+        G.strings[left.value].data += text;
     }
 
     G.objectByIdent = function objectByIdent(objectId) {
