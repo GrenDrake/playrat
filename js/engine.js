@@ -502,7 +502,76 @@ const G = {
             G.eOutput.removeChild(G.eOutput.firstChild);
         }
     }
+    G.gc = {};
+    G.gc.markObject = function markObject(object, xtra) {
+        if (!object || object.marked || !object.data) return;
+        object.marked = true;
+        const keys = Object.keys(object.data);
+        keys.forEach(function(key) {
+            G.gc.markValue(object.data[key]);
+        });
+    }
+    G.gc.markList = function markList(list) {
+        if (!list || list.marked || !list.data) return;
+        list.marked = true;
+        list.data.forEach(function(value) {
+            G.gc.markValue(value);
+        });
+    }
+    G.gc.markMap = function markMap(map) {
+        if (!map || map.marked || !map.data) return;
+        map.marked = true;
 
+        const rawKeys = Object.keys(map.data);
+        rawKeys.forEach(function(key) {
+            const keySep = key.indexOf(":");
+            const keyType = +key.substring(0, keySep);
+            const keyValue = +key.substring(keySep + 1);
+            const value = new G.Value(keyType, keyValue);
+            G.gc.markValue(value);
+            G.gc.markValue(map.data[key]);
+        })
+    }
+    G.gc.markString = function markString(string) {
+        if (!string || string.marked || string.data == undefined) return;
+        string.marked = true;
+    }
+    G.gc.markValue = function markValue(what) {
+        if (!what || !(what instanceof G.Value)) return;
+        switch(what.type) {
+            case G.ValueType.String:
+                G.gc.markString(G.strings[what.value]);
+                break;
+            case G.ValueType.Object:
+                G.gc.markObject(G.getObject(what.value));
+                break;
+            case G.ValueType.List:
+                G.gc.markList(G.getList(what.value));
+                break;
+            case G.ValueType.Map:
+                G.gc.markMap(G.getMap(what.value));
+                break;
+            case G.ValueType.None:
+            case G.ValueType.Integer:
+            case G.ValueType.Function:
+            case G.ValueType.Property:
+                // no need to mark
+                break;
+            default:
+                console.error("Found unknown type ", what.type, " during garbage collection.");
+        }
+        what.marked = true;
+    }
+    G.gc.collect = function collect(theList,start) {
+        for (var i = start; i < theList.length; ++i) {
+            if (!theList[i] || theList[i].data == undefined) {
+                continue;
+            }
+            if (!theList[i].marked) {
+                theList[i] = undefined;
+            }
+        }
+    }
     G.collectGarbage = function collectGarbage() {
         ////////////////////////////////////////
         // UNMARK ALL
@@ -512,91 +581,22 @@ const G = {
         G.strings.forEach(function(item) { if (item) item.marked = false; });
 
         ////////////////////////////////////////
-        // COLLECTING
-        function markObject(object, xtra) {
-            if (!object || object.marked || !object.data) return;
-            object.marked = true;
-            const keys = Object.keys(object.data);
-            keys.forEach(function(key) {
-                markValue(object.data[key]);
-            });
-        };
-        function markList(list) {
-            if (!list || list.marked || !list.data) return;
-            list.marked = true;
-            list.data.forEach(function(value) {
-                markValue(value);
-            });
-        };
-        function markMap(map) {
-            if (!map || map.marked || !map.data) return;
-            map.marked = true;
-
-            const rawKeys = Object.keys(map.data);
-            rawKeys.forEach(function(key) {
-                const keySep = key.indexOf(":");
-                const keyType = +key.substring(0, keySep);
-                const keyValue = +key.substring(keySep + 1);
-                const value = new G.Value(keyType, keyValue);
-                markValue(value);
-                markValue(map.data[key]);
-            })
-        };
-        function markString(string) {
-            if (!string || string.marked || string.data == undefined) return;
-            string.marked = true;
-        }
-        function markValue(what) {
-            if (!what || !(what instanceof G.Value)) return;
-            switch(what.type) {
-                case G.ValueType.String:
-                    markString(G.strings[what.value]);
-                    break;
-                case G.ValueType.Object:
-                    markObject(G.getObject(what.value));
-                    break;
-                case G.ValueType.List:
-                    markList(G.getList(what.value));
-                    break;
-                case G.ValueType.Map:
-                    markMap(G.getMap(what.value));
-                    break;
-                case G.ValueType.None:
-                case G.ValueType.Integer:
-                case G.ValueType.Function:
-                case G.ValueType.Property:
-                    // no need to mark
-                    break;
-                default:
-                    console.error("Found unknown type ", what.type, " during garbage collection.");
-            }
-            what.marked = true;
-        }
-        for (var i = 0; i <= G.objectCount; ++i)    markObject(G.objects[i]);
-        for (var i = 0; i <= G.listCount; ++i)      markList(G.lists[i]);
-        for (var i = 0; i <= G.mapCount; ++i)       markMap(G.maps[i]);
+        // MARK ACCESSABLE
+        for (var i = 0; i <= G.objectCount; ++i)    G.gc.markObject(G.objects[i]);
+        for (var i = 0; i <= G.listCount; ++i)      G.gc.markList(G.lists[i]);
+        for (var i = 0; i <= G.mapCount; ++i)       G.gc.markMap(G.maps[i]);
         G.options.forEach(function(option) {
-            markValue(option.displayText);
-            markValue(option.extra);
-            markValue(option.value);
+            G.gc.markValue(option.displayText);
+            G.gc.markValue(option.extra);
+            G.gc.markValue(option.value);
         });
 
         ////////////////////////////////////////
         // COLLECTING
-        function collect(theList,start) {
-            for (var i = start; i < theList.length; ++i) {
-                if (!theList[i] || theList[i].data == undefined) {
-                    continue;
-                }
-                if (!theList[i].marked) {
-                    theList[i] = undefined;
-                }
-            }
-        }
-        collect(G.objects,  G.objectCount + 1);
-        collect(G.lists,    G.listCount + 1);
-        collect(G.maps,     G.mapCount + 1);
-        collect(G.strings,  G.stringCount);
+        G.gc.collect(G.objects,  G.objectCount + 1);
+        G.gc.collect(G.lists,    G.listCount + 1);
+        G.gc.collect(G.maps,     G.mapCount + 1);
+        G.gc.collect(G.strings,  G.stringCount);
 
         ////////////////////////////////////////
         // TRIMMING
@@ -616,7 +616,6 @@ const G = {
                 && G.lists[G.lists.length - 1] == undefined) {
             G.lists.pop();
         }
-
     }
 
     G.delPage = function delPage(pageId) {
