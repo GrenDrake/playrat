@@ -83,6 +83,7 @@ const G = {
         Node:         5,
         Object:       6,
         Property:     7,
+        TypeId:       8,
         JumpTarget:   9,
         VarRef:       10,
         LocalVar:     15,
@@ -99,7 +100,7 @@ const G = {
         "Function",     // 5
         "Object",       // 6
         "Property",     // 7
-        "(unused)",     // 8
+        "TypeId",       // 8
         "JumpTarget",   // 9
         "Reference",    // 10
         "(unused)",     // 11
@@ -925,7 +926,7 @@ const G = {
 
     G.makeNew = function makeNew(type) {
         if (type instanceof G.Value) {
-            type.requireType(G.ValueType.Integer);
+            type.requireType(G.ValueType.TypeId);
             type = type.value;
         }
         let nextId = -1;

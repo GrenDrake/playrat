@@ -320,7 +320,7 @@
                     break;
                 case Opcode.TypeOf:
                     v1 = G.callStack.pop();
-                    G.callStack.stack.push(new G.Value(G.ValueType.Integer, v1.type));
+                    G.callStack.stack.push(new G.Value(G.ValueType.TypeId, v1.type));
                     break;
                 case Opcode.DelItem: {
                     v1 = G.callStack.pop();
@@ -354,7 +354,7 @@
                 case Opcode.AsType: {
                     const value = G.callStack.pop();
                     const type = G.callStack.pop();
-                    type.requireType(G.ValueType.Integer);
+                    type.requireType(G.ValueType.TypeId);
                     const newValue = new G.Value(type.value, value.value);
                     G.callStack.stack.push(newValue);
                     break; }
