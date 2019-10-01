@@ -58,6 +58,7 @@
         BitXor:                 50,
         BitNot:                 51,
         Random:                 52,
+        NextObject:             53,
         GetRandom:              55,
         GetKeys:                56,
         StackSwap:              57,
@@ -543,6 +544,32 @@
                                                    + v2.value);
                     G.callStack.stack.push(new G.Value(G.ValueType.Integer, randomValue));
                     break;
+                case Opcode.NextObject: {
+                    v1 = G.callStack.pop();
+                    if (G.objects.length === 0) {
+                        G.callStack.stack.push(G.noneValue);
+                    } else {
+                        let nextValue = 0;
+                        if (v1.type !== G.ValueType.None) {
+                            v1.requireType(G.ValueType.Object);
+                            if (v1.value > 0) {
+                                nextValue = v1.value;
+                            }
+                        }
+
+                        while(1) {
+                            ++nextValue;
+                            if (nextValue >= G.objects.length) {
+                                G.callStack.stack.push(G.noneValue);
+                                break;
+                            }
+                            if (G.objects[nextValue] !== undefined) {
+                                G.callStack.stack.push(new G.Value(G.ValueType.Object, nextValue));
+                                break;
+                            }
+                        }
+                    }
+                    break; }
                 case Opcode.GetRandom: {
                     v1 = G.callStack.pop();
                     v1.requireType(G.ValueType.List);
