@@ -543,18 +543,22 @@ const G = {
                 G.gc.markString(G.strings[what.value]);
                 break;
             case G.ValueType.Object:
-                G.gc.markObject(G.getObject(what.value));
+                G.gc.markObject(G.objects[what.value]);
                 break;
             case G.ValueType.List:
-                G.gc.markList(G.getList(what.value));
+                G.gc.markList(G.lists[what.value]);
                 break;
             case G.ValueType.Map:
-                G.gc.markMap(G.getMap(what.value));
+                G.gc.markMap(G.maps[what.value]);
                 break;
             case G.ValueType.None:
             case G.ValueType.Integer:
             case G.ValueType.Function:
             case G.ValueType.Property:
+            case G.ValueType.TypeId:
+            case G.ValueType.JumpTarget:
+            case G.ValueType.VarRef:
+            case G.ValueType.LocalVar:
                 // no need to mark
                 break;
             default:
@@ -563,14 +567,17 @@ const G = {
         what.marked = true;
     }
     G.gc.collect = function collect(theList,start) {
+        let count = 0;
         for (var i = start; i < theList.length; ++i) {
             if (!theList[i] || theList[i].data == undefined) {
                 continue;
             }
             if (!theList[i].marked) {
                 theList[i] = undefined;
+                ++count;
             }
         }
+        return count;
     }
     G.collectGarbage = function collectGarbage() {
         ////////////////////////////////////////
@@ -590,13 +597,22 @@ const G = {
             G.gc.markValue(option.extra);
             G.gc.markValue(option.value);
         });
+        G.callStack.frames.forEach(function(callFrame) {
+            callFrame.stack.stack.forEach(function(stackItem) {
+                G.gc.markValue(stackItem);
+            });
+            callFrame.locals.forEach(function(localItem) {
+                G.gc.markValue(localItem);
+            });
+        });
 
         ////////////////////////////////////////
         // COLLECTING
-        G.gc.collect(G.objects,  G.objectCount + 1);
-        G.gc.collect(G.lists,    G.listCount + 1);
-        G.gc.collect(G.maps,     G.mapCount + 1);
-        G.gc.collect(G.strings,  G.stringCount);
+        let count = 0;
+        count += G.gc.collect(G.objects,  G.objectCount + 1);
+        count += G.gc.collect(G.lists,    G.listCount + 1);
+        count += G.gc.collect(G.maps,     G.mapCount + 1);
+        count += G.gc.collect(G.strings,  G.stringCount);
 
         ////////////////////////////////////////
         // TRIMMING
@@ -616,6 +632,8 @@ const G = {
                 && G.lists[G.lists.length - 1] == undefined) {
             G.lists.pop();
         }
+
+        return count;
     }
 
     G.delPage = function delPage(pageId) {
@@ -940,6 +958,41 @@ const G = {
             default:
                 return new G.Value(G.ValueType.Integer, 1);
         }
+    }
+
+    G.isValid = function isValid(value) {
+        switch(value.type) {
+            case G.ValueType.None:
+            case G.ValueType.Integer:
+            case G.ValueType.Property:
+            case G.ValueType.JumpTarget:
+            case G.ValueType.VarRef:
+            case G.ValueType.LocalVar:
+            case G.ValueType.TypeId:
+                return true;
+
+            case G.ValueType.List:
+                if (value.value <= 0 || value.value >= G.lists.length) return false;
+                if (G.lists[value.value] === undefined) return false;
+                return true;
+            case G.ValueType.Map:
+                if (value.value <= 0 || value.value >= G.maps.length) return false;
+                if (G.maps[value.value] === undefined) return false;
+                return true;
+            case G.ValueType.Object:
+                if (value.value <= 0 || value.value >= G.objects.length) return false;
+                if (G.objects[value.value] === undefined) return false;
+                return true;
+            case G.ValueType.String:
+                if (value.value <= 0 || value.value >= G.strings.length) return false;
+                if (G.strings[value.value] === undefined) return false;
+                return true;
+            case G.ValueType.Function:
+                if (value.value <= 0 || value.value >= G.functions.length) return false;
+                if (G.functions[value.value] === undefined) return false;
+                return true;
+        }
+        return false;
     }
 
     G.makeNew = function makeNew(type) {

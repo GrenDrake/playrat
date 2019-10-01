@@ -10,6 +10,7 @@
         Push16:                 5,
         Push32:                 6,
         Store:                  7,
+        CollectGarbage:         8,
         SayUCFirst:             9,
         Say:                    10,
         SayUnsigned:            11,
@@ -19,6 +20,7 @@
         StackPeek:              15, // peek at the stack item X items from the top
         StackSize:              16, // get the current size of the stack
         Call:                   17, // call a value as a function
+        IsValid:                18,
         ListPush:               19, // add item to end of list
         ListPop:                20, // remove and return item from end of list
         Sort:                   21, // sorts a list
@@ -163,6 +165,9 @@
                     value.forbidType(G.ValueType.VarRef);
                     G.callStack.set(localId.value, value);
                     break;
+                case Opcode.CollectGarbage:
+                    G.callStack.stack.push(G.collectGarbage());
+                    break;
 
                 case Opcode.Say:
                     v1 = G.callStack.pop();
@@ -216,6 +221,11 @@
                     G.callStack.buildLocals(theArgs, theFunc[0], theFunc[0] + theFunc[1]);
                     IP = theFunc[2];
                     break; }
+
+                case Opcode.IsValid:
+                    v1 = G.callStack.pop();
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer, G.isValid(v1) ? 1 : 0));
+                    break;
 
                 case Opcode.ListPush: {
                     v1 = G.callStack.pop();
