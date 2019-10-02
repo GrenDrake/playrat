@@ -59,6 +59,7 @@
         BitNot:                 51,
         Random:                 52,
         NextObject:             53,
+        IndexOf:                54,
         GetRandom:              55,
         GetKeys:                56,
         StackSwap:              57,
@@ -569,6 +570,20 @@
                             }
                         }
                     }
+                    break; }
+                case Opcode.IndexOf: {
+                    v1 = G.callStack.pop();
+                    v2 = G.callStack.pop();
+                    v2.requireType(G.ValueType.List);
+                    const theList = G.getList(v2.value);
+                    let result = -1;
+                    for (let i = 0; i < theList.length; ++i) {
+                        if (theList[i].type == v1.type && theList[i].value == v1.value) {
+                            result = i;
+                            break;
+                        }
+                    }
+                    G.callStack.stack.push(new G.Value(G.ValueType.Integer, result));
                     break; }
                 case Opcode.GetRandom: {
                     v1 = G.callStack.pop();
