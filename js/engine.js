@@ -48,6 +48,12 @@ const G = {
     showOperationsCount: true,
     showGarbageCollectionDuration: true,
 
+    gamenameId: -1,
+    authorId: -1,
+    versionId: -1,
+    gameId: -1,
+    buildNumber: -1,
+
     propInternalName: 1,
     propIdent: 2,
     propParent: 3,

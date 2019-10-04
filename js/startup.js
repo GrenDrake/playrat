@@ -314,6 +314,11 @@
         G.magicNumber = G.gamedataSrc.getUint32(0, true);
         G.formatVersion = G.gamedataSrc.getUint32(4, true);
         G.mainFunction = G.gamedataSrc.getUint32(8, true);
+        G.gamenameId = G.gamedataSrc.getUint32(16, true);
+        G.authorId = G.gamedataSrc.getUint32(20, true);
+        G.versionId = G.gamedataSrc.getUint32(24, true);
+        G.gameId = G.gamedataSrc.getUint32(28, true);
+        G.buildNumber = G.gamedataSrc.getUint32(32, true);
 
         ///////////////////////////////////////////////////////////////////////
         // Read strings from datafile
@@ -464,6 +469,14 @@
         ///////////////////////////////////////////////////////////////////////
         // Store the none value for ease of use
         G.noneValue = new G.Value(G.ValueType.None, 0);
+
+        //////////////////////////////////////////////
+        // Update the credits window
+        document.getElementById("gamename").textContent = G.getString(G.gamenameId);
+        document.getElementById("version").textContent = G.versionId;
+        document.getElementById("authorline").textContent = G.getString(G.authorId);
+        document.getElementById("gameid").textContent = G.getString(G.gameId);
+        document.getElementById("buildnumber").textContent = "0x" + G.buildNumber.toString(16);
 
         ///////////////////////////////////////////////////////////////////////
         // Start the game running

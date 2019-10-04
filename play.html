@@ -76,10 +76,15 @@
 
     <div id='creditsWindow' class='dialog'>
         <div class='dialogTitle'>
-            Credits
+            <span id='gamename'>Untitled</span><br>
+            <span id='authorline'>Anonymous</span><br>
         </div>
-        <p>QuollVM by <a href='https://github.com/GrenDrake'>Gren Drake</a>
-        <p>Options icon by <a href='http://lorcblog.blogspot.com/' target='_blank'>Lorc</a>. Credits, new, load, and save icons by <a href='https://delapouite.com/' target='_blank'>Delapouite</a>. All courtesy of <a href='http://game-icons.net/' target='_blank'>game-icons.net</a>.
+        <p class='creditline'><b>Version:</b> <span id='version'>V1</span><br>
+        <b>Build ID:</b> <span id='buildnumber'></span></span><br>
+        <b>Game ID:</b> <span id='gameid'>Test Suite</span></span>
+        <hr>
+        <p class='creditline'>Implemented with <a href='https://github.com/GrenDrake/quollvm'>QuollVM</a>, an engine created and developed by <a href='https://github.com/GrenDrake'>Gren Drake</a>
+        <p class='creditline'>Options icon by <a href='http://lorcblog.blogspot.com/' target='_blank'>Lorc</a>. Credits, new, load, and save icons by <a href='https://delapouite.com/' target='_blank'>Delapouite</a>. All courtesy of <a href='http://game-icons.net/' target='_blank'>game-icons.net</a>.
 
         <div class='dialogButtons'>
             <button id='closeCredits'>Close</button>

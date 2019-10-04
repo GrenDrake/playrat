@@ -144,12 +144,16 @@ body {
 }
 .dialog {
     display: none;
-    width: 400px;
+    width: 500px;
     margin: 100px auto;
     border: 4px solid black;
     background: white;
     text-align: left;
     padding: 1em;
+}
+.dialog HR {
+    border: none;
+    border-bottom: 1px dotted black;
 }
 .dialogTitle {
     text-align: center;
@@ -167,7 +171,13 @@ body {
 .dialogButtons button {
     font-size: 110%;
 }
-
+#authorline {
+    font-style: italic;
+    font-size: 80%;
+}
+.creditline {
+    font-size: 80%;
+}
 
 @media (max-width: 500px) {
     #top-statusbar {
