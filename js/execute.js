@@ -103,15 +103,19 @@
             }
         }
 
+        let iterations = 0;
         var rawType, rawValue, v1, v2, v3, v4, target;
 
         while (1) {
-            const opcode = G.bytecode.getUint8(IP);
-            ++IP;
-            ++G.operations;
-            if (G.operations % 500000 === 0) {
+            ++iterations;
+            if (iterations > 500000) {
+                G.nextIP = IP;
                 return 1;
             }
+
+            ++G.operations;
+            const opcode = G.bytecode.getUint8(IP);
+            ++IP;
 
             switch(opcode) {
                 case Opcode.Return: {

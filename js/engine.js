@@ -47,6 +47,7 @@ const G = {
     showEventDuration: true,
     showOperationsCount: true,
     showGarbageCollectionDuration: true,
+    eventIsUpdateOnly: false,
 
     gamenameId: -1,
     authorId: -1,
@@ -665,18 +666,22 @@ const G = {
     }
 
     G.doEvent = function doEvent(argsList) {
-        argsList = argsList || G.noneValue;
+        if (G.eventIsUpdateOnly) argsList = undefined;
+        else argsList = argsList || G.noneValue;
+
         if (G.inPage) {
             G.doPage(G.inPage, argsList, functionId);
             return;
         }
 
         let updateOnly = false;
-        G.optionType = -1;
-        if (G.eventStartTime <= 0)
-            G.eventStartTime = performance.now();
-        G.options = [];
-        G.textBuffer = [];
+        if (!G.eventIsUpdateOnly) {
+            G.optionType = -1;
+            if (G.eventStartTime <= 0)
+                G.eventStartTime = performance.now();
+            G.options = [];
+            G.textBuffer = [];
+        }
 
         let errorDiv = undefined;
         try {
@@ -709,10 +714,13 @@ const G = {
             const runtime = Math.round((end - G.eventStartTime) * 1000) / 1000000;
             G.eBottomLeft.textContent =
                 "Runtime: " + runtime + "s; " +
-                G.operations + " opcodes; running";
+                G.operations.toLocaleString() + " opcodes; running";
             setTimeout(doEvent, 0);
+            G.eventIsUpdateOnly = true;
             return;
         }
+        G.eventIsUpdateOnly = false;
+
         G.doOutput(errorDiv);
         ++G.eventCount;
         const runGC = G.eventCount % G.garbageCollectionFrequency ===  0;
@@ -728,7 +736,7 @@ const G = {
             systemInfo.push("Runtime: " + runtime + "s");
         }
         if (G.showOperationsCount) {
-            systemInfo.push(G.operations + " opcodes");
+            systemInfo.push(G.operations.toLocaleString() + " opcodes");
         }
         if (runGC && G.showGarbageCollectionDuration) {
             const runtime = Math.round((gcEnd - gcStart) * 1000) / 1000000;
