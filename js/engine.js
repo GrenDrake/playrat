@@ -712,9 +712,7 @@ const G = {
         const end = performance.now();
         if (updateOnly) {
             const runtime = Math.round((end - G.eventStartTime) * 1000) / 1000000;
-            G.eBottomLeft.textContent =
-                "Runtime: " + runtime + "s; " +
-                G.operations.toLocaleString() + " opcodes; running";
+            G.doEventUpdateStatus(runtime, G.operations, -1, 0);
             setTimeout(doEvent, 0);
             G.eventIsUpdateOnly = true;
             return;
@@ -725,25 +723,31 @@ const G = {
         ++G.eventCount;
         const runGC = G.eventCount % G.garbageCollectionFrequency ===  0;
         const gcStart = performance.now();
+        let gcCollected = 0;
         if (runGC) {
-            G.collectGarbage();
+            gcCollected = G.collectGarbage();
         }
         const gcEnd = performance.now();
 
+        const eventRuntime = Math.round((end - G.eventStartTime) * 1000) / 1000000;
+        const gcRuntime    = Math.round((gcEnd - gcStart) * 1000) / 1000000;
+        G.doEventUpdateStatus(eventRuntime, G.operations, runGC ? gcRuntime : -1, gcCollected);
+        G.eventStartTime = 0;
+    }
+
+    G.doEventUpdateStatus = function doEventUpdateStatus(eventRuntime, operations, gcRuntime, gcCollected) {
         const systemInfo = [];
         if (G.showEventDuration) {
-            const runtime = Math.round((end - G.eventStartTime) * 1000) / 1000000;
-            systemInfo.push("Runtime: " + runtime + "s");
+            systemInfo.push("Runtime: " + eventRuntime + "s");
         }
         if (G.showOperationsCount) {
-            systemInfo.push(G.operations.toLocaleString() + " opcodes");
+            systemInfo.push(operations.toLocaleString() + " opcodes");
         }
-        if (runGC && G.showGarbageCollectionDuration) {
-            const runtime = Math.round((gcEnd - gcStart) * 1000) / 1000000;
-            systemInfo.push("GC: " + runtime + "s");
+        if (gcRuntime >= 0 && G.showGarbageCollectionDuration) {
+            systemInfo.push("GC: " + gcRuntime + "s");
+            systemInfo.push(gcCollected + " collected");
         }
         G.eBottomLeft.textContent = systemInfo.join("; ");
-        G.eventStartTime = 0;
     }
 
     G.doOutput = function doOutput(errorMessage) {
