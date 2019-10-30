@@ -81,6 +81,8 @@
         New:                    74,
         StringAppendUF:         75,
         IsStatic:               76,
+        EncodeString:           77,
+        DecodeString:           78,
     };
     Object.freeze(Opcode);
 
@@ -763,6 +765,66 @@
                     v1 = G.isStatic(v1);
                     G.callStack.stack.push(v1);
                     break;
+
+                case Opcode.EncodeString: {
+                    const stringId = G.callStack.pop();
+                    stringId.requireType(G.ValueType.String);
+                    const rawText = G.getString(stringId.value);
+                    const listId = G.makeNew(G.ValueType.List);
+                    G.callStack.push(listId);
+                    const list = G.getList(listId.value);
+
+                    const text = new TextEncoder("utf-8").encode(rawText);
+                    let v = 0;
+                    let counter = 0;
+                    text.forEach(function(s) {
+                        const byte = s & 0xFF;
+                        v <<= 8;
+                        v |= byte;
+                        ++counter;
+                        if (counter >= 4) {
+                            list.push(new G.Value(G.ValueType.Integer, v));
+                            counter = v = 0;
+                        }
+                    });
+                    if (counter !== 0) {
+                        while (counter < 4) {
+                            ++counter;
+                            v <<= 8;
+                        }
+                        list.push(new G.Value(G.ValueType.Integer, v));
+                    }
+                    break; }
+                case Opcode.DecodeString: {
+                    const listId = G.callStack.pop();
+                    listId.requireType(G.ValueType.List);
+                    const list = G.getList(listId.value);
+                    const newText = G.makeNew(G.ValueType.String);
+                    G.callStack.push(newText);
+
+                    const bytes = [];
+                    for (let i = 0; i < list.length; ++i) {
+                        const value = list[i];
+                        value.requireType(G.ValueType.Integer);
+                        const v4 = (value.value >> 24) & 0xFF;
+                        if (!v4) break;
+                        bytes.push(v4);
+                        const v3 = (value.value >> 16) & 0xFF;
+                        if (!v3) break;
+                        bytes.push(v3);
+                        const v2 = (value.value >> 8) & 0xFF;
+                        if (!v2) break;
+                        bytes.push(v2);
+                        const v1 = value.value & 0xFF;
+                        if (!v1) break;
+                        bytes.push(v1);
+                    };
+                    const byteArr = new Uint8Array(bytes.length);
+                    for (let i = 0; i < bytes.length; ++i) {
+                        byteArr[i] = bytes[i];
+                    }
+                    G.strings[newText.value].data = new TextDecoder("utf-8").decode(byteArr);
+                    break; }
 
                 default:
                     throw new G.RuntimeError("Unknown opcode " + opcode + ".");
