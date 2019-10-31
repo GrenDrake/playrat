@@ -472,7 +472,9 @@
 
         //////////////////////////////////////////////
         // Update the credits window
-        document.getElementById("gamename").textContent = G.getString(G.gamenameId);
+        const gameNameStr = G.getString(G.gamenameId);
+        document.getElementById("gamename").textContent = gameNameStr;
+        document.title = gameNameStr;
         document.getElementById("version").textContent = G.versionId;
         document.getElementById("authorline").textContent = G.getString(G.authorId);
         document.getElementById("gameid").textContent = G.getString(G.gameId);
