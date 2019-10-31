@@ -475,6 +475,7 @@
         const gameNameStr = G.getString(G.gamenameId);
         document.getElementById("gamename").textContent = gameNameStr;
         document.title = gameNameStr;
+        G.setSetting(G.Settings.InfobarLeft, gameNameStr);
         document.getElementById("version").textContent = G.versionId;
         document.getElementById("authorline").textContent = G.getString(G.authorId);
         document.getElementById("gameid").textContent = G.getString(G.gameId);
