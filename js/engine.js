@@ -666,9 +666,6 @@ const G = {
     }
 
     G.doEvent = function doEvent(argsList) {
-        if (G.eventIsUpdateOnly) argsList = undefined;
-        else argsList = argsList || G.noneValue;
-
         if (G.inPage) {
             G.doPage(G.inPage, argsList, functionId);
             return;
