@@ -83,6 +83,10 @@
         IsStatic:               76,
         EncodeString:           77,
         DecodeString:           78,
+        FileList:               79,
+        FileRead:               80,
+        FileWrite:              81,
+        FileDelete:             82,
     };
     Object.freeze(Opcode);
 
@@ -824,6 +828,90 @@
                         byteArr[i] = bytes[i];
                     }
                     G.strings[newText.value].data = new TextDecoder("utf-8").decode(byteArr);
+                    break; }
+
+                case Opcode.FileList: {
+                    const gameIdRef = G.callStack.pop();
+                    gameIdRef.requireType(G.ValueType.String);
+                    const gameId = G.getString(gameIdRef.value);
+                    const files = G.getFileIndex();
+                    const fileNames = Object.keys(files);
+                    const fileListId = G.makeNew(G.ValueType.List);
+                    const fileList = G.getList(fileListId);
+                    G.callStack.push(fileListId);
+                    fileNames.forEach(function(fileName) {
+                        const file = files[fileName];
+                        if (file.gameid !== gameId) return;
+                        const rowId = G.makeNew(G.ValueType.List);
+                        const row = G.getList(rowId);
+                        const nameStr = G.makeNew(G.ValueType.String);
+                        G.strings[nameStr.value].data = file.name;
+                        const dateStr = G.makeNew(G.ValueType.String);
+                        G.strings[dateStr.value].data = (new Date(file.timestamp)).toLocaleString();
+                        row.push(nameStr, dateStr);
+                        fileList.push(rowId);
+                    });
+                    break; }
+
+                case Opcode.FileRead: {
+                    const fileNameId = G.callStack.pop();
+                    const gameIdRef = G.callStack.pop();
+                    fileNameId.requireType(G.ValueType.String);
+                    gameIdRef.requireType(G.ValueType.String);
+                    const fileName = G.getString(fileNameId);
+                    const gameId = G.getString(gameIdRef.value);
+                    const filedata = G.getFile(fileName, gameId);
+                    if (!filedata) {
+                        G.callStack.push(G.noneValue);
+                    } else {
+                        const b64data = filedata.file;
+                        const binData = G.decodeData(b64data);
+                        const dataList = G.makeNew(G.ValueType.List);
+                        const aList = G.getList(dataList);
+                        for (let i = 0; i < binData.byteLength; i += 4) {
+                            aList.push(new G.Value(G.ValueType.Integer, binData.getInt32(i, true)));
+                        }
+                        G.callStack.push(dataList);
+                    }
+                    break; }
+
+                case Opcode.FileWrite: {
+                    const fileNameId = G.callStack.pop();
+                    const dataListId = G.callStack.pop();
+                    fileNameId.requireType(G.ValueType.String);
+                    dataListId.requireType(G.ValueType.List);
+                    const fileName = G.getString(fileNameId);
+                    const gameId = G.getString(G.gameId);
+                    const aList = G.getList(dataListId);
+                    if (aList.length > 0) {
+                        const binLength = aList.length * 4;
+                        const binData = new ArrayBuffer(binLength);
+                        const binView = new DataView(binData);
+                        for (let i = 0; i < aList.length; ++i) {
+                            aList[i].requireType(G.ValueType.Integer);
+                            binView.setInt32(i * 4, aList[i].value, true);
+                        }
+                        const finalData = G.encodeData(binView);
+                        G.saveFile(fileName, gameId, finalData);
+                    } else {
+                        G.saveFile(fileName, gameId, "");
+                    }
+
+                    G.callStack.push(new G.Value(G.ValueType.Integer, 1));
+                    break; }
+
+                case Opcode.FileDelete: {
+                    const fileNameId = G.callStack.pop();
+                    fileNameId.requireType(G.ValueType.String);
+                    const fileName = G.getString(fileNameId);
+                    const gameId = G.getString(G.gameId);
+                    const file = G.getFile(fileName, gameId);
+                    if (file) {
+                        G.deleteFile(fileName, gameId);
+                        G.callStack.push(new G.Value(G.ValueType.Integer, 1));
+                    } else {
+                        G.callStack.push(new G.Value(G.ValueType.Integer, 0));
+                    }
                     break; }
 
                 default:

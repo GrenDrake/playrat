@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Saved Game Manager</title>
+<meta charset='utf-8'>
+<style>
+table {
+    border-top: 2px solid black;
+    border-bottom: 2px solid black;
+    border-collapse: collapse;
+    margin-bottom: 1em;
+}
+td, th {
+    padding: 0.25em 1em;
+}
+th {
+    border-bottom: 1px solid black;
+}
+#filemanager button {
+    font-size: 110%;
+}
+#editorFrame {
+    display: none;
+}
+</style>
+</head>
+<body>
+
+<h1>Saved Game Manager</h1>
+
+<p>This small utility allows for editing files saved by QuollVM games hosted on this server. All files are presented in <a href='https://en.wikipedia.org/wiki/Base64'>Base64 Encoding</a>.
+<p>(<a href='/index.html'>return to games list</a>)
+
+<div id='filemanager'>
+    <table id='filelist'>
+        <tr id='filelistheader'><th>Name</th><th>Game ID</th><th>Last Modified</th><th><button id='newfile'>Create File</button></th></tr>
+    </table>
+
+    <div id='editorFrame'>
+        <label>Name: <input type='edit' id='filename'></label>
+        <label>GameID: <input type='edit' id='filegameid'></label><br>
+        <textarea style='width:80%; height: 12em' id='fileeditor'></textarea><br>
+        <button id='saveFile'>Save</button>
+        <button id='cancelFile'>Close Editor</button>
+    </div>
+</div>
+
+<script src='js/filemanager.js'></script>
+<script src='js/filedb.js'></script>

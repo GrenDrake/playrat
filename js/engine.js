@@ -446,6 +446,14 @@ const G = {
                     G.typeNames[this.type] + ".");
             }
         }
+        requireEitherType(type1, type2) {
+            if (this.type !== type1 && this.type !== type2) {
+                throw new G.RuntimeError(
+                    "Expected " + G.typeNames[type1] + " or " + G.typeNames[type2] +
+                    ", but found " +
+                    G.typeNames[this.type] + ".");
+            }
+        }
         toKey() {
             return this.mType + ":" + this.mValue;
         }
@@ -829,7 +837,9 @@ const G = {
             index.requireType(type);
             index = index.value;
         }
-        if (index < 0 || index >= dataArray.length || (type !== G.ValueType.String && index === 0)) {
+        if (index < 0 || index >= dataArray.length ||
+                (type !== G.ValueType.String && index === 0) ||
+                dataArray[index] == undefined) {
             throw new G.RuntimeError("Tried to access invalid " + G.typeNames[type] + " #" + index);
         }
         return dataArray[index].data;
