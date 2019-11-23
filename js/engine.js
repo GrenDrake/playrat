@@ -1154,7 +1154,8 @@ const G = {
 
         let text = G.asString(right);
         if (ucFirst) text = G.ucFirst(text);
-        G.strings[left.value].data += text;
+        const result = G.strings[left.value].data + text;
+        G.strings[left.value].data = result.normalize("NFC");
     }
 
     G.objectByIdent = function objectByIdent(objectId) {
