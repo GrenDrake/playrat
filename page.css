@@ -179,6 +179,28 @@ body {
     font-size: 80%;
 }
 
+.textcol-red {
+    color: red;
+}
+.textcol-green {
+    color: green;
+}
+.textcol-yellow {
+    color: #AA0;
+}
+.textcol-blue {
+    color: blue;
+}
+.textcol-magenta {
+    color: magenta;
+}
+.textcol-cyan {
+    color: darkcyan;
+}
+.textcol-default {
+    color: black;
+}
+
 @media (max-width: 500px) {
     #top-statusbar {
         flex-direction: column;

@@ -756,35 +756,28 @@ const G = {
     }
 
     G.doOutput = function doOutput(errorMessage) {
+        let line = G.textBuffer.join("").replace(/&/g, "&amp;");
+        line = line.replace(/</g, "&lt;");
+        line = line.replace(/>/g, "&gt;");
+            
+        const result = G.formatter(line);
+        if (result.errors.length > 0) {
+            if (!errorMessage) {
+                errorMessage = document.createElement("div");
+                errorMessage.classList.add("error");
+            }
+            const errText = ["<span class='errorTitle'>Formatting Errors Occured</span><br>"];
+            result.errors.forEach(function(err) {
+                errText.push(err, "<br>");
+            });
+            errorMessage.innerHTML += errText.join("");
+        }
+
         const nextDiv = document.createElement("div");
         nextDiv.classList.add("sceneNode");
-        const outputText = G.textBuffer.join("").split("\n");
-        outputText.forEach(function(line) {
-            line = line.trim();
-            if (line === "") return;
-
-            if (line.match(/^---+$/) !== null) {
-                const p = document.createElement("hr");
-                nextDiv.appendChild(p);
-            } else {
-                line = line.replace(/&/g, "&amp;");
-                line = line.replace(/</g, "&lt;");
-                line = line.replace(/>/g, "&gt;");
-                line = line.replace(/\[b](.*?)\[\/b]/g, "<b>$1</b>");
-                line = line.replace(/\[i](.*?)\[\/i]/g, "<i>$1</i>");
-                line = line.replace(/\[br]/g, "<br>");
-
-                const p = document.createElement("p");
-                if (line.substring(0,1) === "#") {
-                    p.innerHTML = line.substring(1);
-                    p.classList.add("headerParagraph")
-                } else {
-                    p.innerHTML = line;
-                }
-                nextDiv.appendChild(p);
-            }
-        });
+        nextDiv.innerHTML = result.text;
         G.eOutput.appendChild(nextDiv);
+
         if (errorMessage) {
             G.eOutput.appendChild(errorMessage);
             errorMessage.scrollIntoView();
