@@ -246,6 +246,7 @@
 
         switch(root.type) {
             case TextNodeType.Root:
+                if (root.children.length <= 0) break;
                 while (root.children[root.children.length-1].type == TextNodeType.Paragraph) {
                     root.children.pop();
                 }
