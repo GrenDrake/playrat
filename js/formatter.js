@@ -178,7 +178,7 @@
                 const parts = state.here().text.split(" ");
                 if (parts.length > 0) {
                     const tag = getTag(parts[0]);
-                    if (tag.name !== "") {
+                    if (tag && tag.name !== "") {
                         if (tag.topLevel) {
                             if (!tags.empty()) {
                                 results.errors.push("Tag " + tag.name + " may only occur at top level.");
