@@ -449,10 +449,17 @@
             filePos += 2;
             const localCount = G.gamedataSrc.getUint16(filePos, true);
             filePos += 2;
+            const totalCount = argCount + localCount;
+            const types = [];
+            for (let j = 0; j < totalCount; ++j) {
+                const type = G.gamedataSrc.getUint8(filePos, true);
+                filePos += 1;
+                types.push(type);
+            }
             const codePosition = G.gamedataSrc.getUint32(filePos, true);
             filePos += 4;
             G.functions.push({
-                data: [argCount, localCount, codePosition],
+                data: [argCount, localCount, codePosition, types],
                 sourceName: sourceName,
                 sourceFile: sourceFileIdx,
                 sourceLine: sourceLine

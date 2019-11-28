@@ -229,6 +229,14 @@
                         theArgs.push(G.callStack.pop());
                         v1.value -= 1;
                     }
+                    for (let i = 0; i < theFunc[0]; ++i) {
+                        if (theFunc[3][i] != G.ValueType.Any && theArgs[i].type !== theFunc[3][i]) {
+                            const name = G.getString(G.getSource(target));
+                            throw new G.RuntimeError("Argument " + i + " of " + name + " requires type of "
+                                    + G.typeNames[theFunc[3][i]] + " but receieved " 
+                                    + G.typeNames[theArgs[i].type] + ".");
+                        }
+                    }
                     G.callStack.pushFrame(target.value, theFunc[2], IP, null);
                     G.callStack.buildLocals(theArgs, theFunc[0], theFunc[0] + theFunc[1]);
                     IP = theFunc[2];

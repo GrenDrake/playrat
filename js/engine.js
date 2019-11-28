@@ -95,6 +95,7 @@ const G = {
         VarRef:       10,
         LocalVar:     15,
         MaxType:      15,
+        Any:          32,
     };
     Object.freeze(G.ValueType);
 
