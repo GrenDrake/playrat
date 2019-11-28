@@ -89,7 +89,7 @@ body {
 #optionsCore {
     border-top: 1px dashed grey;
     padding-top: 1em;
-    padding-bottom: 30em;
+    padding-bottom: 1em;
 }
 .optionslineinput {
     display: flex;
