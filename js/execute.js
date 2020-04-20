@@ -229,6 +229,7 @@
                         theArgs.push(G.callStack.pop());
                         v1.value -= 1;
                     }
+                    while (theArgs.length < theFunc[0]) theArgs.push(G.noneValue);
                     for (let i = 0; i < theFunc[0]; ++i) {
                         if (theFunc[3][i] != G.ValueType.Any && theArgs[i].type !== theFunc[3][i]) {
                             const name = G.getString(G.getSource(target));
