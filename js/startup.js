@@ -1,5 +1,7 @@
 (function() {
     "use strict";
+    G.E = undefined;
+
 // ////////////////////////////////////////////////////////////////////////////
 // UI Code
 // ////////////////////////////////////////////////////////////////////////////
@@ -244,35 +246,45 @@
         document.getElementById("saveCancel")
             .addEventListener("click", G.UI.closeSaveDialog);
 
+        window.addEventListener("keydown", G.keyPressHandler);
+
         G.UI.applySettings();
 
-        var loadGameData = new XMLHttpRequest();
-        loadGameData.addEventListener("load", loadedDataFile);
-        loadGameData.addEventListener("progress", loadProgress);
-        loadGameData.addEventListener("error", failedToLoadGameData);
-        loadGameData.addEventListener("abort", failedToLoadGameData);
+        if (this.window.api) {
+            window.api.receive("loadGameData", (data) => {
+                console.log("Received game data of ", data.byteLength, " bytes.");
+                G.rawSource = data;
+                G.gamedataSrc = new DataView(G.rawSource);
+                G.parseGameFile();
+            });
+            window.api.send("requestGameData", "some data");
+        } else {
+            var loadGameData = new XMLHttpRequest();
+            loadGameData.addEventListener("load", loadedDataFile);
+            loadGameData.addEventListener("progress", loadProgress);
+            loadGameData.addEventListener("error", failedToLoadGameData);
+            loadGameData.addEventListener("abort", failedToLoadGameData);
 
-        let gameFile = G.gameDir + "game.qvm";
-        if ("URLSearchParams" in window) {
-            const args = new URLSearchParams(window.location.search);
-            if (args.has("game")) {
-                let newName = args.get("game");
-                const valid = newName.match(/^[a-zA-Z0-9_]+$/) !== null;
-                if (valid) {
-                    gameFile = G.gameDir + newName + ".qvm";
-                } else {
-                    G.eOutput.innerHTML +=
-                        "<div class='error'>[Game file not valid: "
-                        + newName + ".]</div>";
+            let gameFile = G.gameDir + "game.qvm";
+            if ("URLSearchParams" in window) {
+                const args = new URLSearchParams(window.location.search);
+                if (args.has("game")) {
+                    let newName = args.get("game");
+                    const valid = newName.match(/^[a-zA-Z0-9_]+$/) !== null;
+                    if (valid) {
+                        gameFile = G.gameDir + newName + ".qvm";
+                    } else {
+                        G.eOutput.innerHTML +=
+                            "<div class='error'>[Game file not valid: "
+                            + newName + ".]</div>";
+                    }
                 }
             }
+
+            loadGameData.open("GET", gameFile);
+            loadGameData.responseType = "arraybuffer";
+            loadGameData.send();
         }
-
-        loadGameData.open("GET", gameFile);
-        loadGameData.responseType = "arraybuffer";
-        loadGameData.send();
-
-        window.addEventListener("keydown", G.keyPressHandler);
     })
 
     function loadProgress(event) {
