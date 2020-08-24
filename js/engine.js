@@ -760,7 +760,7 @@ const G = {
         let line = G.textBuffer.join("").replace(/&/g, "&amp;");
         line = line.replace(/</g, "&lt;");
         line = line.replace(/>/g, "&gt;");
-            
+
         const result = G.formatter(line);
         if (result.errors.length > 0) {
             if (!errorMessage) {
@@ -955,17 +955,17 @@ const G = {
         }
         switch(what.type) {
             case G.ValueType.Object:
-                if (what.value >= G.objectCount)
+                if (what.value > G.objectCount)
                     return new G.Value(G.ValueType.Integer, 0);
                 else
                     return new G.Value(G.ValueType.Integer, 1);
             case G.ValueType.Map:
-                if (what.value >= G.mapCount)
+                if (what.value > G.mapCount)
                     return new G.Value(G.ValueType.Integer, 0);
                 else
                     return new G.Value(G.ValueType.Integer, 1);
             case G.ValueType.List:
-                if (what.value >= G.listCount)
+                if (what.value > G.listCount)
                     return new G.Value(G.ValueType.Integer, 0);
                 else
                     return new G.Value(G.ValueType.Integer, 1);
