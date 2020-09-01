@@ -87,6 +87,8 @@
         FileRead:               80,
         FileWrite:              81,
         FileDelete:             82,
+
+        Tokenize:               83,
     };
     Object.freeze(Opcode);
 
@@ -234,7 +236,7 @@
                         if (theFunc[3][i] != G.ValueType.Any && theArgs[i].type !== theFunc[3][i]) {
                             const name = G.getString(G.getSource(target));
                             throw new G.RuntimeError("Argument " + i + " of " + name + " requires type of "
-                                    + G.typeNames[theFunc[3][i]] + " but receieved " 
+                                    + G.typeNames[theFunc[3][i]] + " but receieved "
                                     + G.typeNames[theArgs[i].type] + ".");
                         }
                     }
@@ -921,6 +923,29 @@
                     } else {
                         G.callStack.push(new G.Value(G.ValueType.Integer, 0));
                     }
+                    break; }
+
+                case Opcode.Tokenize: {
+                // Value text = callStack.pop();
+                // text.requireType(Value::String);
+                // Value newList = makeNew(Value::List);
+                // ListDef &listDef = getList(newList.value);
+                // auto result = explodeString(getString(text.value).text);
+                // for (const std::string &s : result) {
+                //     listDef.items.push_back(makeNewString(s));
+                // }
+                // callStack.push(newList);
+                    const text = G.callStack.pop();
+                    text.requireType(G.ValueType.String);
+                    const newList = G.makeNew(G.ValueType.List);
+                    G.callStack.push(newList);
+                    const result = G.getString(text.value).split(/[ \n\r\t]/);
+                    result.forEach(function(word) {
+                        if (word === "") return;
+                        const nv = new G.makeNew(G.ValueType.String);
+                        G.strings[nv.value].data = word;
+                        G.getList(newList.value).push(nv);
+                    });
                     break; }
 
                 default:
