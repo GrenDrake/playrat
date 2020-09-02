@@ -9,22 +9,46 @@
         background: white;
         color: black;
         font-size: 1.25em;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
     }
     h1 {
         border-bottom: 1px dotted grey;
+    }
+    .listhead {
+        font-weight: bold;
+        margin-top: 0.5em;
+        list-style-type: none;
+    }
+    table {
+        border: none;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    td {
+        border: none;
+        vertical-align: top;
     }
 </style>
 </head>
 <body>
 <h1>QuollVM</h1>
-<p>Welcome to the QuollVM games list! Select the game of interest from the list below:
+<p>Welcome to the QuollVM programs list! Select the program of interest from the list below:
+<table><tr><td>
 <ul>
+    <li class='listhead'>Games
     <li><a href='play.html'>Demo Game</a>
+
+    <li class='listhead'>Utilities
+    <li><a href='filemanager.html'>Virtual File Manager</a>
+
+    <li class='listhead'>Examples
     <li><a href='play.html?game=user_tests'>User Tests</a>
     <li><a href='play.html?game=fizzbuzz'>FizzBuzz Demo</a>
     <li><a href='play.html?game=fibonacci'>Fibonacci Benchmark</a> (warning: very slow)
-
-    <li><b>Automated Tests</b>
+</ul></td><td><ul>
+    <li class='listhead'>Automated Tests
     <li><a href='play.html?game=test_comparisons'>Comparisons Test</a>
     <li><a href='play.html?game=test_dynamic'    >Dynamic Objects Test</a>
     <li><a href='play.html?game=test_fileio'     >File IO Test</a>
@@ -37,9 +61,7 @@
     <li><a href='play.html?game=test_stack'      >Stack Manipulation Test</a>
     <li><a href='play.html?game=test_strings'    >Strings Test</a>
     <li><a href='play.html?game=test_values'     >Values Test</a>
-
-    <li><a href='filemanager.html'>Manage Saved Games</a>
-</ul>
+</ul></td></tr></table>
 </body>
 
 </html>
