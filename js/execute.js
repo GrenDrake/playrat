@@ -71,13 +71,13 @@
         AddOption:              63,
         StringClear:            65,
         StringAppend:           66,
-        StringLength:           67,
+        // unused:              67,
         StringCompare:          68,
         Error:                  69,
         Origin:                 70,
-        AddPage:                71,
-        DeletePage:             72,
-        EndPage:                73,
+        // unused               71,
+        // unused               72,
+        // unused               73,
         New:                    74,
         StringAppendUF:         75,
         IsStatic:               76,
@@ -926,25 +926,33 @@
                     break; }
 
                 case Opcode.Tokenize: {
-                // Value text = callStack.pop();
-                // text.requireType(Value::String);
-                // Value newList = makeNew(Value::List);
-                // ListDef &listDef = getList(newList.value);
-                // auto result = explodeString(getString(text.value).text);
-                // for (const std::string &s : result) {
-                //     listDef.items.push_back(makeNewString(s));
-                // }
-                // callStack.push(newList);
                     const text = G.callStack.pop();
+                    const strList = G.callStack.pop();
+                    const vocabList = G.callStack.pop();
                     text.requireType(G.ValueType.String);
-                    const newList = G.makeNew(G.ValueType.List);
-                    G.callStack.push(newList);
+                    strList.requireEitherType(G.ValueType.List, G.ValueType.None);
+                    vocabList.requireEitherType(G.ValueType.List, G.ValueType.None);
+
+                    let strDef = undefined, vocabDef = undefined;
+                    if (strList.type === G.ValueType.List) {
+                        strDef = G.getList(strList.value);
+                        strDef.length = 0;
+                    }
+                    if (vocabList.type === G.ValueType.List) {
+                        vocabDef = G.getList(vocabList.value);
+                        vocabDef.length = 0;
+                    }
                     const result = G.getString(text.value).split(/[ \n\r\t]/);
                     result.forEach(function(word) {
                         if (word === "") return;
-                        const nv = new G.makeNew(G.ValueType.String);
-                        G.strings[nv.value].data = word;
-                        G.getList(newList.value).push(nv);
+                        if (strDef) {
+                            const nv = new G.makeNew(G.ValueType.String);
+                            G.strings[nv.value].data = word;
+                            strDef.push(nv);
+                        }
+                        if (vocabDef) {
+                            vocabDef.push(new G.Value(G.ValueType.Vocab, G.getVocabNumber(word)));
+                        }
                     });
                     break; }
 

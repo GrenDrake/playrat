@@ -4,11 +4,12 @@ const G = {
         inDialog: false,
     },
     noneValue: undefined,
-    strings: [],
-    objects: [],
-    lists: [],
-    maps: [],
-    functions: [],
+    strings: {},
+    vocab: [],
+    objects: {},
+    lists: {},
+    maps: {},
+    functions: {},
     raw: {
         objects: [],
         lists: [],
@@ -54,6 +55,7 @@ const G = {
     versionId: -1,
     gameId: -1,
     buildNumber: -1,
+    nextIdent: 1,
 
     propInternalName: 1,
     propIdent: 2,
@@ -93,6 +95,7 @@ const G = {
         TypeId:       8,
         JumpTarget:   9,
         VarRef:       10,
+        Vocab:        11,
         LocalVar:     15,
         MaxType:      15,
         Any:          32,
@@ -111,7 +114,7 @@ const G = {
         "TypeId",       // 8
         "JumpTarget",   // 9
         "Reference",    // 10
-        "(unused)",     // 11
+        "Vocab",        // 11
         "(unused)",     // 12
         "(unused)",     // 13
         "(unused)",     // 14
@@ -501,6 +504,8 @@ const G = {
         switch(aValue.type) {
             case G.ValueType.String:
                 return G.getString(aValue.value);
+            case G.ValueType.Vocab:
+                return G.getVocab(aValue.value);
             case G.ValueType.Integer:
                 return ""+aValue.value;
             default:
@@ -575,6 +580,7 @@ const G = {
             case G.ValueType.JumpTarget:
             case G.ValueType.VarRef:
             case G.ValueType.LocalVar:
+            case G.ValueType.Vocab:
                 // no need to mark
                 break;
             default:
@@ -582,26 +588,41 @@ const G = {
         }
         what.marked = true;
     }
-    G.gc.collect = function collect(theList,start) {
+    G.gc.collect = function collect(theList) {
+        const ids = Object.keys(theList);
         let count = 0;
-        for (var i = start; i < theList.length; ++i) {
-            if (!theList[i] || theList[i].data == undefined) {
-                continue;
-            }
-            if (!theList[i].marked) {
-                theList[i] = undefined;
-                ++count;
-            }
-        }
+        ids.forEach(function (id) {
+            if (theList[id].static) return;
+            if (theList[id].marked) return;
+            delete theList[id];
+            ++count;
+        });
+        // let count = 0;
+        // for (var i = start; i < theList.length; ++i) {
+        //     if (!theList[i] || theList[i].data == undefined) {
+        //         continue;
+        //     }
+        //     if (!theList[i].marked) {
+        //         theList[i] = undefined;
+        //         ++count;
+        //     }
+        // }
         return count;
     }
     G.collectGarbage = function collectGarbage() {
         ////////////////////////////////////////
+        // GET EXISTING IDENT LISTS
+        const listIds = Object.keys(G.lists);
+        const mapIds = Object.keys(G.maps);
+        const objectIds = Object.keys(G.objects);
+        const stringIds = Object.keys(G.strings);
+
+        ////////////////////////////////////////
         // UNMARK ALL
-        G.objects.forEach(function(item) { if (item) item.marked = false; });
-        G.lists.forEach(function(item)   { if (item) item.marked = false; });
-        G.maps.forEach(function(item)    { if (item) item.marked = false; });
-        G.strings.forEach(function(item) { if (item) item.marked = false; });
+        listIds.forEach(function(ident)   { const item = G.lists[ident];    if (item) item.marked = false; });
+        mapIds.forEach(function(ident)    { const item = G.maps[ident];     if (item) item.marked = false; });
+        objectIds.forEach(function(ident) { const item = G.objects[ident];  if (item) item.marked = false; });
+        stringIds.forEach(function(ident) { const item = G.strings[ident];  if (item) item.marked = false; });
 
         ////////////////////////////////////////
         // MARK ACCESSABLE
@@ -630,24 +651,24 @@ const G = {
         count += G.gc.collect(G.maps,     G.mapCount + 1);
         count += G.gc.collect(G.strings,  G.stringCount);
 
-        ////////////////////////////////////////
-        // TRIMMING
-        while (G.objects.length > 0
-                && G.objects[G.objects.length - 1] == undefined) {
-            G.objects.pop();
-        }
-        while (G.maps.length > 0
-                && G.maps[G.maps.length - 1] == undefined) {
-            G.maps.pop();
-        }
-        while (G.strings.length > 0
-                && G.strings[G.strings.length - 1] == undefined) {
-            G.strings.pop();
-        }
-        while (G.lists.length > 0
-                && G.lists[G.lists.length - 1] == undefined) {
-            G.lists.pop();
-        }
+        // ////////////////////////////////////////
+        // // TRIMMING
+        // while (G.objects.length > 0
+        //         && G.objects[G.objects.length - 1] == undefined) {
+        //     G.objects.pop();
+        // }
+        // while (G.maps.length > 0
+        //         && G.maps[G.maps.length - 1] == undefined) {
+        //     G.maps.pop();
+        // }
+        // while (G.strings.length > 0
+        //         && G.strings[G.strings.length - 1] == undefined) {
+        //     G.strings.pop();
+        // }
+        // while (G.lists.length > 0
+        //         && G.lists[G.lists.length - 1] == undefined) {
+        //     G.lists.pop();
+        // }
 
         return count;
     }
@@ -949,31 +970,38 @@ const G = {
         return G.getData(G.ValueType.String, G.strings, stringNumber);
     }
 
+    G.getVocab = function getVocab(index) {
+        if (index < 0 || index >= G.vocab.length) {
+            return "invalid vocab " + index;
+        }
+        return G.vocab[index].data;
+    }
+    G.getVocabNumber = function getVocabNumber(theWord) {
+        let i = 0;
+        while (i < G.vocab.length) {
+            if (G.vocab[i].data === theWord) return i;
+            ++i;
+        }
+        return -1;
+    }
+
     G.isStatic = function isStatic(what) {
         if (!(what instanceof G.Value)) {
             throw new G.RuntimeError("Used isStatic on non-Value");
         }
         switch(what.type) {
             case G.ValueType.Object:
-                if (what.value > G.objectCount)
-                    return new G.Value(G.ValueType.Integer, 0);
-                else
-                    return new G.Value(G.ValueType.Integer, 1);
+                if (G.objects.hasOwnProperty(what.value)) return new G.Value(G.ValueType.Integer, G.objects[what.value].static ? 1 : 0);
+                return false;
             case G.ValueType.Map:
-                if (what.value > G.mapCount)
-                    return new G.Value(G.ValueType.Integer, 0);
-                else
-                    return new G.Value(G.ValueType.Integer, 1);
+                if (G.maps.hasOwnProperty(what.value)) return new G.Value(G.ValueType.Integer, G.maps[what.value].static ? 1 : 0);
+                return false;
             case G.ValueType.List:
-                if (what.value > G.listCount)
-                    return new G.Value(G.ValueType.Integer, 0);
-                else
-                    return new G.Value(G.ValueType.Integer, 1);
+                if (G.lists.hasOwnProperty(what.value)) return new G.Value(G.ValueType.Integer, G.lists[what.value].static ? 1 : 0);
+                return false;
             case G.ValueType.String:
-                if (what.value >= G.stringCount)
-                    return new G.Value(G.ValueType.Integer, 0);
-                else
-                    return new G.Value(G.ValueType.Integer, 1);
+                if (G.strings.hasOwnProperty(what.value)) return new G.Value(G.ValueType.Integer, G.strings[what.value].static ? 1 : 0);
+                return false;
             default:
                 return new G.Value(G.ValueType.Integer, 1);
         }
@@ -988,6 +1016,10 @@ const G = {
             case G.ValueType.VarRef:
             case G.ValueType.LocalVar:
             case G.ValueType.TypeId:
+                return true;
+
+            case G.ValueType.Vocab:
+                if (value.value < 0 || value.value >= G.vocab.length) return false;
                 return true;
 
             case G.ValueType.List:
@@ -1019,23 +1051,20 @@ const G = {
             type.requireType(G.ValueType.TypeId);
             type = type.value;
         }
-        let nextId = -1;
+        let nextId = G.nextIdent;
+        G.nextIdent++;
         switch (type) {
             case G.ValueType.List:
-                nextId = G.lists.length;
-                G.lists[nextId] = {data:[], sourceFile: -2, sourceLine: -1};
+                G.lists[nextId] = {data:[], sourceFile: -2, sourceLine: -1, static: false};
                 return new G.Value(G.ValueType.List, nextId);
             case G.ValueType.Map:
-                nextId = G.maps.length;
-                G.maps[nextId] = {data:{}, sourceFile: -2, sourceLine: -1};
+                G.maps[nextId] = {data:{}, sourceFile: -2, sourceLine: -1, static: false};
                 return new G.Value(G.ValueType.Map, nextId);
             case G.ValueType.Object:
-                nextId = G.objects.length;
-                G.objects[nextId] = {data:{}, sourceFile: -2, sourceLine: -1};
+                G.objects[nextId] = {data:{}, sourceFile: -2, sourceLine: -1, static: false};
                 return new G.Value(G.ValueType.Object, nextId);
             case G.ValueType.String:
-                nextId = G.strings.length;
-                G.strings[nextId] = {data:""};
+                G.strings[nextId] = {data:"", static: false};
                 return new G.Value(G.ValueType.String, nextId);
             default:
                 throw new G.RuntimeError("Cannot instantiate objects of type "

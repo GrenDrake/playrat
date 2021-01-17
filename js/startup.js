@@ -347,19 +347,41 @@
                 rawStringData[i] ^= 0x7B;
             }
             filePos += stringLength;
-            G.strings.push({data:decoder.decode(rawStringData)});
+            G.strings[i] = {
+                ident: i,
+                static: true,
+                data: decoder.decode(rawStringData)
+            };
+            if (i >= G.nextIdent) G.nextIdent = i + 1;
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        // Read vocab from datafile
+        G.vocabCount = G.gamedataSrc.getUint32(filePos, true);
+        filePos += 4;
+        for (var i = 0; i < G.vocabCount; ++i) {
+            const stringLength = G.gamedataSrc.getUint16(filePos, true);
+            filePos += 2;
+            const rawStringData = new Uint8Array(G.rawSource, filePos,
+                                                 stringLength);
+            for (let i = 0; i < stringLength; ++i) {
+                rawStringData[i] ^= 0x7B;
+            }
+            filePos += stringLength;
+            G.vocab.push({data:decoder.decode(rawStringData)});
         }
 
         ///////////////////////////////////////////////////////////////////////
         // Read lists from datafile
         G.listCount = G.gamedataSrc.getUint32(filePos, true);
         filePos += 4;
-        G.lists.push(undefined);
         for (var i = 0; i < G.listCount; ++i) {
             const thisList = [];
             const sourceFileIdx = G.gamedataSrc.getInt32(filePos, true);
             filePos += 4;
             const sourceLine = G.gamedataSrc.getInt32(filePos, true);
+            filePos += 4;
+            const ident = G.gamedataSrc.getInt32(filePos, true);
             filePos += 4;
             const listSize = G.gamedataSrc.getUint16(filePos, true);
             filePos += 2;
@@ -370,23 +392,30 @@
                 filePos += 4;
                 thisList.push(new G.Value(itemType, itemValue));
             }
-            G.lists.push({
+            if (G.lists.hasOwnProperty(ident)) {
+                console.error("Duplicate list ident");
+            }
+            G.lists[ident] = {
+                ident: ident,
+                static: true,
                 data: thisList,
                 sourceFile: sourceFileIdx,
                 sourceLine: sourceLine
-            });
+            };
+            if (ident >= G.nextIdent) G.nextIdent = ident + 1;
         }
 
         ///////////////////////////////////////////////////////////////////////
         // Read maps from datafile
         G.mapCount = G.gamedataSrc.getUint32(filePos, true);
         filePos += 4;
-        G.maps.push(undefined);
         for (var i = 0; i < G.mapCount; ++i) {
             const thisMap = {};
             const sourceFileIdx = G.gamedataSrc.getInt32(filePos, true);
             filePos += 4;
             const sourceLine = G.gamedataSrc.getInt32(filePos, true);
+            filePos += 4;
+            const ident = G.gamedataSrc.getInt32(filePos, true);
             filePos += 4;
             const mapSize = G.gamedataSrc.getUint16(filePos, true);
             filePos += 2;
@@ -405,18 +434,23 @@
 
                 thisMap[valueOne.toKey()] = valueTwo;
             }
-            G.maps.push({
+            if (G.maps.hasOwnProperty(ident)) {
+                console.error("Duplicate map ident");
+            }
+            G.maps[ident] = {
+                ident: ident,
+                static: true,
                 data: thisMap,
                 sourceFile: sourceFileIdx,
                 sourceLine: sourceLine
-            });
+            };
+            if (ident >= G.nextIdent) G.nextIdent = ident + 1;
         }
 
         ///////////////////////////////////////////////////////////////////////
         // Read game objects from datafile
         G.objectCount = G.gamedataSrc.getUint32(filePos, true);
         filePos += 4;
-        G.objects.push(undefined);
         for (var i = 0; i < G.objectCount; ++i) {
             const thisObject = {};
             const sourceName = G.gamedataSrc.getInt32(filePos, true);
@@ -425,7 +459,8 @@
             filePos += 4;
             const sourceLine = G.gamedataSrc.getInt32(filePos, true);
             filePos += 4;
-            // thisObject.key = G.gamedataSrc.getUint32(filePos, true);
+            const ident = G.gamedataSrc.getInt32(filePos, true);
+            filePos += 4;
             const objectSize = G.gamedataSrc.getUint16(filePos, true);
             filePos += 2;
             for (var j = 0; j < objectSize; ++j) {
@@ -437,25 +472,32 @@
                 filePos += 4;
                 thisObject[propId] = new G.Value(itemType, itemValue);
             }
-            G.objects.push({
+            if (G.objects.hasOwnProperty(ident)) {
+                console.error("Duplicate object ident");
+            }
+            G.objects[ident] = {
+                ident: ident,
+                static: true,
                 data: thisObject,
                 sourceName: sourceName,
                 sourceFile: sourceFileIdx,
                 sourceLine: sourceLine
-            });
+            };
+            if (ident >= G.nextIdent) G.nextIdent = ident + 1;
         }
 
         ///////////////////////////////////////////////////////////////////////
         // Read function headers from datafile
         G.functionCount = G.gamedataSrc.getUint32(filePos, true);
         filePos += 4;
-        G.functions.push(undefined);
         for (var i = 0; i < G.functionCount; ++i) {
             const sourceName = G.gamedataSrc.getInt32(filePos, true);
             filePos += 4;
             const sourceFileIdx = G.gamedataSrc.getInt32(filePos, true);
             filePos += 4;
             const sourceLine = G.gamedataSrc.getInt32(filePos, true);
+            filePos += 4;
+            const ident = G.gamedataSrc.getInt32(filePos, true);
             filePos += 4;
             const argCount = G.gamedataSrc.getUint16(filePos, true);
             filePos += 2;
@@ -470,12 +512,16 @@
             }
             const codePosition = G.gamedataSrc.getUint32(filePos, true);
             filePos += 4;
-            G.functions.push({
+            if (G.functions.hasOwnProperty(ident)) {
+                console.error("Duplicate function ident");
+            }
+            G.functions[ident] = {
+                ident: ident,
                 data: [argCount, localCount, codePosition, types],
                 sourceName: sourceName,
                 sourceFile: sourceFileIdx,
                 sourceLine: sourceLine
-            });
+            };
         }
 
         ///////////////////////////////////////////////////////////////////////
