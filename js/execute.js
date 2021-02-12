@@ -843,8 +843,8 @@
 
                 case Opcode.FileList: {
                     const gameIdRef = G.callStack.pop();
-                    gameIdRef.requireType(G.ValueType.String);
-                    const gameId = G.getString(gameIdRef.value);
+                    gameIdRef.requireEitherType(G.ValueType.String, G.ValueType.None);
+                    const gameId = gameIdRef.type == G.ValueType.None ? "" : G.getString(gameIdRef.value);
                     const files = G.getFileIndex();
                     const fileNames = Object.keys(files);
                     const fileListId = G.makeNew(G.ValueType.List);
@@ -852,7 +852,7 @@
                     G.callStack.push(fileListId);
                     fileNames.forEach(function(fileName) {
                         const file = files[fileName];
-                        if (file.gameid !== gameId) return;
+                        if (gameId !== "" && file.gameid !== gameId) return;
                         const rowId = G.makeNew(G.ValueType.List);
                         const row = G.getList(rowId);
                         const nameStr = G.makeNew(G.ValueType.String);
