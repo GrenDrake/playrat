@@ -265,14 +265,14 @@
             loadGameData.addEventListener("error", failedToLoadGameData);
             loadGameData.addEventListener("abort", failedToLoadGameData);
 
-            let gameFile = G.gameDir + "game.qvm";
+            let gameFile = G.gameDir + "game.rvm";
             if ("URLSearchParams" in window) {
                 const args = new URLSearchParams(window.location.search);
                 if (args.has("game")) {
                     let newName = args.get("game");
                     const valid = newName.match(/^[a-zA-Z0-9_]+$/) !== null;
                     if (valid) {
-                        gameFile = G.gameDir + newName + ".qvm";
+                        gameFile = G.gameDir + newName + ".rvm";
                     } else {
                         G.eOutput.innerHTML +=
                             "<div class='error'>[Game file not valid: "
