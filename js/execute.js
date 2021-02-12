@@ -866,11 +866,9 @@
 
                 case Opcode.FileRead: {
                     const fileNameId = G.callStack.pop();
-                    const gameIdRef = G.callStack.pop();
                     fileNameId.requireType(G.ValueType.String);
-                    gameIdRef.requireType(G.ValueType.String);
                     const fileName = G.getString(fileNameId);
-                    const gameId = G.getString(gameIdRef.value);
+                    const gameId = G.getString(G.gameId);
                     const filedata = G.getFile(fileName, gameId);
                     if (!filedata) {
                         G.callStack.push(G.noneValue);
