@@ -1,3 +1,6 @@
+*.map
+*.js
+
 games
 .vscode
 .DS_Store
