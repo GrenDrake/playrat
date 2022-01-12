@@ -40,6 +40,9 @@ interface MapDef {
 
 interface ObjectDef {
     ident: number,
+    parent: number,
+    child: number,
+    sibling: number,
     static: boolean,
     data: Record<number, Value>,
     sourceName: number,
@@ -195,6 +198,12 @@ enum Opcode {
     FileWrite             = 81,
     FileDelete            = 82,
     Tokenize              = 83,
+    GetParent             = 84,
+    GetFirstChild         = 85,
+    GetSibling            = 86,
+    GetChildren           = 87,
+    GetChildCount         = 88,
+    MoveTo                = 89,
 };
 
 // ////////////////////////////////////////////////////////////////////////////
@@ -815,6 +824,13 @@ function getObject(objectNumber: number) {
     throw new RuntimeError("Tried to access invalid object #" + objectNumber + ".");
 }
 
+function getObjectDef(objectNumber: number) {
+    if (State.objects.hasOwnProperty(objectNumber)) {
+        return State.objects[objectNumber];
+    }
+    throw new RuntimeError("Tried to access invalid object #" + objectNumber + ".");
+}
+
 function getString(stringNumber: number) {
     if (State.strings.hasOwnProperty(stringNumber)) {
         return State.strings[stringNumber].data;
@@ -977,6 +993,73 @@ function isValid(value: Value) {
     return false;
 }
 
+function moveObject(objectToMove: Value, newParent: Value) {
+    if (isIndirectLoop(objectToMove, newParent)) {
+        throw new RuntimeError("Tried to create circular containment.");
+    }
+
+    const toMove = getObjectDef(objectToMove.value);
+    const oldParent = toMove.parent;
+    toMove.parent = 0;
+    if (oldParent > 0) {
+        const oldParentObj = getObjectDef(oldParent);
+        if (oldParentObj.child == toMove.ident) {
+            oldParentObj.child = toMove.sibling;
+        } else {
+            let child = oldParentObj.child;
+            while (child > 0) {
+                const c = getObjectDef(child);
+                if (c.sibling == toMove.ident) {
+                    c.sibling = toMove.sibling;
+                    break;
+                }
+                child = c.sibling;
+            }
+        }
+    }
+    toMove.sibling = 0;
+
+    if (newParent.type !== ValueType.None) {
+        toMove.parent = newParent.value;
+        const parent = getObjectDef(newParent.value);
+        if (parent.child === 0) {
+            parent.child = objectToMove.value;
+        } else {
+            let childId = parent.child;
+            while (1) {
+                let child = getObjectDef(childId);
+                if (child.sibling > 0) {
+                    childId = child.sibling;
+                } else {
+                    child.sibling = objectToMove.value;
+                    break;
+                }
+            }
+        }
+    }
+
+}
+
+function isIndirectLoop(childId: Value, parentId: Value) {
+    if (childId.value == 0 || parentId.value == 0) return false;
+    if (childId == parentId) return true;
+
+    const object = getObjectDef(childId.value);
+    if (object.parent == parentId.value) return true;
+    const parent = getObjectDef(parentId.value);
+
+    let superParentId = parent.parent;
+    while (superParentId > 0) {
+        if (superParentId === object.ident) {
+            return true;
+        } else {
+            const superParent = getObjectDef(superParentId);
+            superParentId = superParent.parent;
+        }
+    }
+    return false;
+}
+
 function makeNew(type: ValueType) {
     const nextId = State.nextIdent;
     State.nextIdent++;
@@ -1004,6 +1087,9 @@ function makeNew(type: ValueType) {
         case ValueType.Object: {
             const newObject:ObjectDef = {
                 ident: nextId,
+                parent: 0,
+                child: 0,
+                sibling: 0,
                 data: {},
                 sourceName: -1,
                 sourceFile: -2,
@@ -1863,6 +1949,12 @@ function parseGameFile() {
         filePos += 4;
         const ident = State.dataSrc.getInt32(filePos, true);
         filePos += 4;
+        const parent = State.dataSrc.getInt32(filePos, true);
+        filePos += 4;
+        const child = State.dataSrc.getInt32(filePos, true);
+        filePos += 4;
+        const sibling = State.dataSrc.getInt32(filePos, true);
+        filePos += 4;
         const objectSize = State.dataSrc.getUint16(filePos, true);
         filePos += 2;
         for (var j = 0; j < objectSize; ++j) {
@@ -1879,6 +1971,9 @@ function parseGameFile() {
         }
         State.objects[ident] = {
             ident: ident,
+            parent: parent,
+            child: child,
+            sibling: sibling,
             static: true,
             data: thisObject,
             sourceName: sourceName,
@@ -3017,6 +3112,79 @@ function resumeExec(pushValue?: Value) {
                     }
                 });
                 break; }
+
+            case Opcode.GetChildCount: {
+                const objectId = State.callStack.pop();
+                objectId.requireType(ValueType.Object);
+                const object = getObjectDef(objectId.value);
+                if (object.child === 0) {
+                    State.callStack.push(new Value(ValueType.Integer, 0));
+                } else {
+                    let count = 0;
+                    let child = getObjectDef(object.child);
+                    while (1) {
+                        ++count;
+                        if (child.sibling <= 0) break;
+                        child = getObjectDef(child.sibling);
+                    }
+                    State.callStack.push(new Value(ValueType.Integer, count));
+                }
+                break; }
+
+            case Opcode.GetParent: {
+                const objectId = State.callStack.pop();
+                objectId.requireType(ValueType.Object);
+                const object = getObjectDef(objectId.value);
+                if (object.parent === 0) {
+                    State.callStack.push(noneValue);
+                } else {
+                    State.callStack.push(new Value(ValueType.Object, object.parent));
+                }
+                break; }
+            case Opcode.GetFirstChild: {
+                const objectId = State.callStack.pop();
+                objectId.requireType(ValueType.Object);
+                const object = getObjectDef(objectId.value);
+                if (object.child === 0) {
+                    State.callStack.push(noneValue);
+                } else {
+                    State.callStack.push(new Value(ValueType.Object, object.child));
+                }
+                break; }
+            case Opcode.GetSibling: {
+                const objectId = State.callStack.pop();
+                objectId.requireType(ValueType.Object);
+                const object = getObjectDef(objectId.value);
+                if (object.sibling === 0) {
+                    State.callStack.push(noneValue);
+                } else {
+                    State.callStack.push(new Value(ValueType.Object, object.sibling));
+                }
+                break; }
+            case Opcode.GetChildren: {
+                const objectId = State.callStack.pop();
+                objectId.requireType(ValueType.Object);
+                const object = getObjectDef(objectId.value);
+                const listV = makeNew(ValueType.List);
+                State.callStack.push(listV);
+                const list = getList(listV.value);
+                if (object.child > 0) {
+                    let child = getObjectDef(object.child);
+                    while (1) {
+                        list.push(new Value(ValueType.Object, child.ident));
+                        if (child.sibling <= 0) break;
+                        child = getObjectDef(child.sibling);
+                    }
+                }
+                break; }
+            case Opcode.MoveTo: {
+                const objectId = State.callStack.pop();
+                objectId.requireType(ValueType.Object);
+                const newParent = State.callStack.pop();
+                newParent.requireEitherType(ValueType.Object, ValueType.None);
+                moveObject(objectId, newParent);
+                break; }
+
 
             default:
                 throw new RuntimeError("Unknown opcode " + opcode + ".");
